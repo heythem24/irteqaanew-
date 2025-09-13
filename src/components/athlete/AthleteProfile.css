@@ -1,0 +1,346 @@
+/* تحسينات تصميم صفحة الرياضي - ألوان عصرية وجذابة */
+
+/* ألوان جديدة عصرية */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  --light-bg: #f8f9fa;
+  --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --hover-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* تحديث خلفية الصفحة */
+body {
+  background: var(--light-bg);
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+}
+
+/* تحسين التبويبات بألوان عصرية */
+.nav-tabs {
+  border-bottom: 2px solid transparent;
+  background: var(--dark-gradient);
+  border-radius: 1rem 1rem 0 0;
+  padding: 0.5rem;
+}
+
+.nav-tabs .nav-link {
+  border-radius: 0.75rem;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  margin: 0 0.25rem;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  background: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+  background: var(--accent-gradient);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+}
+
+.nav-tabs .nav-link.active {
+  background: var(--secondary-gradient);
+  color: white !important;
+  box-shadow: 0 5px 20px rgba(240, 147, 251, 0.4);
+  transform: translateY(-2px);
+}
+
+/* تحسين الألوان للتبويبات غير النشطة */
+.nav-tabs .nav-link:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7) !important;
+  border: none;
+}
+
+.nav-tabs .nav-link:not(.active):hover {
+  background: var(--accent-gradient);
+  color: white !important;
+  transform: translateY(-2px);
+}
+
+/* تحسين البطاقات بألوان عصرية */
+.card {
+  border: none;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: var(--card-shadow);
+  position: relative;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--primary-gradient);
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--hover-shadow);
+}
+
+.card-header {
+  border-radius: 1.5rem 1.5rem 0 0;
+  border: none;
+  padding: 1.5rem;
+  background: var(--light-bg);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card-body {
+  padding: 2rem;
+  background: white;
+}
+
+/* تحسين الصورة الشخصية */
+.athlete-image {
+  border: 5px solid white;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.athlete-image:hover {
+  transform: scale(1.05);
+}
+
+/* تحسين شريط التقدم */
+.progress {
+  height: 12px;
+  border-radius: 10px;
+  background-color: #f8f9fa;
+  overflow: hidden;
+}
+
+.progress-bar {
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+/* تحسين الجداول */
+.table {
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.table thead th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+.table tbody tr {
+  transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.01);
+}
+
+.table tbody td {
+  padding: 1rem;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* تحسين الشارات */
+.badge {
+  border-radius: 50px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+/* تحسين Timeline */
+.timeline {
+  position: relative;
+  padding: 1rem 0;
+}
+
+.timeline-item {
+  position: relative;
+  padding: 1rem 0;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #667eea, #764ba2);
+  transform: translateX(-50%);
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-date {
+  position: relative;
+  z-index: 2;
+}
+
+.timeline-date::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  background: white;
+  border: 3px solid #667eea;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}
+
+/* تحسين الإحصائيات */
+.stats-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.stats-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.stats-label {
+  font-size: 1rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* تحسين الأيقونات */
+.icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* تحسين الرسوم المتحركة */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* تحسين الاستجابة للشاشات الصغيرة */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .nav-tabs .nav-link {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .stats-number {
+    font-size: 2rem;
+  }
+  
+  .timeline-item::before {
+    left: 20px;
+  }
+  
+  .timeline-date::after {
+    left: 20px;
+  }
+}
+
+/* تحسين الألوان حسب مستوى الحزام */
+.belt-white {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  color: #333;
+}
+
+.belt-yellow {
+  background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+  color: #333;
+}
+
+.belt-orange {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+  color: white;
+}
+
+.belt-green {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.belt-blue {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+.belt-brown {
+  background: linear-gradient(135deg, #795548 0%, #5d4037 100%);
+  color: white;
+}
+
+.belt-black {
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%);
+  color: white;
+}
+
+/* تحسين التمرير السلس */
+html {
+  scroll-behavior: smooth;
+}
+
+/* تحسين التركيز */
+.nav-link:focus,
+.btn:focus {
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  outline: none;
+}

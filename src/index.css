@@ -1,0 +1,392 @@
+/* Import Google Fonts for Arabic support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
+
+:root {
+  font-family: 'Noto Sans Arabic', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+body {
+  margin: 0;
+  background-color: #f8f9fa;
+  color: #333;
+  direction: rtl;
+  text-align: right;
+  padding-top: 48px; /* Reduced navbar height */
+}
+
+/* RTL Support */
+.text-start {
+  text-align: left !important;
+}
+
+.text-end {
+  text-align: right !important;
+}
+
+/* Custom Bootstrap overrides for RTL */
+.navbar-nav .dropdown-menu {
+  right: 0;
+  left: auto;
+}
+
+/* Scrollable dropdown menus for long lists */
+#leagues-dropdown .dropdown-menu,
+#clubs-dropdown .dropdown-menu {
+  max-height: 60vh; /* limit height to viewport */
+  overflow-y: auto;  /* enable vertical scrolling */
+  overscroll-behavior: contain;
+}
+
+/* React-Bootstrap renders the menu with aria-labelledby referencing the toggle id */
+.dropdown-menu[aria-labelledby="leagues-dropdown"],
+.dropdown-menu[aria-labelledby="clubs-dropdown"] {
+  max-height: 60vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.carousel-control-prev {
+  left: auto;
+  right: 0;
+}
+
+.carousel-control-next {
+  right: auto;
+  left: 0;
+}
+
+/* Custom styles */
+.min-vh-100 {
+  min-height: 100vh;
+}
+
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+/* Card hover effects */
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Prevent hover jitter inside carousels */
+.carousel .carousel-card:hover {
+  transform: none !important;
+}
+.carousel .carousel-card .img-fluid:hover {
+  transform: none !important;
+}
+
+/* Navbar customizations */
+.navbar-brand {
+  font-weight: 600;
+}
+
+.navbar-nav .nav-link {
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+}
+
+.navbar-nav .nav-link:hover {
+  color: #0d6efd !important;
+}
+
+/* Button customizations */
+.btn {
+  font-weight: 500;
+  border-radius: 0.375rem;
+}
+
+.btn-lg {
+  padding: 0.75rem 1.5rem;
+  font-size: 1.1rem;
+}
+
+/* Hero section */
+.bg-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%) !important;
+}
+
+.hero-carousel-container {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.hero-carousel .carousel-inner,
+.hero-carousel .carousel-item,
+.hero-carousel .hero-image-container,
+.hero-carousel .hero-carousel-image {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.hero-carousel {
+  margin-bottom: 3rem; /* Add space below the carousel */
+  margin-top: 0; /* Remove top margin since navbar is fixed */
+}
+
+.hero-carousel-image {
+  width: 100%;
+  height: 500px; /* Increased height from 400px */
+  object-fit: cover;
+  object-position: center 18%;
+}
+
+/* Ensure content below has enough spacing */
+.hero-carousel + .container {
+  padding-top: 2rem;
+}
+
+/* Carousel customizations */
+.carousel-item {
+  transition: transform 0.6s ease-in-out;
+}
+
+.carousel-indicators [data-bs-target] {
+  background-color: #0d6efd;
+}
+
+/* Footer */
+footer {
+  margin-top: auto;
+}
+
+/* Form customizations */
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Achievement and Event items */
+.achievement-item, .event-item {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.02);
+  transition: background-color 0.2s ease;
+}
+
+.achievement-item:hover, .event-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Card header improvements */
+.card-header {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Badge improvements */
+.badge {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Image hover effects */
+.img-fluid {
+  transition: transform 0.3s ease;
+}
+
+.img-fluid:hover {
+  transform: scale(1.05);
+}
+
+.transition-scale {
+  transition: transform 0.3s ease;
+}
+
+.transition-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Section spacing */
+section {
+  scroll-margin-top: 4rem; /* Increased to account for fixed navbar */
+}
+
+/* Add padding to main content areas to prevent overlap with fixed navbar */
+main {
+  padding-top: 1rem;
+}
+
+/* Ensure containers have proper spacing */
+.container,
+.container-fluid {
+  padding-top: 1rem;
+}
+
+/* Special handling for pages with hero sections */
+.hero-carousel-container {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* League and club page headers need extra spacing */
+.bg-primary.text-white.py-5,
+section.bg-primary {
+  margin-top: 0;
+  padding-top: 5rem !important; /* Account for navbar height */
+}
+
+/* Ensure dropdown menus appear above navbar */
+.dropdown-menu {
+  z-index: 1035;
+}
+
+/* Adjust navbar height for different screen sizes */
+@media (max-width: 991px) {
+  body {
+    padding-top: 48px; /* Reduced navbar height for mobile */
+  }
+}
+
+@media (min-width: 992px) {
+  body {
+    padding-top: 48px; /* Reduced navbar height */
+  }
+}
+
+/* Club page specific styles */
+.athlete-card:hover, .achievement-card:hover, .staff-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.nav-pills .nav-link {
+  border-radius: 1rem;
+  transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.nav-pills .nav-link.active {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+  box-shadow: 0 0.5rem 1rem rgba(13, 110, 253, 0.3);
+}
+
+/* Gradient backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%) !important;
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #198754 0%, #0f5132 100%) !important;
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #cc9a06 100%) !important;
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%) !important;
+}
+
+.bg-gradient-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #a71e2a 100%) !important;
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #212529 0%, #000000 100%) !important;
+}
+
+/* Tab content animations */
+.tab-content {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom Carousel Enhancements */
+.custom-carousel .carousel-control-prev-icon,
+.custom-carousel .carousel-control-next-icon {
+  background-color: rgba(13, 110, 253, 0.7);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background-size: 60% 60%;
+}
+
+.custom-carousel .carousel-indicators [data-bs-target] {
+  background-color: #0d6efd;
+  opacity: 0.7;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.custom-carousel .carousel-indicators .active {
+  opacity: 1;
+  width: 12px;
+  height: 12px;
+}
+
+/* Rounded buttons */
+.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+/* Animations */
+.animate__animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+
+  .display-5 {
+    font-size: 1.75rem;
+  }
+
+  .display-6 {
+    font-size: 1.5rem;
+  }
+
+  .lead {
+    font-size: 1rem;
+  }
+
+  .achievement-item, .event-item {
+    padding: 0.75rem;
+  }
+  
+  .hero-carousel-image {
+    height: 300px;
+  }
+  
+  .btn {
+    margin-bottom: 10px;
+    width: 100%;
+  }
+}

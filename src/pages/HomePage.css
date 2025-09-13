@@ -1,0 +1,146 @@
+/* HomePage Styles */
+
+.homepage {
+  font-family: 'Noto Sans Arabic', system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* Hero Section */
+.hero-section {
+  position: relative;
+  margin-bottom: 2rem;
+}
+
+.hero-overlay-text {
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-overlay-text h1 {
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.hero-overlay-text .lead {
+  font-size: 1.25rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Stats Section */
+.stats-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 1rem;
+  margin: 3rem 0;
+  padding: 2rem;
+}
+
+.stats-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.stats-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
+}
+
+.card-bg-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+}
+
+.card-bg-success {
+  background: linear-gradient(135deg, #198754 0%, #0f5132 100%);
+}
+
+.card-bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #cc9a06 100%);
+}
+
+.card-bg-info {
+  background: linear-gradient(135deg, #0dcaf0 0%, #0aa2c0 100%);
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate__fadeInUp {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate__fadeIn {
+  animation: fadeIn 0.6s ease forwards;
+}
+
+.animate__delay-1s {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+.animate__delay-2s {
+  animation-delay: 0.6s;
+  opacity: 0;
+}
+
+.animate__delay-3s {
+  animation-delay: 0.9s;
+  opacity: 0;
+}
+
+/* Carousel Enhancements */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  background-color: rgba(13, 110, 253, 0.7);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background-size: 60% 60%;
+}
+
+.carousel-indicators [data-bs-target] {
+  background-color: #0d6efd;
+  opacity: 0.7;
+}
+
+.carousel-indicators .active {
+  opacity: 1;
+  width: 12px;
+  height: 12px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hero-overlay-text h1 {
+    font-size: 2rem;
+  }
+  
+  .hero-overlay-text .lead {
+    font-size: 1rem;
+  }
+  
+  .stats-section {
+    padding: 1rem;
+  }
+  
+  .stats-card {
+    margin-bottom: 1rem;
+  }
+}

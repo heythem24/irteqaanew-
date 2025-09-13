@@ -1,0 +1,360 @@
+/* ملف الأنماط للنظام الطبي - ألوان عصرية وجذابة */
+
+/* ألوان جديدة عصرية */
+:root {
+  --medical-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --medical-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --medical-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  --medical-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+  --medical-warning: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  --medical-danger: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+  --medical-light: #f8f9fa;
+  --medical-white: #ffffff;
+  --medical-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  --medical-hover-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* لوحة التحكم الطبية */
+.medical-dashboard {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  direction: rtl;
+  background: var(--medical-light);
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%);
+}
+
+.medical-dashboard .wellness-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  border-radius: 1.5rem;
+  background: var(--medical-white);
+  box-shadow: var(--medical-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.medical-dashboard .wellness-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--medical-primary);
+}
+
+.medical-dashboard .wellness-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.medical-dashboard .wellness-score {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.medical-dashboard .wellness-trend {
+  font-size: 1.2rem;
+  margin-top: 0.5rem;
+}
+
+/* نموذج التقييم اليومي */
+.wellness-form .scale-card {
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.wellness-form .scale-card:hover {
+  border-color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 123, 255, 0.1);
+}
+
+.wellness-form .form-range {
+  height: 8px;
+}
+
+.wellness-form .form-range::-webkit-slider-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.wellness-form .form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* نموذج الإصابة */
+.injury-form .pain-level-display {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+.injury-form .pain-level-text {
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* الرسم البياني */
+.wellness-chart-container {
+  position: relative;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.wellness-chart svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* التنبيهات */
+.medical-alert {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-bottom: 10px;
+}
+
+.medical-alert.alert-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.medical-alert.alert-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.medical-alert.alert-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+}
+
+/* بطاقات الإصابات */
+.injury-card {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.injury-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.injury-card .injury-status-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+
+/* الأزرار المخصصة */
+.medical-btn {
+  border-radius: 25px;
+  padding: 10px 25px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.medical-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.medical-btn:hover::before {
+  left: 100%;
+}
+
+.medical-btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+.medical-btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.medical-btn-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+/* الإحصائيات */
+.medical-stats {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.medical-stats h6 {
+  color: #1976d2;
+  font-weight: bold;
+}
+
+/* الرسوم المتحركة */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+/* الاستجابة للأجهزة المحمولة */
+@media (max-width: 768px) {
+  .medical-dashboard .wellness-card {
+    margin-bottom: 1rem;
+  }
+  
+  .medical-dashboard .wellness-score {
+    font-size: 2rem;
+  }
+  
+  .wellness-form .scale-card {
+    margin-bottom: 1rem;
+  }
+  
+  .injury-form .pain-level-display {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* تخصيص شريط التمرير */
+.medical-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #007bff #f1f1f1;
+}
+
+.medical-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.medical-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.medical-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-radius: 10px;
+}
+
+.medical-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+/* تأثيرات الحوامة والتفاعل */
+.medical-interactive {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.medical-interactive:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* ألوان مخصصة للنظام الطبي */
+.medical-primary {
+  color: #007bff !important;
+}
+
+.medical-success {
+  color: #28a745 !important;
+}
+
+.medical-warning {
+  color: #ffc107 !important;
+}
+
+.medical-danger {
+  color: #dc3545 !important;
+}
+
+.medical-info {
+  color: #17a2b8 !important;
+}
+
+/* خلفيات متدرجة */
+.medical-bg-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.medical-bg-success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.medical-bg-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%) !important;
+}
+
+.medical-bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.medical-bg-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+}

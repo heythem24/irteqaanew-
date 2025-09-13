@@ -1,0 +1,255 @@
+/* Attendance Tracker Styles */
+
+.attendance-table {
+  font-size: 14px;
+}
+
+.attendance-table th {
+  background-color: #343a40 !important;
+  color: white !important;
+  border: 1px solid #495057 !important;
+  padding: 8px 4px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.attendance-table td {
+  border: 1px solid #dee2e6 !important;
+  padding: 4px !important;
+  vertical-align: middle !important;
+}
+
+.attendance-cell {
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.attendance-cell:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.attendance-cell.absent {
+  background-color: #dc3545 !important;
+  color: white;
+}
+
+.attendance-cell.present {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+.attendance-cell.present:hover {
+  background-color: #e9ecef;
+}
+
+.attendance-cell.absent:hover {
+  background-color: #c82333;
+}
+
+/* Today's column highlighting */
+.today-column {
+  background-color: #e3f2fd !important;
+}
+
+.today-column th {
+  background-color: #1976d2 !important;
+  color: white !important;
+}
+
+/* Responsive table improvements */
+@media (max-width: 768px) {
+  .attendance-table {
+    font-size: 12px;
+  }
+  
+  .attendance-table th,
+  .attendance-table td {
+    padding: 2px !important;
+  }
+  
+  .attendance-cell {
+    width: 25px;
+    height: 25px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .attendance-table {
+    font-size: 10px;
+  }
+  
+  .attendance-cell {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+}
+
+/* Animation for attendance changes */
+@keyframes attendanceChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.attendance-cell.changed {
+  animation: attendanceChange 0.3s ease;
+}
+
+/* Scrollable table container */
+.table-responsive {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Sticky headers */
+.attendance-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.attendance-table tbody td:first-child,
+.attendance-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  background-color: white;
+  z-index: 5;
+}
+
+.attendance-table tbody td:nth-child(2),
+.attendance-table thead th:nth-child(2) {
+  position: sticky;
+  left: 60px;
+  background-color: white;
+  z-index: 5;
+}
+
+/* Statistics badges */
+.stats-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  margin: 1px;
+}
+
+/* Month navigation */
+.month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.month-nav button {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Loading state */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* Success/Error messages */
+.alert-floating {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1050;
+  min-width: 300px;
+}
+
+/* Attendance summary cards */
+.summary-card {
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Color coding for attendance rates */
+.rate-excellent {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.rate-good {
+  color: #ffc107;
+  font-weight: bold;
+}
+
+.rate-poor {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Tooltip improvements */
+.attendance-tooltip {
+  font-size: 12px;
+  max-width: 200px;
+}
+
+/* Export button styling */
+.export-btn {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  border: none;
+  border-radius: 25px;
+  padding: 8px 20px;
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+  background: linear-gradient(45deg, #0056b3, #004085);
+}
+
+/* Weekend highlighting */
+.weekend-column {
+  background-color: #fff3cd !important;
+}
+
+.weekend-column th {
+  background-color: #856404 !important;
+  color: white !important;
+}
+
+/* Holiday highlighting */
+.holiday-column {
+  background-color: #f8d7da !important;
+}
+
+.holiday-column th {
+  background-color: #721c24 !important;
+  color: white !important;
+}

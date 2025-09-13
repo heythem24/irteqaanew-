@@ -1,0 +1,276 @@
+.coach-competition-participation {
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.participation-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.participation-header h2 {
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.participation-header p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.no-competitions {
+  text-align: center;
+  padding: 3rem;
+  background: white;
+  border-radius: 8px;
+  color: #6c757d;
+}
+
+.competitions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.competition-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.competition-card.selected {
+  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3);
+  border: 2px solid #007bff;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.card-header:hover {
+  background-color: #f8f9fa;
+}
+
+.competition-thumbnail {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 1.5rem;
+  flex-shrink: 0;
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.competition-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder {
+  color: #6c757d;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.competition-info {
+  flex: 1;
+}
+
+.competition-info h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.competition-info p {
+  margin: 0.25rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.expand-arrow {
+  font-size: 1.2rem;
+  color: #007bff;
+  margin-left: 1rem;
+  transition: transform 0.3s;
+}
+
+.card-content {
+  border-top: 1px solid #dee2e6;
+  padding: 1.5rem;
+  background-color: #fafbfc;
+}
+
+.categories-section h4 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.category-section {
+  background: white;
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.category-section h5 {
+  margin: 0 0 0.5rem 0;
+  color: #007bff;
+  font-size: 1.1rem;
+}
+
+.category-section > p {
+  margin: 0 0 1rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.athletes-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.athlete-item {
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s;
+}
+
+.athlete-item:hover {
+  background-color: #e9ecef;
+}
+
+.athlete-item label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin: 0;
+}
+
+.athlete-item input[type="checkbox"] {
+  margin-left: 0.75rem;
+  transform: scale(1.2);
+}
+
+.athlete-name {
+  font-weight: bold;
+  color: #333;
+  margin-left: 0.5rem;
+}
+
+.athlete-details {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
+  display: block;
+  margin-right: 1.5rem;
+}
+
+.no-eligible {
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+  padding: 1rem;
+}
+
+.registration-actions {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.alert {
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .coach-competition-participation {
+    padding: 1rem;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .competition-thumbnail {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .athletes-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .athlete-item label {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .athlete-details {
+    margin-right: 0;
+    margin-top: 0.5rem;
+  }
+}

@@ -1,0 +1,98 @@
+.competition-detail-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.competition-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.competition-logo {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  margin-bottom: 1rem;
+}
+
+.competition-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.competition-dates, .competition-location {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 0.25rem;
+}
+
+.competition-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.competition-tabs button {
+  padding: 0.5rem 1.5rem;
+  border: none;
+  background-color: #e0e0e0;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.competition-tabs button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.competition-content {
+  background-color: #f9f9f9;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.overview-tab, .categories-tab, .brackets-tab {
+  padding: 1rem 0;
+}
+
+.categories-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.category-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+}
+
+.bracket-container {
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.back-link {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.back-link a {
+  text-decoration: none;
+  color: #007bff;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.back-link a:hover {
+  color: #0056b3;
+}

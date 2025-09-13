@@ -1,0 +1,419 @@
+/* Technical Card Component Styles */
+
+.technical-card-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8rem;
+  direction: rtl;
+  width: 100%;
+}
+
+.technical-card-table th {
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem;
+  border: 2px solid #000;
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+.technical-card-table td {
+  border: 2px solid #000;
+  padding: 0.25rem;
+  vertical-align: top;
+  background-color: white;
+}
+
+/* تصميم رؤوس الأعمدة */
+.phase-header {
+  width: 12%;
+  background-color: #28a745 !important;
+}
+
+.objectives-header {
+  width: 20%;
+  background-color: #28a745 !important;
+}
+
+.content-header {
+  width: 30%;
+  background-color: #28a745 !important;
+}
+
+.content-sub-header {
+  width: 6%;
+  background-color: #34ce57 !important;
+  font-size: 0.7rem;
+}
+
+.formations-header {
+  width: 20%;
+  background-color: #28a745 !important;
+}
+
+.duration-header {
+  width: 10%;
+  background-color: #28a745 !important;
+}
+
+.notes-header {
+  width: 14%;
+  background-color: #28a745 !important;
+}
+
+/* تصميم الخلايا */
+.phase-cell {
+  background-color: #f8f9fa;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.phase-cell-merged {
+  background-color: #e9ecef;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: 1rem 0.5rem;
+  border: 2px solid #000 !important;
+}
+
+.phase-title {
+  writing-mode: horizontal-tb;
+  text-orientation: upright;
+  transform: rotate(0deg);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #495057;
+  line-height: 1.2;
+}
+
+/* تحسينات إضافية للتصميم */
+.prep-phase {
+  background-color: #f8f9fa;
+}
+
+.main-phase {
+  background-color: #fff3cd;
+}
+
+.final-phase {
+  background-color: #d1ecf1;
+}
+
+/* تحسين حقول الإدخال */
+.technical-card-table .form-control {
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  padding: 0.2rem;
+  text-align: right;
+  resize: none;
+}
+
+.technical-card-table .form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+  border-color: #28a745;
+}
+
+/* تحسين عرض النص */
+.objectives-input,
+.formations-input,
+.notes-input {
+  min-height: 60px;
+  line-height: 1.3;
+}
+
+.content-input {
+  text-align: center;
+  font-weight: bold;
+}
+
+.duration-input {
+  text-align: center;
+  font-size: 0.7rem;
+}
+
+/* صف تقييم المدرب */
+.evaluation-row {
+  background-color: #f8f9fa;
+}
+
+.evaluation-cell {
+  text-align: center;
+  padding: 1rem;
+  border: 2px solid #000 !important;
+  background-color: #e9ecef;
+}
+
+.evaluation-content {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #495057;
+}
+
+.objectives-cell {
+  background-color: #fff;
+}
+
+.content-cell {
+  background-color: #fff;
+  text-align: center;
+  width: 6%;
+}
+
+.formations-cell {
+  background-color: #fff;
+}
+
+.duration-cell {
+  background-color: #fff;
+  text-align: center;
+}
+
+.notes-cell {
+  background-color: #fff;
+}
+
+/* تصميم حقول الإدخال */
+.technical-card-table .form-control {
+  border: none;
+  background: transparent;
+  resize: none;
+  font-size: 0.75rem;
+  padding: 0.25rem;
+  text-align: right;
+  direction: rtl;
+}
+
+.technical-card-table .form-control:focus {
+  border: 1px solid #0d6efd;
+  box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
+  background-color: #f8f9fa;
+}
+
+.phase-input {
+  font-weight: bold;
+  text-align: center !important;
+  background-color: #f8f9fa;
+}
+
+.sub-phase-input {
+  font-weight: normal;
+  text-align: center !important;
+  background-color: #e9ecef;
+  font-size: 0.7rem;
+}
+
+.objectives-input {
+  min-height: 120px;
+  line-height: 1.3;
+}
+
+.content-input {
+  text-align: center !important;
+  font-weight: bold;
+  min-height: 120px;
+}
+
+.formations-input {
+  min-height: 120px;
+  line-height: 1.3;
+  font-family: monospace;
+}
+
+.duration-input {
+  text-align: center !important;
+  font-weight: bold;
+  min-height: 80px;
+}
+
+.notes-input {
+  min-height: 120px;
+  line-height: 1.3;
+}
+
+/* تصميم صفوف المراحل */
+.prep-phase {
+  background-color: rgba(40, 167, 69, 0.1);
+}
+
+.main-phase {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.final-phase {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* تصميم معلومات الرأس */
+.header-info {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.header-info strong {
+  color: #495057;
+  font-weight: 600;
+}
+
+.header-info .form-control {
+  border: 1px solid #ced4da;
+  background-color: white;
+}
+
+.header-info .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
+}
+
+/* تصميم تقييم المدرب */
+.trainer-evaluation {
+  background-color: #e9ecef;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 2px solid #6c757d;
+}
+
+.trainer-evaluation strong {
+  color: #495057;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .technical-card-table {
+    font-size: 0.7rem;
+  }
+  
+  .technical-card-table th,
+  .technical-card-table td {
+    padding: 0.2rem;
+  }
+  
+  .technical-card-table .form-control {
+    font-size: 0.65rem;
+    padding: 0.15rem;
+  }
+  
+  .objectives-input,
+  .formations-input,
+  .notes-input {
+    min-height: 100px;
+  }
+  
+  .content-input {
+    min-height: 100px;
+  }
+}
+
+@media (max-width: 992px) {
+  .technical-card-table {
+    font-size: 0.65rem;
+  }
+  
+  .technical-card-table th,
+  .technical-card-table td {
+    padding: 0.15rem;
+  }
+  
+  .technical-card-table .form-control {
+    font-size: 0.6rem;
+    padding: 0.1rem;
+  }
+  
+  .objectives-input,
+  .formations-input,
+  .notes-input {
+    min-height: 80px;
+  }
+  
+  .content-input {
+    min-height: 80px;
+  }
+  
+  .duration-input {
+    min-height: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .technical-card-table {
+    font-size: 0.6rem;
+  }
+  
+  .technical-card-table .form-control {
+    font-size: 0.55rem;
+  }
+  
+  .objectives-input,
+  .formations-input,
+  .notes-input {
+    min-height: 60px;
+  }
+  
+  .content-input {
+    min-height: 60px;
+  }
+  
+  .duration-input {
+    min-height: 40px;
+  }
+}
+
+/* تحسين مظهر الحدود */
+.table-bordered th,
+.table-bordered td {
+  border: 2px solid #000 !important;
+}
+
+/* تحسين مظهر النصوص */
+.text-center {
+  text-align: center !important;
+}
+
+.fw-bold {
+  font-weight: 600 !important;
+}
+
+/* تحسين مظهر الأزرار */
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* تحسين مظهر الجدول العام */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.technical-card-table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* تحسين مظهر رأس البطاقة */
+.card-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-header h5 {
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}

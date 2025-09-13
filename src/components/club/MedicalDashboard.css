@@ -1,0 +1,163 @@
+/* Medical Dashboard Styles */
+
+.alert-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Custom styles for medical dashboard cards */
+.medical-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.medical-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Wellness score colors */
+.wellness-excellent {
+  color: #28a745;
+}
+
+.wellness-good {
+  color: #17a2b8;
+}
+
+.wellness-fair {
+  color: #ffc107;
+}
+
+.wellness-poor {
+  color: #dc3545;
+}
+
+/* Injury status colors */
+.injury-active {
+  color: #dc3545;
+}
+
+.injury-recovering {
+  color: #ffc107;
+}
+
+.injury-recovered {
+  color: #28a745;
+}
+
+.injury-chronic {
+  color: #6c757d;
+}
+
+/* Alert severity colors */
+.alert-critical {
+  color: #dc3545;
+}
+
+.alert-high {
+  color: #fd7e14;
+}
+
+.alert-medium {
+  color: #17a2b8;
+}
+
+.alert-low {
+  color: #6c757d;
+}
+
+/* Custom table styles */
+.medical-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.medical-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+/* Modal styles */
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Tab styles */
+.nav-tabs .nav-link {
+  border-radius: 8px 8px 0 0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs .nav-link.active {
+  font-weight: 600;
+}
+
+/* Badge styles */
+.badge {
+  font-size: 0.85em;
+  padding: 0.5em 0.75em;
+}
+
+/* Form styles */
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.form-select:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Button styles */
+.btn-primary {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0069d9;
+  border-color: #0062cc;
+}
+
+/* Card header styles */
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .medical-card {
+    margin-bottom: 1rem;
+  }
+  
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+}

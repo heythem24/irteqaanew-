@@ -1,0 +1,382 @@
+/* Annual Plan Component Styles */
+
+.annual-plan-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.75rem;
+  direction: rtl;
+}
+
+.annual-plan-table th {
+  background-color: #28a745;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.5rem 0.25rem;
+  border: 1px solid #dee2e6;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+.annual-plan-table td {
+  border: 1px solid #dee2e6;
+  padding: 0.25rem;
+  text-align: center;
+  vertical-align: middle;
+  height: 40px;
+}
+
+.annual-plan-table .form-control {
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  text-align: center;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.25rem;
+  height: auto;
+  min-height: 25px;
+}
+
+.annual-plan-table .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
+}
+
+.annual-plan-table .form-check-input {
+  margin: 0;
+  transform: scale(0.8);
+}
+
+/* تحسين مظهر الخلايا */
+.month-header {
+  background-color: #28a745 !important;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.week-header {
+  background-color: #34ce57 !important;
+  color: white;
+  font-weight: bold;
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+}
+
+.stats-header {
+  background-color: #e9ecef !important;
+  color: #495057;
+  font-weight: bold;
+  font-size: 0.65rem;
+}
+
+.row-label {
+  background-color: #f8f9fa !important;
+  color: #495057;
+  font-weight: bold;
+  text-align: right !important;
+  padding-right: 0.5rem !important;
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+}
+
+.stats-cell {
+  background-color: #e9ecef !important;
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  position: relative;
+  padding: 0.25rem !important;
+}
+
+.total-cell {
+  background-color: #e9ecef !important;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  position: relative;
+  padding: 0.25rem !important;
+}
+
+/* Center any single child (input/badge) exactly in the middle of stats/total cells */
+.stats-cell > *,
+.total-cell > * {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* تحسين مظهر النسب المئوية */
+.percentage-badge {
+  font-size: 0.6rem !important;
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+}
+
+.percentage-badge:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3) !important;
+}
+
+.percentage-badge:focus {
+  transform: scale(1.1) !important;
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.4) !important;
+}
+
+/* تحسين مظهر العدادات الصغيرة */
+.week-input {
+  width: 35px !important;
+  min-width: 35px !important;
+  max-width: 35px !important;
+  font-size: 0.7rem !important;
+  text-align: center;
+  padding: 0.1rem !important;
+  margin: 0 auto !important;
+  display: block;
+}
+
+.stats-input {
+  width: 45px !important;
+  min-width: 45px !important;
+  max-width: 45px !important;
+  font-size: 0.7rem !important;
+  text-align: center;
+  padding: 0.1rem !important;
+  transition: all 0.3s ease !important;
+  margin: 0 auto !important;
+  display: block;
+}
+
+.stats-input:hover {
+  transform: scale(1.1) !important;
+  border-color: #28a745 !important;
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.3) !important;
+}
+
+.stats-input:focus {
+  transform: scale(1.1) !important;
+  border-color: #28a745 !important;
+  box-shadow: 0 0 8px rgba(40, 167, 69, 0.4) !important;
+  background-color: #f8fff9 !important;
+}
+
+/* تحسين مظهر الجدول العام */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* منع إزاحة الصفوف عند hover */
+.annual-plan-table tbody tr {
+  transition: none !important;
+  transform: none !important;
+}
+
+.annual-plan-table tbody tr:hover {
+  transform: none !important;
+  margin: 0 !important;
+  padding: inherit !important;
+  position: static !important;
+  background-color: transparent !important;
+}
+
+/* تحسين مظهر رأس البطاقة */
+.card-header {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+}
+
+.card-header h5 {
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* تحسين مظهر الأزرار */
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .annual-plan-table {
+    font-size: 0.65rem;
+  }
+  
+  .annual-plan-table th,
+  .annual-plan-table td {
+    padding: 0.2rem 0.1rem;
+  }
+  
+  .week-input,
+  .stats-input {
+    width: 30px !important;
+    min-width: 30px !important;
+    max-width: 30px !important;
+    font-size: 0.6rem !important;
+  }
+  
+  .row-label {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .annual-plan-table {
+    font-size: 0.6rem;
+  }
+  
+  .annual-plan-table th,
+  .annual-plan-table td {
+    padding: 0.15rem 0.05rem;
+  }
+  
+  .week-input,
+  .stats-input {
+    width: 25px !important;
+    min-width: 25px !important;
+    max-width: 25px !important;
+    font-size: 0.55rem !important;
+  }
+  
+  .row-label {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+    font-size: 0.6rem;
+  }
+  
+  .stats-cell,
+  .total-cell {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+  }
+}
+
+@media (max-width: 768px) {
+  .annual-plan-table {
+    font-size: 0.55rem;
+  }
+  
+  .week-input,
+  .stats-input {
+    width: 20px !important;
+    min-width: 20px !important;
+    max-width: 20px !important;
+    font-size: 0.5rem !important;
+  }
+  
+  .row-label {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    font-size: 0.55rem;
+  }
+  
+  .percentage-badge {
+    font-size: 0.5rem !important;
+    padding: 0.1rem 0.2rem;
+  }
+}
+
+/* تحسين مظهر الخانات الفارغة */
+.empty-cell {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+}
+
+/* تأثيرات التفاعل */
+.annual-plan-table .form-control:hover {
+  border-color: #0d6efd;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.annual-plan-table .form-check-input:hover {
+  transform: scale(0.9);
+  transition: all 0.2s ease;
+}
+
+/* تحسين مظهر الحقول المحدودة */
+.week-input[max="0"] {
+  background-color: #f8d7da;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+.week-input[max="0"]:disabled {
+  background-color: #e9ecef;
+  opacity: 0.6;
+}
+
+/* مؤشر المجموع */
+.total-indicator {
+  font-size: 0.6rem;
+  color: #6c757d;
+}
+
+.total-indicator.over-limit {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.total-indicator.under-limit {
+  color: #ffc107;
+}
+
+.total-indicator.exact-match {
+  color: #28a745;
+}
+
+/* تحسين مظهر النصوص */
+.text-info {
+  color: #0dcaf0 !important;
+}
+
+.fw-bold {
+  font-weight: 600 !important;
+}
+
+/* تحسين مظهر الحدود */
+.table-bordered th,
+.table-bordered td {
+  border: 1px solid #dee2e6 !important;
+}
+
+/* تحسين مظهر الخلفيات */
+.table-success th {
+  background-color: #28a745 !important;
+  color: white !important;
+}
+
+.bg-light-gray {
+  background-color: #f8f9fa !important;
+}
+
+.bg-stats {
+  background-color: #e9ecef !important;
+}
