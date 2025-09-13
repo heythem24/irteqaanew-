@@ -16,9 +16,15 @@
   min-height: 350px;
 }
 
+/* اجعل عنصر الكاروسيل يرث الارتفاع لتجنب تمدد غير متوقع */
+.hero-carousel .carousel-item {
+  height: 100%;
+}
+
 .hero-carousel-image {
   width: 100%;
   height: 100%;
+  display: block;
   object-fit: cover;
   object-position: center;
 }
@@ -143,4 +149,15 @@
 
 .hero-carousel .carousel-indicators .active {
   background-color: white;
+}
+
+/* تحسينات الهواتف الصغيرة */
+@media (max-width: 576px) {
+  .hero-image-container {
+    height: 40vh;
+    min-height: 220px;
+  }
+  .hero-carousel .carousel-indicators {
+    bottom: 10px;
+  }
 }

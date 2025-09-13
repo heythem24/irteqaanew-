@@ -26,7 +26,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ items }) => {
       <Carousel indicators={true} controls={false} interval={5000} className="hero-carousel-container">
         {items.map((item) => (
           <Carousel.Item key={item.id} className="w-100">
-            <div className="w-100">
+            <div className="hero-image-container">
               <img
                 src={item.image}
                 alt={item.alt}
