@@ -22,15 +22,22 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ items }) => {
   }
 
   return (
-    <section className="hero-carousel mb-5 p-0">
-      <Carousel indicators={true} controls={false} interval={5000} className="hero-carousel-container">
+    <section className="hero-carousel p-0">
+      <Carousel 
+        indicators={true} 
+        controls={false} 
+        interval={5000} 
+        className="hero-carousel-container"
+        pause={false}
+        wrap={true}
+      >
         {items.map((item) => (
-          <Carousel.Item key={item.id} className="w-100">
+          <Carousel.Item key={item.id} className="w-100 h-100">
             <div className="hero-image-container">
               <img
                 src={item.image}
                 alt={item.alt}
-                className="hero-carousel-image w-100"
+                className="hero-carousel-image"
               />
               <div className="hero-overlay">
                 <div className="container-fluid h-100 px-0">

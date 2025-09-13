@@ -106,8 +106,8 @@
 }
 
 /* Carousel Enhancements */
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
+.custom-carousel .carousel-control-prev-icon,
+.custom-carousel .carousel-control-next-icon {
   background-color: rgba(13, 110, 253, 0.7);
   border-radius: 50%;
   width: 40px;
@@ -115,19 +115,47 @@
   background-size: 60% 60%;
 }
 
-.carousel-indicators [data-bs-target] {
+.custom-carousel .carousel-indicators [data-bs-target] {
   background-color: #0d6efd;
   opacity: 0.7;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
-.carousel-indicators .active {
+.custom-carousel .carousel-indicators .active {
   opacity: 1;
   width: 12px;
   height: 12px;
 }
 
-/* Responsive Adjustments */
+/* Rounded buttons */
+.rounded-pill {
+  border-radius: 50rem !important;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+
+  .display-5 {
+    font-size: 1.75rem;
+  }
+
+  .display-6 {
+    font-size: 1.5rem;
+  }
+
+  .lead {
+    font-size: 1rem;
+  }
+
+  .achievement-item, .event-item {
+    padding: 0.75rem;
+  }
+  
   .hero-overlay-text h1 {
     font-size: 2rem;
   }
