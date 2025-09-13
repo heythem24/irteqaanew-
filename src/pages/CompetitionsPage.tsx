@@ -4,6 +4,7 @@ import { Spinner, Alert } from 'react-bootstrap';
 import { CompetitionsService } from '../services/firestoreService';
 import type { Competition } from '../types';
 import ImageWithFallback from '../components/shared/ImageWithFallback';
+import './CompetitionsPage.css';
 
 const CompetitionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'ongoing' | 'finished'>('upcoming');
@@ -57,15 +58,31 @@ const CompetitionsPage: React.FC = () => {
 
   return (
     <div className="competitions-page">
-      <h1>البطولات</h1>
-      <div className="tabs">
-        <button onClick={() => setActiveTab('upcoming')} className={activeTab === 'upcoming' ? 'active' : ''}>
+      <div className="page-header">
+        <h1 className="page-title">البطولات</h1>
+        <p className="page-subtitle">استكشف البطولات والمنافسات القادمة والجارية والمنتهية</p>
+      </div>
+
+      <div className="competition-tabs">
+        <button 
+          onClick={() => setActiveTab('upcoming')} 
+          className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''}`}
+        >
+          <i className="fas fa-calendar-plus me-2"></i>
           قادمة
         </button>
-        <button onClick={() => setActiveTab('ongoing')} className={activeTab === 'ongoing' ? 'active' : ''}>
+        <button 
+          onClick={() => setActiveTab('ongoing')} 
+          className={`tab-button ${activeTab === 'ongoing' ? 'active' : ''}`}
+        >
+          <i className="fas fa-play-circle me-2"></i>
           جارية
         </button>
-        <button onClick={() => setActiveTab('finished')} className={activeTab === 'finished' ? 'active' : ''}>
+        <button 
+          onClick={() => setActiveTab('finished')} 
+          className={`tab-button ${activeTab === 'finished' ? 'active' : ''}`}
+        >
+          <i className="fas fa-check-circle me-2"></i>
           منتهية
         </button>
       </div>
@@ -75,76 +92,66 @@ const CompetitionsPage: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="d-flex justify-content-center align-items-center py-5">
-          <Spinner animation="border" />
+        <div className="loading-container">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-2">جاري تحميل البطولات...</p>
         </div>
       ) : (
-        <div className="row">
-          {competitions.map((c) => {
-            const content = (
-              <div 
-                className="card shadow-sm h-100" 
-                style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <div style={{ height: '200px', overflow: 'hidden' }}>
-                  <ImageWithFallback
-                    inputSrc={c.image || undefined}
-                    fallbackSrc={'/vite.svg'}
-                    alt={c.nameAr}
-                    boxWidth={'100%'}
-                    boxHeight={200}
-                    fixedBox
-                    style={{ height: '200px', width: '100%', objectFit: 'cover', background: '#007bff' }}
-                  />
-                </div>
-                <div className="card-body">
-                  <h5 className="card-title">{c.nameAr}</h5>
-                  {c.level && (
-                    <div className="mb-2">
-                      <span className="badge bg-secondary">{levelLabelAr(c.level)}</span>
+        <div className="competitions-grid">
+          {competitions.length > 0 ? (
+            competitions.map((c) => (
+              <div key={c.id} className="competition-card-wrapper">
+                <Link to={`/competitions/${c.id}`} className="competition-card-link">
+                  <div className="competition-card">
+                    <div className="card-image-container">
+                      <ImageWithFallback
+                        inputSrc={c.image || undefined}
+                        fallbackSrc={'/vite.svg'}
+                        alt={c.nameAr}
+                        boxWidth={'100%'}
+                        boxHeight={200}
+                        fixedBox
+                        className="card-image"
+                      />
+                      <div className="card-badge">
+                        <span className="badge bg-secondary">{levelLabelAr(c.level)}</span>
+                      </div>
                     </div>
-                  )}
-                  {c.descriptionAr && (
-                    <p className="card-text text-muted text-end" dir="rtl" style={{ minHeight: '2.5em' }}>
-                      {c.descriptionAr.length > 120 ? `${c.descriptionAr.slice(0, 120)}…` : c.descriptionAr}
-                    </p>
-                  )}
-                  <p className="card-text mb-1">
-                    <small className="text-muted">
-                      <i className="fas fa-calendar me-1"></i>
-                      {activeTab === 'upcoming' && `${formatDateAr(c.startDate)} - ${formatDateAr(c.endDate)}`}
-                      {activeTab === 'ongoing' && `${formatDateAr(c.startDate)} - ${formatDateAr(c.endDate)}`}
-                      {activeTab === 'finished' && `${formatDateAr(c.startDate)} - ${formatDateAr(c.endDate)}`}
-                    </small>
-                  </p>
-                  {activeTab === 'upcoming' && c.registrationDeadline && (
-                    <p className="card-text mb-1">
-                      <small className="text-muted">
-                        <i className="fas fa-hourglass-end me-1"></i>
-                        انتهاء التسجيل: {formatDateAr(c.registrationDeadline)}
-                      </small>
-                    </p>
-                  )}
-                  <p className="card-text">
-                    <small className="text-muted">
-                      <i className="fas fa-map-marker-alt me-1"></i>
-                      {c.placeAr || c.place || '-'}
-                    </small>
-                  </p>
-                </div>
-              </div>
-            );
-
-            return (
-              <div key={c.id} className="col-md-4 mb-4">
-                <Link to={`/competitions/${c.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  {content}
+                    <div className="card-content">
+                      <h3 className="card-title">{c.nameAr}</h3>
+                      {c.descriptionAr && (
+                        <p className="card-description" dir="rtl">
+                          {c.descriptionAr.length > 120 ? `${c.descriptionAr.slice(0, 120)}…` : c.descriptionAr}
+                        </p>
+                      )}
+                      <div className="card-details">
+                        <div className="detail-item">
+                          <i className="fas fa-calendar me-1"></i>
+                          <span>{formatDateAr(c.startDate)} - {formatDateAr(c.endDate)}</span>
+                        </div>
+                        {activeTab === 'upcoming' && c.registrationDeadline && (
+                          <div className="detail-item">
+                            <i className="fas fa-hourglass-end me-1"></i>
+                            <span>انتهاء التسجيل: {formatDateAr(c.registrationDeadline)}</span>
+                          </div>
+                        )}
+                        <div className="detail-item">
+                          <i className="fas fa-map-marker-alt me-1"></i>
+                          <span>{c.placeAr || c.place || '-'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </Link>
               </div>
-            );
-          })}
+            ))
+          ) : (
+            <div className="no-competitions">
+              <i className="fas fa-trophy fa-3x mb-3"></i>
+              <h3>لا توجد بطولات</h3>
+              <p>لا توجد بطولات في هذا القسم حالياً</p>
+            </div>
+          )}
         </div>
       )}
     </div>

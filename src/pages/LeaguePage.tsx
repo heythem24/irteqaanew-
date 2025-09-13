@@ -19,6 +19,7 @@ const LeaguePage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [leagueContent, setLeagueContent] = useState<LeagueHomepageContent>({ standoutAthletes: [], achievements: [], upcomingEvents: [], managementTeam: [], leagueClubs: [] });
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
   // Image URLs are handled via ImageWithFallback to ensure HTTPS and fallbacks
 
@@ -343,6 +344,322 @@ const LeaguePage: React.FC = () => {
     );
   }
 
+  // Tab content sections
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <>
+            {/* President Profile */}
+            <section className="mb-5 animate__animated animate__fadeInUp">
+              <Card className="shadow-lg border-success rounded-3 overflow-hidden">
+                <Card.Header className="bg-gradient-success text-white py-3">
+                  <h3 className="mb-0 text-center fw-bold" dir="rtl">رئيس الرابطة الولائية للجودو</h3>
+                </Card.Header>
+                <Card.Body className="p-4">
+                  <Row className="align-items-center">
+                    {/* Left: Large circular image */}
+                    <Col md={4} className="text-center mb-4 mb-md-0">
+                      <ImageWithFallback
+                        inputSrc={displayImage}
+                        fallbackSrc={'/images/default-president.jpg'}
+                        alt={displayNameAr}
+                        className="img-fluid rounded-circle shadow-lg border border-4 border-success"
+                        boxWidth={250}
+                        boxHeight={250}
+                        fixedBox
+                        style={{ width: '250px', height: '250px', objectFit: 'cover' }}
+                      />
+                    </Col>
+                    {/* Right: Details, achievements, experience */}
+                    <Col md={8}>
+                      <div className="text-end" dir="rtl">
+                        <h3 className="mb-1 text-success fw-bold">{displayNameAr}</h3>
+                        <p className="text-muted mb-3">{displayPositionAr}</p>
+
+                        {(displayBioAr || '').trim().length > 0 && (
+                          <>
+                            <h5 className="mt-3 fw-bold">نبذة مختصرة</h5>
+                            <p className="mb-3">{displayBioAr}</p>
+                          </>
+                        )}
+                        <div className="mt-3">
+                          <h5 className="mb-2 fw-bold">الخبرات</h5>
+                          {presidentExperiences.length > 0 ? (
+                            <ul className="list-unstyled">
+                              {presidentExperiences.map((exp, idx) => (
+                                <li className="mb-2" key={`exp-${idx}`}>
+                                  <i className="fas fa-check-circle text-success ms-2"></i>
+                                  {bulletToText(exp)}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <ul className="list-unstyled">
+                              <li className="mb-2">
+                                <i className="fas fa-check-circle text-success ms-2"></i>
+                                {`قيادة رابطة ${league.wilayaNameAr} للجودو`}
+                              </li>
+                              <li className="mb-2">
+                                <i className="fas fa-users text-success ms-2"></i>
+                                {`الإشراف على ${clubs.length} ناديًا ضمن الرابطة`}
+                              </li>
+                            </ul>
+                          )}
+                        </div>
+
+                        <div className="mt-3">
+                          <h5 className="mb-2 fw-bold">الإنجازات</h5>
+                          {presidentAchievements.length > 0 ? (
+                            <ul className="list-unstyled">
+                              {presidentAchievements.map((ach, idx) => (
+                                <li className="mb-2" key={`ach-${idx}`}>
+                                  <i className="fas fa-trophy text-success ms-2"></i>
+                                  {bulletToText(ach)}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <ul className="list-unstyled">
+                              <li className="mb-2">
+                                <i className="fas fa-trophy text-success ms-2"></i>
+                                {`المساهمة في ${leagueContent.achievements?.length || 0} من إنجازات الرابطة`}
+                              </li>
+                              <li className="mb-2">
+                                <i className="fas fa-calendar text-success ms-2"></i>
+                                {`تنسيق ${leagueContent.upcomingEvents?.length || 0} فعالية/أحداث قادمة`}
+                              </li>
+                            </ul>
+                          )}
+                        </div>
+
+                        {(displayEmail || displayPhone) && (
+                          <ul className="list-unstyled mt-3">
+                            {displayEmail && (
+                              <li className="mb-2">
+                                <i className="fas fa-envelope text-success ms-2"></i>
+                                البريد: {displayEmail}
+                              </li>
+                            )}
+                            {displayPhone && (
+                              <li className="mb-2">
+                                <i className="fas fa-phone text-success ms-2"></i>
+                                الهاتف: {displayPhone}
+                              </li>
+                            )}
+                          </ul>
+                        )}
+                      </div>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </section>
+
+            {/* Clubs Carousel Section */}
+            <section className="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
+              <h2 className="text-center mb-4 text-primary fw-bold" dir="rtl">أندية الرابطة</h2>
+              {clubsCarouselItems.length > 0 ? (
+                <CustomCarousel
+                  items={clubsCarouselItems}
+                  title="أندية الرابطة"
+                  titleAr="أندية الرابطة"
+                  controls={false}
+                  indicators={true}
+                  interval={5000}
+                />
+              ) : (
+                <Alert variant="info" className="text-center">لا توجد أندية مسجلة في هذه الرابطة حاليًا.</Alert>
+              )}
+            </section>
+          </>
+        );
+      case 'management':
+        return (
+          <section className="mb-5 animate__animated animate__fadeInUp">
+            <Card className="shadow-lg border-warning rounded-3 overflow-hidden">
+              <Card.Header className="bg-gradient-warning text-dark py-3">
+                <h3 className="mb-0 text-center fw-bold" dir="rtl">إدارة الرابطة</h3>
+              </Card.Header>
+              <Card.Body className="p-4">
+                {leagueContent.managementTeam && leagueContent.managementTeam.length > 0 ? (
+                  <Row>
+                    {leagueContent.managementTeam.map((m, i) => (
+                      <Col md={4} className="mb-4" key={m.id || i}>
+                        <Card className="h-100 border-0 shadow-sm rounded-3 overflow-hidden team-card">
+                          <div className="team-card-img">
+                            <ImageWithFallback
+                              inputSrc={m.image}
+                              fallbackSrc={'/images/default-avatar.jpg'}
+                              alt={m.nameAr || 'عضو إدارة'}
+                              className="img-fluid"
+                              boxWidth={'100%'}
+                              boxHeight={200}
+                              fixedBox
+                              style={{ width: '100%', height: '200px', objectFit: 'cover' }}
+                            />
+                          </div>
+                          <Card.Body className="text-center">
+                            {m.positionAr && <h6 className="text-warning fw-bold">{m.positionAr}</h6>}
+                            <p className="text-muted small">{m.nameAr || ''}</p>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="fas fa-users fa-3x mb-3 text-muted"></i>
+                    <h4 className="text-muted">لا توجد معلومات عن إدارة الرابطة</h4>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </section>
+        );
+      case 'athletes':
+        return (
+          <section className="mb-5 animate__animated animate__fadeInUp">
+            <Card className="shadow-lg border-info rounded-3 overflow-hidden">
+              <Card.Header className="bg-gradient-info text-white py-3">
+                <h3 className="mb-0 text-center fw-bold" dir="rtl">الرياضيون البارزون</h3>
+              </Card.Header>
+              <Card.Body className="p-4">
+                {leagueContent.standoutAthletes && leagueContent.standoutAthletes.length > 0 ? (
+                  <Row>
+                    {leagueContent.standoutAthletes.map((a, i) => (
+                      <Col md={3} className="mb-4" key={a.id || i}>
+                        <Card className="h-100 border-0 shadow-sm rounded-3 overflow-hidden athlete-card">
+                          <div className="athlete-card-img">
+                            <div style={{ width: '100%', height: 150, overflow: 'hidden' }}>
+                              <ImageWithFallback
+                                inputSrc={a.image}
+                                fallbackSrc={'/images/default-athlete.jpg'}
+                                alt={a.nameAr || 'رياضي'}
+                                className="img-fluid"
+                                boxWidth={'100%'}
+                                boxHeight={150}
+                                fixedBox
+                                style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+                              />
+                            </div>
+                          </div>
+                          <Card.Body className="text-center">
+                            {a.nameAr && <h6 className="text-info fw-bold">{a.nameAr}</h6>}
+                            {a.beltAr && <p className="text-muted small">{a.beltAr}</p>}
+                            {a.highlight && <span className="badge bg-info">{a.highlight}</span>}
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="fas fa-running fa-3x mb-3 text-muted"></i>
+                    <h4 className="text-muted">لا توجد معلومات عن الرياضيين البارزين</h4>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </section>
+        );
+      case 'achievements':
+        return (
+          <section className="mb-5 animate__animated animate__fadeInUp">
+            <Card className="shadow-lg border-danger rounded-3 overflow-hidden">
+              <Card.Header className="bg-gradient-danger text-white py-3">
+                <h3 className="mb-0 text-center fw-bold" dir="rtl">إنجازات الرابطة</h3>
+              </Card.Header>
+              <Card.Body className="p-4">
+                {leagueContent.achievements && leagueContent.achievements.length > 0 ? (
+                  <>
+                    {(leagueContent.achievements || []).map((a, i) => (
+                      <div className="achievement-item mb-3 p-3 rounded-3 shadow-sm" key={a.id || i}>
+                        <div className="d-flex align-items-center">
+                          <div style={{ width: 60, height: 60, borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="me-3">
+                            {a.image ? (
+                              <ImageWithFallback
+                                inputSrc={a.image}
+                                fallbackSrc={'/images/default-achievement.jpg'}
+                                alt="ach"
+                                boxWidth={60}
+                                boxHeight={60}
+                                fixedBox
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <i className="fas fa-trophy text-danger" style={{ fontSize: 28 }}></i>
+                            )}
+                          </div>
+                          <div className="text-end ms-3" dir="rtl">
+                            {a.titleAr && <h6 className="mb-1 fw-bold">{a.titleAr}</h6>}
+                            {a.subtitleAr && <p className="text-muted small mb-0">{a.subtitleAr}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="fas fa-trophy fa-3x mb-3 text-muted"></i>
+                    <h4 className="text-muted">لا توجد إنجازات مسجلة للرابطة</h4>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </section>
+        );
+      case 'events':
+        return (
+          <section className="mb-5 animate__animated animate__fadeInUp">
+            <Card className="shadow-lg border-dark rounded-3 overflow-hidden">
+              <Card.Header className="bg-gradient-dark text-white py-3">
+                <h3 className="mb-0 text-center fw-bold" dir="rtl">الأحداث القادمة</h3>
+              </Card.Header>
+              <Card.Body className="p-4">
+                {leagueContent.upcomingEvents && leagueContent.upcomingEvents.length > 0 ? (
+                  <>
+                    {(leagueContent.upcomingEvents || []).map((ev, i) => (
+                      <div className="event-item mb-3 p-3 rounded-3 shadow-sm" key={ev.id || i}>
+                        <div className="d-flex align-items-center">
+                          <div style={{ width: 60, height: 60, borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="me-3">
+                            {ev.image ? (
+                              <ImageWithFallback
+                                inputSrc={ev.image}
+                                fallbackSrc={'/images/default-league.jpg'}
+                                alt="event"
+                                boxWidth={60}
+                                boxHeight={60}
+                                fixedBox
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <i className="fas fa-calendar text-dark" style={{ fontSize: 28 }}></i>
+                            )}
+                          </div>
+                          <div className="text-end ms-3" dir="rtl">
+                            {ev.titleAr && <h6 className="mb-1 fw-bold">{ev.titleAr}</h6>}
+                            {ev.date && <p className="text-muted small mb-0">{new Date(ev.date as any).toLocaleDateString('ar-DZ')}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="fas fa-calendar-alt fa-3x mb-3 text-muted"></i>
+                    <h4 className="text-muted">لا توجد أحداث قادمة مسجلة</h4>
+                  </div>
+                )}
+              </Card.Body>
+            </Card>
+          </section>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="league-page">
       {/* League Header */}
@@ -385,329 +702,47 @@ const LeaguePage: React.FC = () => {
       </section>
 
       <Container className="py-5">
-        {/* President Section */}
-        {president && (
-          <section className="mb-5 animate__animated animate__fadeInUp">
-            <Card className="shadow-lg border-success rounded-3 overflow-hidden">
-              <Card.Header className="bg-gradient-success text-white py-3">
-                <h3 className="mb-0 text-center fw-bold" dir="rtl">رئيس الرابطة</h3>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <Row className="align-items-center">
-                  <Col md={3} className="text-center">
-                    <ImageWithFallback
-                      inputSrc={president.image}
-                      fallbackSrc={'/images/default-president.jpg'}
-                      alt={`رئيس الرابطة ${president.firstNameAr} ${president.lastNameAr}`}
-                      className="img-fluid rounded-circle shadow-lg border border-3 border-success"
-                      boxWidth={180}
-                      boxHeight={180}
-                      fixedBox
-                      style={{ width: '180px', height: '180px', objectFit: 'cover' }}
-                    />
-                  </Col>
-                  <Col md={9}>
-                    <h4 className="text-end text-success fw-bold" dir="rtl">
-                      {`${president.firstNameAr} ${president.lastNameAr}`}
-                    </h4>
-                    <p className="text-end text-muted" dir="rtl">
-                      {president.positionAr || 'رئيس الرابطة الولائية للجودو'}
-                    </p>
-                    <p className="text-end" dir="rtl">
-                      {president.bioAr || 'كلمة رئيس الرابطة...'}
-                    </p>
-                    <Button variant="outline-success" className="float-end rounded-pill px-4" dir="rtl">
-                      اقرأ المزيد
-                    </Button>
-                  </Col>
-                </Row>
-              </Card.Body>
-            </Card>
-          </section>
-        )}
+        {/* League Tabs */}
+        <div className="league-tabs mb-4">
+          <button 
+            className={`tab-button ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            <i className="fas fa-home me-2"></i>
+            نظرة عامة
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'management' ? 'active' : ''}`}
+            onClick={() => setActiveTab('management')}
+          >
+            <i className="fas fa-users me-2"></i>
+            الإدارة
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'athletes' ? 'active' : ''}`}
+            onClick={() => setActiveTab('athletes')}
+          >
+            <i className="fas fa-running me-2"></i>
+            الرياضيون
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'achievements' ? 'active' : ''}`}
+            onClick={() => setActiveTab('achievements')}
+          >
+            <i className="fas fa-trophy me-2"></i>
+            الإنجازات
+          </button>
+          <button 
+            className={`tab-button ${activeTab === 'events' ? 'active' : ''}`}
+            onClick={() => setActiveTab('events')}
+          >
+            <i className="fas fa-calendar-alt me-2"></i>
+            الأحداث
+          </button>
+        </div>
 
-        {/* Clubs Carousel Section */}
-        <section className="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
-          <h2 className="text-center mb-4 text-primary fw-bold" dir="rtl">أندية الرابطة</h2>
-          {clubsCarouselItems.length > 0 ? (
-            <CustomCarousel
-              items={clubsCarouselItems}
-              title="أندية الرابطة"
-              titleAr="أندية الرابطة"
-              controls={false}
-              indicators={true}
-              interval={5000}
-            />
-          ) : (
-            <Alert variant="info" className="text-center">لا توجد أندية مسجلة في هذه الرابطة حاليًا.</Alert>
-          )}
-        </section>
-
-        {/* President Profile (final) under Clubs section */}
-        <section className="mb-5 animate__animated animate__fadeInUp animate__delay-2s">
-          <Card className="shadow-lg border-success rounded-3 overflow-hidden">
-            <Card.Header className="bg-gradient-success text-white py-3">
-              <h3 className="mb-0 text-center fw-bold" dir="rtl">رئيس الرابطة الولائية للجودو</h3>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <Row className="align-items-center">
-                {/* Left: Large circular image */}
-                <Col md={4} className="text-center mb-4 mb-md-0">
-                  <ImageWithFallback
-                    inputSrc={displayImage}
-                    fallbackSrc={'/images/default-president.jpg'}
-                    alt={displayNameAr}
-                    className="img-fluid rounded-circle shadow-lg border border-4 border-success"
-                    boxWidth={250}
-                    boxHeight={250}
-                    fixedBox
-                    style={{ width: '250px', height: '250px', objectFit: 'cover' }}
-                  />
-                </Col>
-                {/* Right: Details, achievements, experience */}
-                <Col md={8}>
-                  <div className="text-end" dir="rtl">
-                    <h3 className="mb-1 text-success fw-bold">{displayNameAr}</h3>
-                    <p className="text-muted mb-3">{displayPositionAr}</p>
-
-                    {(displayBioAr || '').trim().length > 0 && (
-                      <>
-                        <h5 className="mt-3 fw-bold">نبذة مختصرة</h5>
-                        <p className="mb-3">{displayBioAr}</p>
-                      </>
-                    )}
-                    <div className="mt-3">
-                      <h5 className="mb-2 fw-bold">الخبرات</h5>
-                      {presidentExperiences.length > 0 ? (
-                        <ul className="list-unstyled">
-                          {presidentExperiences.map((exp, idx) => (
-                            <li className="mb-2" key={`exp-${idx}`}>
-                              <i className="fas fa-check-circle text-success ms-2"></i>
-                              {bulletToText(exp)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <ul className="list-unstyled">
-                          <li className="mb-2">
-                            <i className="fas fa-check-circle text-success ms-2"></i>
-                            {`قيادة رابطة ${league.wilayaNameAr} للجودو`}
-                          </li>
-                          <li className="mb-2">
-                            <i className="fas fa-users text-success ms-2"></i>
-                            {`الإشراف على ${clubs.length} ناديًا ضمن الرابطة`}
-                          </li>
-                        </ul>
-                      )}
-                    </div>
-
-                    <div className="mt-3">
-                      <h5 className="mb-2 fw-bold">الإنجازات</h5>
-                      {presidentAchievements.length > 0 ? (
-                        <ul className="list-unstyled">
-                          {presidentAchievements.map((ach, idx) => (
-                            <li className="mb-2" key={`ach-${idx}`}>
-                              <i className="fas fa-trophy text-success ms-2"></i>
-                              {bulletToText(ach)}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <ul className="list-unstyled">
-                          <li className="mb-2">
-                            <i className="fas fa-trophy text-success ms-2"></i>
-                            {`المساهمة في ${leagueContent.achievements?.length || 0} من إنجازات الرابطة`}
-                          </li>
-                          <li className="mb-2">
-                            <i className="fas fa-calendar text-success ms-2"></i>
-                            {`تنسيق ${leagueContent.upcomingEvents?.length || 0} فعالية/أحداث قادمة`}
-                          </li>
-                        </ul>
-                      )}
-                    </div>
-
-                    {(displayEmail || displayPhone) && (
-                      <ul className="list-unstyled mt-3">
-                        {displayEmail && (
-                          <li className="mb-2">
-                            <i className="fas fa-envelope text-success ms-2"></i>
-                            البريد: {displayEmail}
-                          </li>
-                        )}
-                        {displayPhone && (
-                          <li className="mb-2">
-                            <i className="fas fa-phone text-success ms-2"></i>
-                            الهاتف: {displayPhone}
-                          </li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-        </section>
-
-        {/* Management Team Section (dynamic) */}
-        {leagueContent.managementTeam && leagueContent.managementTeam.length > 0 && (
-          <section className="mb-5 animate__animated animate__fadeInUp">
-            <Card className="shadow-lg border-warning rounded-3 overflow-hidden">
-              <Card.Header className="bg-gradient-warning text-dark py-3">
-                <h3 className="mb-0 text-center fw-bold" dir="rtl">إدارة الرابطة</h3>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <Row>
-                  {leagueContent.managementTeam.map((m, i) => (
-                    <Col md={4} className="mb-4" key={m.id || i}>
-                      <Card className="h-100 border-0 shadow-sm rounded-3 overflow-hidden team-card">
-                        <div className="team-card-img">
-                          <ImageWithFallback
-                            inputSrc={m.image}
-                            fallbackSrc={'/images/default-avatar.jpg'}
-                            alt={m.nameAr || 'عضو إدارة'}
-                            className="img-fluid"
-                            boxWidth={'100%'}
-                            boxHeight={200}
-                            fixedBox
-                            style={{ width: '100%', height: '200px', objectFit: 'cover' }}
-                          />
-                        </div>
-                        <Card.Body className="text-center">
-                          {m.positionAr && <h6 className="text-warning fw-bold">{m.positionAr}</h6>}
-                          <p className="text-muted small">{m.nameAr || ''}</p>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Card.Body>
-            </Card>
-          </section>
-        )}
-
-        {/* Standout Athletes Section (dynamic) */}
-        {leagueContent.standoutAthletes && leagueContent.standoutAthletes.length > 0 && (
-          <section className="mb-5 animate__animated animate__fadeInUp animate__delay-1s">
-            <Card className="shadow-lg border-info rounded-3 overflow-hidden">
-              <Card.Header className="bg-gradient-info text-white py-3">
-                <h3 className="mb-0 text-center fw-bold" dir="rtl">الرياضيون البارزون</h3>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <Row>
-                  {leagueContent.standoutAthletes.map((a, i) => (
-                    <Col md={3} className="mb-4" key={a.id || i}>
-                      <Card className="h-100 border-0 shadow-sm rounded-3 overflow-hidden athlete-card">
-                        <div className="athlete-card-img">
-                          <div style={{ width: '100%', height: 150, overflow: 'hidden' }}>
-                            <ImageWithFallback
-                              inputSrc={a.image}
-                              fallbackSrc={'/images/default-athlete.jpg'}
-                              alt={a.nameAr || 'رياضي'}
-                              className="img-fluid"
-                              boxWidth={'100%'}
-                              boxHeight={150}
-                              fixedBox
-                              style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                            />
-                          </div>
-                        </div>
-                        <Card.Body className="text-center">
-                          {a.nameAr && <h6 className="text-info fw-bold">{a.nameAr}</h6>}
-                          {a.beltAr && <p className="text-muted small">{a.beltAr}</p>}
-                          {a.highlight && <span className="badge bg-info">{a.highlight}</span>}
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))}
-                </Row>
-              </Card.Body>
-            </Card>
-          </section>
-        )}
-
-        {/* Achievements and Upcoming Events Section (dynamic) */}
-        {(leagueContent.achievements?.length || leagueContent.upcomingEvents?.length) ? (
-          <section className="mb-5 animate__animated animate__fadeInUp animate__delay-2s">
-            <Row>
-              <Col md={6} className="mb-4 mb-md-0">
-                <Card className="shadow-lg border-danger h-100 rounded-3 overflow-hidden">
-                  <Card.Header className="bg-gradient-danger text-white py-3">
-                    <h4 className="mb-0 text-center fw-bold" dir="rtl">إنجازات الرابطة</h4>
-                  </Card.Header>
-                  <Card.Body className="p-4">
-                    {(leagueContent.achievements || []).map((a, i) => (
-                      <div className="achievement-item mb-3 p-3 rounded-3 shadow-sm" key={a.id || i}>
-                        <div className="d-flex align-items-center">
-                          <div style={{ width: 60, height: 60, borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="me-3">
-                            {a.image ? (
-                              <ImageWithFallback
-                                inputSrc={a.image}
-                                fallbackSrc={'/images/default-achievement.jpg'}
-                                alt="ach"
-                                boxWidth={60}
-                                boxHeight={60}
-                                fixedBox
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            ) : (
-                              <i className="fas fa-trophy text-danger" style={{ fontSize: 28 }}></i>
-                            )}
-                          </div>
-                          <div className="text-end ms-3" dir="rtl">
-                            {a.titleAr && <h6 className="mb-1 fw-bold">{a.titleAr}</h6>}
-                            {a.subtitleAr && <p className="text-muted small mb-0">{a.subtitleAr}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {(leagueContent.achievements || []).length === 0 && (
-                      <div className="text-center text-muted">لا توجد إنجازات</div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              <Col md={6}>
-                <Card className="shadow-lg border-dark h-100 rounded-3 overflow-hidden">
-                  <Card.Header className="bg-gradient-dark text-white py-3">
-                    <h4 className="mb-0 text-center fw-bold" dir="rtl">الأحداث القادمة</h4>
-                  </Card.Header>
-                  <Card.Body className="p-4">
-                    {(leagueContent.upcomingEvents || []).map((ev, i) => (
-                      <div className="event-item mb-3 p-3 rounded-3 shadow-sm" key={ev.id || i}>
-                        <div className="d-flex align-items-center">
-                          <div style={{ width: 60, height: 60, borderRadius: 12, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }} className="me-3">
-                            {ev.image ? (
-                              <ImageWithFallback
-                                inputSrc={ev.image}
-                                fallbackSrc={'/images/default-league.jpg'}
-                                alt="event"
-                                boxWidth={60}
-                                boxHeight={60}
-                                fixedBox
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            ) : (
-                              <i className="fas fa-calendar text-dark" style={{ fontSize: 28 }}></i>
-                            )}
-                          </div>
-                          <div className="text-end ms-3" dir="rtl">
-                            {ev.titleAr && <h6 className="mb-1 fw-bold">{ev.titleAr}</h6>}
-                            {ev.date && <p className="text-muted small mb-0">{new Date(ev.date as any).toLocaleDateString('ar-DZ')}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                    {(leagueContent.upcomingEvents || []).length === 0 && (
-                      <div className="text-center text-muted">لا توجد أحداث</div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
-          </section>
-        ) : null}
+        {/* Tab Content */}
+        {renderTabContent()}
       </Container>
     </div>
   );

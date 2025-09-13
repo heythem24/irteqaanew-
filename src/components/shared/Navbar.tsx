@@ -5,6 +5,7 @@ import { wilayas } from '../../data/wilayas';
 import { ClubsService, LeaguesService } from '../../services/firestoreService';
 import DynamicAdminDashboard from '../admin/DynamicAdminDashboard';
 
+import logo from '../../logo.png';
 interface NavbarProps {
   variant?: 'main' | 'league' | 'club';
   currentLeague?: {
@@ -211,10 +212,10 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
             style={{ cursor: 'pointer', fontSize: '1.1rem' }}
           >
             <img 
-              src="/images/logo.png" 
+              src={logo} 
               height="32" 
               className="me-2"
-              style={{ marginTop: 0 }}
+              style={{ marginTop: 0, filter: 'invert(1) brightness(1.8)' }}
             />
             IRTEQAA
           </BootstrapNavbar.Brand>
