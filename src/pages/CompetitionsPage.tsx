@@ -29,7 +29,29 @@ const CompetitionsPage: React.FC = () => {
   }, []);
 
   const competitions = useMemo(() => {
-    return allCompetitions.filter(c => (c.status || 'upcoming') === activeTab);
+    const now = new Date();
+    const toDateTime = (d?: Date, t?: string): Date | undefined => {
+      if (!d) return undefined;
+      const base = new Date(d as any);
+      if (isNaN(base.getTime())) return undefined;
+      if (t && /^\d{2}:\d{2}$/.test(t)) {
+        const [hh, mm] = t.split(':').map(n => parseInt(n, 10));
+        base.setHours(hh, mm, 0, 0);
+      } else {
+        // no time -> compare by day only
+        base.setHours(0, 0, 0, 0);
+      }
+      return base;
+    };
+    const deriveStatus = (c: Competition): 'upcoming' | 'ongoing' | 'finished' => {
+      const sd = toDateTime(c.startDate as any, (c as any).startTime);
+      const ed = toDateTime(c.endDate as any, (c as any).endTime);
+      if (sd && now < sd) return 'upcoming';
+      if (ed && now > ed) return 'finished';
+      if (sd) return 'ongoing';
+      return (c.status as any) || 'upcoming';
+    };
+    return allCompetitions.filter(c => deriveStatus(c) === activeTab);
   }, [allCompetitions, activeTab]);
 
   const formatDateAr = (value: unknown): string => {

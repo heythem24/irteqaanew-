@@ -150,7 +150,7 @@ const HomePage: React.FC = () => {
                 استكشف الرابطات
               </button>
               <button 
-                className="btn btn-outline-light btn-lg rounded-pill px-4 py-2"
+                className="btn btn-primary btn-lg rounded-pill px-4 py-2"
                 onClick={() => navigate('/about')}
               >
                 <i className="fas fa-info-circle me-2"></i>

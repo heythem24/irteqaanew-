@@ -26,6 +26,8 @@ const CompetitionDetailPage: React.FC = () => {
   const [orgMat, setOrgMat] = useState<1 | 2 | 3>(1);
   const [orgError, setOrgError] = useState<string>('');
   const [orgDisplayName, setOrgDisplayName] = useState<string>('');
+  // tick for live countdown/status reevaluation
+  const [, setNowTick] = useState<number>(Date.now());
 
   useEffect(() => {
     const load = async () => {
@@ -77,6 +79,87 @@ const CompetitionDetailPage: React.FC = () => {
     loadParticipants();
   }, [competition]);
 
+  // Live ticker to update countdown/status once per second
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const deriveStatus = (c: Competition): 'upcoming' | 'ongoing' | 'finished' => {
+    try {
+      const now = new Date();
+      const toDateTime = (d?: Date, t?: string): Date | undefined => {
+        if (!d) return undefined;
+        const base = new Date(d as any);
+        if (isNaN(base.getTime())) return undefined;
+        if (t && /^\d{2}:\d{2}$/.test(t)) {
+          const [hh, mm] = t.split(':').map(n => parseInt(n, 10));
+          base.setHours(hh, mm, 0, 0);
+        } else {
+          // no time provided -> compare by day (start of day)
+          base.setHours(0, 0, 0, 0);
+        }
+        return base;
+      };
+      const sd = toDateTime(c.startDate as any, (c as any).startTime);
+      const ed = toDateTime(c.endDate as any, (c as any).endTime);
+      if (sd && now < sd) return 'upcoming';
+      if (ed && now > ed) return 'finished';
+      if (sd) return 'ongoing';
+      return (c.status as any) || 'upcoming';
+    } catch {
+      return (c.status as any) || 'upcoming';
+    }
+  };
+
+  // Helper to format countdown until start date (used in header)
+  const formatCountdown = (): string | null => {
+    if (!competition?.startDate) return null;
+    const now = new Date();
+    const start = (() => {
+      const d = new Date(competition.startDate as any);
+      if (isNaN(d.getTime())) return null;
+      const t = (competition as any).startTime as string | undefined;
+      if (t && /^\d{2}:\d{2}$/.test(t)) {
+        const [hh, mm] = t.split(':').map(n => parseInt(n, 10));
+        d.setHours(hh, mm, 0, 0);
+        return d;
+      }
+      // no time -> use start of day and show day-based countdown
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })();
+    if (!start) return null;
+
+    const hasTime = (() => {
+      const t = (competition as any).startTime as string | undefined;
+      return !!(t && /^\d{2}:\d{2}$/.test(t));
+    })();
+
+    if (!hasTime) {
+      // day-only countdown
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffMs = start.getTime() - todayStart.getTime();
+      if (diffMs <= 0) return null;
+      const days = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+      return days === 1 ? 'تبقى يوم واحد' : `تبقى ${days} أيام`;
+    }
+
+    // time-aware countdown
+    const diff = start.getTime() - now.getTime();
+    if (diff <= 0) return null;
+    const s = Math.floor(diff / 1000);
+    const days = Math.floor(s / 86400);
+    const hrs = Math.floor((s % 86400) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const parts: string[] = [];
+    if (days > 0) parts.push(`${days} يوم`);
+    if (hrs > 0 || days > 0) parts.push(`${hrs} ساعة`);
+    parts.push(`${mins} دقيقة`, `${secs} ثانية`);
+    return `باقي ${parts.join(' ')}`;
+  };
+
   const refreshPairingsOnly = async () => {
     if (!competition) return;
     try {
@@ -89,6 +172,7 @@ const CompetitionDetailPage: React.FC = () => {
 
   if (loading) return <div>جاري التحميل...</div>;
   if (!competition) return <div>البطولة غير موجودة</div>;
+  const currentStatus = deriveStatus(competition);
 
   return (
     <div className="competition-detail-page">
@@ -101,6 +185,11 @@ const CompetitionDetailPage: React.FC = () => {
           {new Date(competition.startDate).toLocaleDateString('ar-DZ')} - {new Date(competition.endDate).toLocaleDateString('ar-DZ')}
         </p>
         <p className="competition-location">{competition.placeAr || competition.place || ''}</p>
+        {currentStatus === 'upcoming' && (
+          <div className="mt-2">
+            <span className="badge bg-primary" style={{ fontSize: '1rem' }}>{formatCountdown() || 'اقترب وقت الانطلاق'}</span>
+          </div>
+        )}
       </div>
 
       {/* تبويب رئيسي: تفاصيل / منظمو البطولة */}
@@ -113,7 +202,7 @@ const CompetitionDetailPage: React.FC = () => {
 
       {!showOrganizers ? (
         (() => {
-          const safeStatus = (competition.status || 'upcoming').toLowerCase();
+          const safeStatus = deriveStatus(competition);
           return (
             <>
               {/* تنبيه حالة البطولة يظهر دائماً */}
@@ -126,22 +215,28 @@ const CompetitionDetailPage: React.FC = () => {
               )}
 
               <div className="competition-tabs">
-                <button onClick={() => setActiveTab('overview')} className={activeTab === 'overview' ? 'active' : ''}>
-                  نظرة عامة
-                </button>
-                <button onClick={() => setActiveTab('categories')} className={activeTab === 'categories' ? 'active' : ''}>
-                  الفئات
-                </button>
+                {currentStatus !== 'finished' && (
+                  <button onClick={() => setActiveTab('overview')} className={activeTab === 'overview' ? 'active' : ''}>
+                    نظرة عامة
+                  </button>
+                )}
+                {currentStatus !== 'finished' && (
+                  <button onClick={() => setActiveTab('categories')} className={activeTab === 'categories' ? 'active' : ''}>
+                    الفئات
+                  </button>
+                )}
                 <button onClick={() => setActiveTab('brackets')} className={activeTab === 'brackets' ? 'active' : ''}>
                   الجداول
                 </button>
-                <button onClick={() => setActiveTab('weights')} className={activeTab === 'weights' ? 'active' : ''}>
-                  الأوزان
-                </button>
-          </div>
+                {currentStatus !== 'finished' && (
+                  <button onClick={() => setActiveTab('weights')} className={activeTab === 'weights' ? 'active' : ''}>
+                    الأوزان
+                  </button>
+                )}
+              </div>
 
           <div className="competition-content">
-            {activeTab === 'overview' && (
+            {activeTab === 'overview' && currentStatus !== 'finished' && (
               <div className="overview-tab">
                 <h2>عن البطولة</h2>
                 <p>{competition.descriptionAr || competition.description || 'لا يوجد وصف متوفر لهذه البطولة.'}</p>
@@ -152,7 +247,7 @@ const CompetitionDetailPage: React.FC = () => {
               </div>
             )}
 
-            {activeTab === 'categories' && (
+            {activeTab === 'categories' && currentStatus !== 'finished' && (
               <div className="categories-tab">
                 <h2>الفئات المتاحة</h2>
                 <div className="categories-list">
@@ -185,7 +280,11 @@ const CompetitionDetailPage: React.FC = () => {
               <div className="brackets-tab">
                 <h2>جداول المنافسة</h2>
                 <div className="bracket-container" dir="rtl">
-                  {loadingParticipants ? (
+                  {currentStatus === 'upcoming' && !(pairings && pairings.matches.length > 0) ? (
+                    <div className="alert alert-secondary" dir="rtl">
+                      لم تبدأ البطولة بعد. سيتم تفعيل الجداول وإتاحة القرعة عند انطلاق البطولة في التاريخ المحدد.
+                    </div>
+                  ) : loadingParticipants ? (
                     <div>جاري تحميل المشاركين...</div>
                   ) : pairings && pairings.matches.length > 0 ? (
                     <div>
@@ -457,84 +556,93 @@ const CompetitionDetailPage: React.FC = () => {
       {/* لوحة منظمي البطولة */}
       {showOrganizers && (
         <div className="organizers-panel" dir="rtl">
-          {!orgLoggedIn ? (
-            <div className="card p-3" style={{ maxWidth: 560, marginInlineStart: 'auto' }}>
-              <h5 className="mb-3 text-end">تسجيل الدخول — منظمو البطولة</h5>
-              <div className="mb-3">
-                <label className="form-label d-block text-end">اسم المستخدم</label>
-                <input className="form-control text-end" value={orgUsername} onChange={(e)=>setOrgUsername(e.target.value)} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label d-block text-end">كلمة المرور</label>
-                <input type="password" className="form-control text-end" value={orgPassword} onChange={(e)=>setOrgPassword(e.target.value)} />
-              </div>
-              <div className="mb-3">
-                <label className="form-label d-block text-end">الدور</label>
-                <select className="form-select text-end" value={orgRole} onChange={(e)=>setOrgRole(e.target.value as any)}>
-                  <option value="">اختر الدور</option>
-                  <option value="table_official">مسؤول الطاولة</option>
-                  <option value="supervisor">مشرف البطولة</option>
-                </select>
-              </div>
-              {orgError && <div className="alert alert-danger text-end">{orgError}</div>}
-              <div className="text-center">
-                <button
-                  className="btn btn-success"
-                  onClick={async ()=>{
-                    try {
-                      setOrgError('');
-                      if (!competition) return;
-                      if (!orgRole || !orgUsername || !orgPassword) {
-                        setOrgError('يرجى إدخال اسم المستخدم وكلمة المرور واختيار الدور');
-                        return;
+          {(() => {
+            const safe = deriveStatus(competition);
+            if (safe === 'upcoming') {
+              return (
+                <div className="alert alert-secondary" dir="rtl">
+                  لا يمكن الدخول إلى لوحة المنظمين قبل موعد انطلاق البطولة. سيتم تفعيل الولوج والقرعة تلقائياً عند بدء البطولة.
+                </div>
+              );
+            }
+            return !orgLoggedIn ? (
+              <div className="card p-3" style={{ maxWidth: 560, marginInlineStart: 'auto' }}>
+                <h5 className="mb-3 text-end">تسجيل الدخول — منظمو البطولة</h5>
+                <div className="mb-3">
+                  <label className="form-label d-block text-end">اسم المستخدم</label>
+                  <input className="form-control text-end" value={orgUsername} onChange={(e)=>setOrgUsername(e.target.value)} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label d-block text-end">كلمة المرور</label>
+                  <input type="password" className="form-control text-end" value={orgPassword} onChange={(e)=>setOrgPassword(e.target.value)} />
+                </div>
+                <div className="mb-3">
+                  <label className="form-label d-block text-end">الدور</label>
+                  <select className="form-select text-end" value={orgRole} onChange={(e)=>setOrgRole(e.target.value as any)}>
+                    <option value="">اختر الدور</option>
+                    <option value="table_official">مسؤول الطاولة</option>
+                    <option value="supervisor">مشرف البطولة</option>
+                  </select>
+                </div>
+                {orgError && <div className="alert alert-danger text-end">{orgError}</div>}
+                <div className="text-center">
+                  <button
+                    className="btn btn-success"
+                    onClick={async ()=>{
+                      try {
+                        setOrgError('');
+                        if (!competition) return;
+                        if (!orgRole || !orgUsername || !orgPassword) {
+                          setOrgError('يرجى إدخال اسم المستخدم وكلمة المرور واختيار الدور');
+                          return;
+                        }
+                        const account = await CompetitionOrganizersService.login(competition.id, orgUsername, orgPassword, orgRole as any);
+                        if (!account) {
+                          setOrgError('بيانات الدخول غير صحيحة أو الحساب غير نشط');
+                          return;
+                        }
+                        if (account.role === 'table_official' && account.mat) {
+                          setOrgMat(account.mat as 1|2|3);
+                        }
+                        setOrgDisplayName(`${account.username}`);
+                        setOrgLoggedIn(true);
+                      } catch (e) {
+                        console.error('Organizer login failed', e);
+                        setOrgError('فشل في تسجيل الدخول');
                       }
-                      const account = await CompetitionOrganizersService.login(competition.id, orgUsername, orgPassword, orgRole as any);
-                      if (!account) {
-                        setOrgError('بيانات الدخول غير صحيحة أو الحساب غير نشط');
-                        return;
-                      }
-                      // تعيين البساط من الحساب لمسؤول الطاولة
-                      if (account.role === 'table_official' && account.mat) {
-                        setOrgMat(account.mat as 1|2|3);
-                      }
-                      setOrgDisplayName(`${account.username}`);
-                      setOrgLoggedIn(true);
-                    } catch (e) {
-                      console.error('Organizer login failed', e);
-                      setOrgError('فشل في تسجيل الدخول');
-                    }
-                  }}
-                  disabled={!orgRole}
-                >
-                  دخول
-                </button>
+                    }}
+                    disabled={!orgRole}
+                  >
+                    دخول
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="mt-3">
-              {orgRole === 'table_official' ? (
-                <TableOfficialPanel
-                  competition={competition}
-                  participants={participants}
-                  leaguesMap={leaguesMap}
-                  pairings={pairings}
-                  mat={orgMat}
-                  onAfterUpdate={refreshPairingsOnly}
-                />
-              ) : (
-                <SupervisorPanel
-                  competition={competition}
-                  participants={participants}
-                  leaguesMap={leaguesMap}
-                  pairings={pairings}
-                />
-              )}
-              <div className="mt-3 text-end">
-                <span className="me-2 text-muted">دخول: {orgDisplayName || (orgRole==='table_official' ? 'مسؤول الطاولة' : 'مشرف')}</span>
-                <button className="btn btn-outline-secondary" onClick={()=>{ setOrgLoggedIn(false); setOrgUsername(''); setOrgPassword(''); setOrgRole(''); setOrgError(''); }}>تسجيل خروج</button>
+            ) : (
+              <div className="mt-3">
+                {orgRole === 'table_official' ? (
+                  <TableOfficialPanel
+                    competition={competition}
+                    participants={participants}
+                    leaguesMap={leaguesMap}
+                    pairings={pairings}
+                    mat={orgMat}
+                    onAfterUpdate={refreshPairingsOnly}
+                  />
+                ) : (
+                  <SupervisorPanel
+                    competition={competition}
+                    participants={participants}
+                    leaguesMap={leaguesMap}
+                    pairings={pairings}
+                  />
+                )}
+                <div className="mt-3 text-end">
+                  <span className="me-2 text-muted">دخول: {orgDisplayName || (orgRole==='table_official' ? 'مسؤول الطاولة' : 'مشرف')}</span>
+                  <button className="btn btn-outline-secondary" onClick={()=>{ setOrgLoggedIn(false); setOrgUsername(''); setOrgPassword(''); setOrgRole(''); setOrgError(''); }}>تسجيل خروج</button>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 

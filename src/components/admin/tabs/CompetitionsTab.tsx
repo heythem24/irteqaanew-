@@ -29,13 +29,16 @@ const CompetitionsTab: React.FC = () => {
     level: 'league' as CompetitionLevel,
     wilayaId: '',
     startDate: '',
+    startTime: '',
     endDate: '',
+    endTime: '',
     status: 'upcoming' as CompetitionStatus,
     categories: [] as string[],
     weights: {} as Record<string, { male: string[]; female: string[] }>,
     image: ''
     ,
-    registrationDeadline: ''
+    registrationDeadline: '',
+    registrationDeadlineTime: ''
   });
 
   // UI state
@@ -482,6 +485,54 @@ const CompetitionsTab: React.FC = () => {
     });
   };
 
+  // Live ticker to re-evaluate statuses/countdowns
+  const [, setNowTick] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Helper: combine date with optional HH:mm time for precise comparisons
+  const toDateTime = (d?: Date, t?: string): Date | undefined => {
+    if (!d) return undefined;
+    const base = new Date(d as any);
+    if (isNaN(base.getTime())) return undefined;
+    if (t && /^\d{2}:\d{2}$/.test(t)) {
+      const [hh, mm] = t.split(':').map(n => parseInt(n, 10));
+      base.setHours(hh, mm, 0, 0);
+    } else {
+      base.setHours(0, 0, 0, 0);
+    }
+    return base;
+  };
+
+  // Derive status using minute precision when time fields exist
+  const deriveStatus = (c: Competition): 'upcoming' | 'ongoing' | 'finished' => {
+    const now = new Date();
+    const sd = toDateTime(c.startDate as any, (c as any).startTime);
+    const ed = toDateTime(c.endDate as any, (c as any).endTime);
+    if (sd && now < sd) return 'upcoming';
+    if (ed && now > ed) return 'finished';
+    if (sd) return 'ongoing';
+    return (c.status as any) || 'upcoming';
+  };
+
+  // Format short remaining time until start (for upcoming rows)
+  const formatUntilStart = (c: Competition): string | null => {
+    const start = toDateTime(c.startDate as any, (c as any).startTime);
+    if (!start) return null;
+    const now = new Date();
+    const diff = start.getTime() - now.getTime();
+    if (diff <= 0) return null;
+    const s = Math.floor(diff / 1000);
+    const days = Math.floor(s / 86400);
+    const hrs = Math.floor((s % 86400) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    if (days > 0) return `بعد ${days} يوم${days === 1 ? '' : ''}`;
+    if (hrs > 0) return `بعد ${hrs} ساعة و ${mins} دقيقة`;
+    return `بعد ${mins} دقيقة`;
+  };
+
   const handleImageUpload = async (file: File) => {
     try {
       setUploadingImage(true);
@@ -520,8 +571,11 @@ const CompetitionsTab: React.FC = () => {
         level: formData.level || undefined,
         wilayaId: formData.wilayaId ? Number(formData.wilayaId) : undefined,
         startDate: new Date(formData.startDate),
+        startTime: formData.startTime || undefined,
         endDate: new Date(formData.endDate),
+        endTime: formData.endTime || undefined,
         registrationDeadline: formData.registrationDeadline ? new Date(formData.registrationDeadline) : undefined,
+        registrationDeadlineTime: formData.registrationDeadlineTime || undefined,
         status: formData.status,
         categories: formData.categories,
         weights: Object.keys(formData.weights || {}).length ? formData.weights : undefined,
@@ -550,13 +604,16 @@ const CompetitionsTab: React.FC = () => {
         level: 'league',
         wilayaId: '',
         startDate: '',
+        startTime: '',
         endDate: '',
+        endTime: '',
         status: 'upcoming',
         categories: [],
         weights: {},
         image: ''
         ,
-        registrationDeadline: ''
+        registrationDeadline: '',
+        registrationDeadlineTime: ''
       });
       
       // Reload competitions
@@ -582,13 +639,16 @@ const CompetitionsTab: React.FC = () => {
       level: competition.level || 'league',
       wilayaId: competition.wilayaId ? String(competition.wilayaId) : '',
       startDate: competition.startDate.toISOString().split('T')[0],
+      startTime: (competition as any).startTime || '',
       endDate: competition.endDate.toISOString().split('T')[0],
+      endTime: (competition as any).endTime || '',
       status: competition.status,
       categories: competition.categories,
       weights: competition.weights || {},
       image: competition.image || ''
       ,
-      registrationDeadline: competition.registrationDeadline ? competition.registrationDeadline.toISOString().split('T')[0] : ''
+      registrationDeadline: competition.registrationDeadline ? competition.registrationDeadline.toISOString().split('T')[0] : '',
+      registrationDeadlineTime: (competition as any).registrationDeadlineTime || ''
     });
   };
 
@@ -623,13 +683,16 @@ const CompetitionsTab: React.FC = () => {
       level: 'league',
       wilayaId: '',
       startDate: '',
+      startTime: '',
       endDate: '',
+      endTime: '',
       status: 'upcoming',
       categories: [],
       weights: {},
       image: ''
       ,
-      registrationDeadline: ''
+      registrationDeadline: '',
+      registrationDeadlineTime: ''
     });
   };
 
@@ -726,6 +789,26 @@ const CompetitionsTab: React.FC = () => {
               </Col>
             </Row>
 
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-end d-block" dir="rtl">آخر موعد للتسجيل</Form.Label>
+                  <div className="d-flex gap-2">
+                    <Form.Control
+                      type="date"
+                      value={formData.registrationDeadline}
+                      onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
+                    />
+                    <Form.Control
+                      type="time"
+                      value={formData.registrationDeadlineTime}
+                      onChange={(e) => handleInputChange('registrationDeadlineTime', e.target.value)}
+                    />
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+
             {/* Level */}
             <Row>
               <Col md={6}>
@@ -741,6 +824,51 @@ const CompetitionsTab: React.FC = () => {
                     <option value="regional">جهوية</option>
                     <option value="league">تابعة لرابطة</option>
                   </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-end d-block" dir="rtl">تاريخ البداية *</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => handleInputChange('startDate', e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-end d-block" dir="rtl">وقت البداية (اختياري)</Form.Label>
+                  <Form.Control
+                    type="time"
+                    value={formData.startTime}
+                    onChange={(e) => handleInputChange('startTime', e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-end d-block" dir="rtl">تاريخ النهاية *</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => handleInputChange('endDate', e.target.value)}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-end d-block" dir="rtl">وقت النهاية (اختياري)</Form.Label>
+                  <Form.Control
+                    type="time"
+                    value={formData.endTime}
+                    onChange={(e) => handleInputChange('endTime', e.target.value)}
+                  />
                 </Form.Group>
               </Col>
             </Row>
@@ -810,66 +938,7 @@ const CompetitionsTab: React.FC = () => {
               </Col>
             </Row>
 
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-end d-block" dir="rtl">
-                    تاريخ البداية *
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={formData.startDate}
-                    onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-end d-block" dir="rtl">
-                    تاريخ النهاية *
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={formData.endDate}
-                    onChange={(e) => handleInputChange('endDate', e.target.value)}
-                    required
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-end d-block" dir="rtl">
-                    رقم الولاية (اختياري)
-                  </Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={formData.wilayaId}
-                    onChange={(e) => handleInputChange('wilayaId', e.target.value)}
-                    min="1"
-                    max="58"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* Registration deadline */}
-            <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-end d-block" dir="rtl">
-                    موعد انتهاء التسجيل (اختياري)
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={formData.registrationDeadline}
-                    onChange={(e) => handleInputChange('registrationDeadline', e.target.value)}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            {/* Categories Selection */}
+            {/* Categories */}
             <Form.Group className="mb-3">
               <Form.Label className="text-end d-block" dir="rtl">الفئات</Form.Label>
               <Row>
@@ -1064,11 +1133,30 @@ const CompetitionsTab: React.FC = () => {
                         )}
                       </td>
                       <td className="text-end" dir="rtl">{competition.nameAr}</td>
-                      <td>{getStatusBadge(competition.status)}</td>
+                      <td>{getStatusBadge(deriveStatus(competition))}</td>
                       <td className="text-end" dir="rtl">{competition.placeAr || '-'}</td>
-                      <td>{formatDateAr(competition.startDate)}</td>
+                      <td>
+                        {formatDateAr(competition.startDate)}
+                        {(() => {
+                          const t = (competition as any).startTime as string | undefined;
+                          return t && /^\d{2}:\d{2}$/.test(t) ? (
+                            <div className="small text-muted">الساعة {t}</div>
+                          ) : null;
+                        })()}
+                        {deriveStatus(competition) === 'upcoming' && (
+                          <div className="small text-primary">{formatUntilStart(competition)}</div>
+                        )}
+                      </td>
                       <td>{formatDateAr(competition.endDate)}</td>
-                      <td>{formatDateAr(competition.registrationDeadline)}</td>
+                      <td>
+                        {formatDateAr(competition.registrationDeadline)}
+                        {(() => {
+                          const t = (competition as any).registrationDeadlineTime as string | undefined;
+                          return t && /^\d{2}:\d{2}$/.test(t) ? (
+                            <div className="small text-muted">الساعة {t}</div>
+                          ) : null;
+                        })()}
+                      </td>
                       <td className="text-end" dir="rtl">
                         {competition.categories.length > 0 ? (
                           <div>

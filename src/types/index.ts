@@ -352,8 +352,12 @@ export interface Competition {
   wilayaId?: number;
   image?: string;    // cloudinary url
   registrationDeadline?: Date; // موعد انتهاء التسجيل
+  // اختيارية: أوقات بصيغة HH:mm لدمجها مع التواريخ عند الحاجة
+  registrationDeadlineTime?: string; // مثال: "17:30"
   startDate: Date;
+  startTime?: string; // مثال: "09:00"
   endDate: Date;
+  endTime?: string; // مثال: "18:00"
   status: CompetitionStatus;
   categories: string[]; // store by category id
   // الأوزان المختارة لكل فئة حسب الجنس. المفتاح هو معرف الفئة (id في categoryUtils) أو الاسم بالعربية، والقيم قوائم أوزان نصية مثل "-60", "+100"
