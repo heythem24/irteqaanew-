@@ -221,3 +221,49 @@
     gap: 1.5rem;
   }
 }
+
+/* Extra small devices */
+@media (max-width: 576px) {
+  .page-title {
+    font-size: 1.6rem;
+  }
+
+  .page-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .tab-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .competition-card {
+    border-radius: 10px;
+  }
+
+  .card-image-container {
+    height: 160px;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-description {
+    font-size: 0.9rem;
+  }
+
+  .detail-item {
+    font-size: 0.85rem;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .no-competitions {
+    padding: 2rem 1rem;
+  }
+}

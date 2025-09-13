@@ -172,3 +172,49 @@
     margin-bottom: 1rem;
   }
 }
+
+/* Extra small devices */
+@media (max-width: 576px) {
+  .homepage {
+    padding-bottom: 1rem;
+  }
+
+  .hero-section {
+    margin-bottom: 1rem;
+  }
+
+  .hero-overlay-text {
+    padding: 0 0.75rem;
+  }
+
+  .hero-overlay-text h1 {
+    font-size: 1.6rem;
+  }
+
+  .hero-overlay-text .lead {
+    font-size: 0.95rem;
+    max-width: 90vw;
+  }
+
+  .hero-overlay-text .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    margin: 0.25rem 0.25rem 0 0;
+    font-size: 0.9rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+  }
+
+  /* Ensure .btn-lg does not appear oversized on small screens */
+  .hero-overlay-text .btn.btn-lg {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .stats-section {
+    margin: 1.5rem 0;
+    border-radius: 0.75rem;
+  }
+}
