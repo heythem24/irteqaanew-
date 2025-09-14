@@ -86,27 +86,41 @@ const CompetitionsPage: React.FC = () => {
       </div>
 
       <div className="competition-tabs">
-        <button 
-          onClick={() => setActiveTab('upcoming')} 
-          className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''}`}
+        {/* Buttons for larger screens */}
+        <div className="tabs-as-buttons">
+          <button
+            onClick={() => setActiveTab('upcoming')}
+            className={`tab-button ${activeTab === 'upcoming' ? 'active' : ''}`}
+          >
+            <i className="fas fa-calendar-plus me-2"></i>
+            قادمة
+          </button>
+          <button
+            onClick={() => setActiveTab('ongoing')}
+            className={`tab-button ${activeTab === 'ongoing' ? 'active' : ''}`}
+          >
+            <i className="fas fa-play-circle me-2"></i>
+            جارية
+          </button>
+          <button
+            onClick={() => setActiveTab('finished')}
+            className={`tab-button ${activeTab === 'finished' ? 'active' : ''}`}
+          >
+            <i className="fas fa-check-circle me-2"></i>
+            منتهية
+          </button>
+        </div>
+
+        {/* Dropdown for smaller screens */}
+        <select
+          className="tabs-as-dropdown"
+          value={activeTab}
+          onChange={(e) => setActiveTab(e.target.value as 'upcoming' | 'ongoing' | 'finished')}
         >
-          <i className="fas fa-calendar-plus me-2"></i>
-          قادمة
-        </button>
-        <button 
-          onClick={() => setActiveTab('ongoing')} 
-          className={`tab-button ${activeTab === 'ongoing' ? 'active' : ''}`}
-        >
-          <i className="fas fa-play-circle me-2"></i>
-          جارية
-        </button>
-        <button 
-          onClick={() => setActiveTab('finished')} 
-          className={`tab-button ${activeTab === 'finished' ? 'active' : ''}`}
-        >
-          <i className="fas fa-check-circle me-2"></i>
-          منتهية
-        </button>
+          <option value="upcoming">قادمة</option>
+          <option value="ongoing">جارية</option>
+          <option value="finished">منتهية</option>
+        </select>
       </div>
 
       {error && (

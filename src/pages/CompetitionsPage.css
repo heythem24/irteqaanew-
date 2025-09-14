@@ -33,11 +33,36 @@
 }
 
 .competition-tabs {
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.tabs-as-buttons {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 2rem;
   flex-wrap: wrap;
+}
+
+.tabs-as-dropdown {
+  display: none; /* Hidden by default */
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: left 0.75rem center;
+  background-size: 16px 12px;
+  padding-right: 2.5rem; /* Right to left adjustment */
+  direction: rtl;
 }
 
 .tab-button {
@@ -80,6 +105,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2rem;
+  position: relative;
+  z-index: 1;
 }
 
 .competition-card-wrapper {
@@ -199,26 +226,29 @@
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  html, body { overflow-x: hidden; }
   .competitions-page {
     padding: 1rem;
+    overflow-x: hidden;
   }
   
   .page-title {
     font-size: 2rem;
   }
-  
-  .competition-tabs {
-    gap: 0.5rem;
+
+  /* Hide the buttons and show the dropdown */
+  .tabs-as-buttons {
+    display: none;
   }
-  
-  .tab-button {
-    padding: 0.6rem 1.2rem;
-    font-size: 0.9rem;
+
+  .tabs-as-dropdown {
+    display: block;
   }
-  
+
   .competitions-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
+    margin-top: 0.5rem;
   }
 }
 
@@ -232,9 +262,10 @@
     font-size: 0.95rem;
   }
 
-  .tab-button {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+  .tabs-as-dropdown {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+    padding-right: 2rem;
   }
 
   .competition-card {
