@@ -192,10 +192,23 @@
     font-size: 1rem;
   }
   
-  .league-page .btn {
-    margin-bottom: 10px;
-    width: 100%;
+  /* Make header CTA buttons compact and inline on mobile */
+  .league-page .animate__delay-2s {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
   }
+  .league-page .animate__delay-2s .btn {
+    font-size: 0.95rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    max-width: 48%;
+    flex: 1 1 0;
+    white-space: nowrap;
+  }
+  .league-page .animate__delay-2s .btn i.me-2 { margin-right: 0.35rem !important; }
   
   .league-page .text-center.text-md-start {
     text-align: center !important;
@@ -210,4 +223,14 @@
     width: 100%;
     justify-content: center;
   }
+}
+
+/* Ultra small phones */
+@media (max-width: 380px) {
+  .league-page .animate__delay-2s .btn {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.7rem;
+    max-width: 49%;
+  }
+  .league-page .animate__delay-2s { gap: 0.4rem; }
 }

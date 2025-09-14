@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { CompetitionsService, ParticipationsService, UsersService, ClubsService, PairingsService, LeaguesService, CompetitionOrganizersService } from '../services/firestoreService';
-import type { Competition, User, Club, League, Participation, Pairings } from '../types';
+import type { Competition, User, Club, League, Participation, Pairings, PairMatch } from '../types';
 import { getCategoryByDOBToday } from '../utils/categoryUtils';
 import ImageWithFallback from '../components/shared/ImageWithFallback';
 import TableOfficialPanel from '../components/competition/TableOfficialPanel';
@@ -28,6 +28,8 @@ const CompetitionDetailPage: React.FC = () => {
   const [orgDisplayName, setOrgDisplayName] = useState<string>('');
   // tick for live countdown/status reevaluation
   const [, setNowTick] = useState<number>(Date.now());
+  // Bracket tab state
+  const [activeBracketTab, setActiveBracketTab] = useState<string>('');
 
   useEffect(() => {
     const load = async () => {
@@ -344,96 +346,180 @@ const CompetitionDetailPage: React.FC = () => {
                         return panel.length ? <div className="mb-3">{panel}</div> : null;
                       })()}
                       {(() => {
-                        const byRound = new Map<number, number[]>();
+                        // Group matches by groupKey to separate different categories/genders/weights
+                        const groupsMap = new Map<string, { matches: PairMatch[], groupKey: string, groupIndex: number }>();
+                        
+                        // Collect all unique group keys and their matches
                         pairings.matches.forEach((m, i) => {
-                          const r = m.round || 1;
-                          if (!byRound.has(r)) byRound.set(r, []);
-                          byRound.get(r)!.push(i);
+                          const key = m.groupKey || 'غير محدد';
+                          if (!groupsMap.has(key)) {
+                            groupsMap.set(key, { matches: [], groupKey: key, groupIndex: m.groupIndex || 0 });
+                          }
+                          groupsMap.get(key)!.matches.push(m);
                         });
-                        const maxRound = Math.max(...Array.from(byRound.keys()));
-                        const roundName = (r: number) => {
-                          const dist = maxRound - r;
-                          if (dist === 0) return 'النهائي';
-                          if (dist === 1) return 'نصف النهائي';
-                          if (dist === 2) return 'ربع النهائي';
-                          return `الدور ${r}`;
+                        
+                        // Convert to array and sort by groupIndex
+                        const groups = Array.from(groupsMap.values()).sort((a, b) => a.groupIndex - b.groupIndex);
+                        
+                        // Set default active tab if not set
+                        if (!activeBracketTab && groups.length > 0) {
+                          setActiveBracketTab(groups[0].groupKey);
+                        }
+                        
+                        // Function to parse group key into readable format
+                        const parseGroupKey = (key: string) => {
+                          const parts = key.split('|');
+                          if (parts.length >= 3) {
+                            return {
+                              category: parts[0] || 'فئة غير محددة',
+                              gender: parts[1] === 'male' ? 'ذكور' : parts[1] === 'female' ? 'إناث' : parts[1] || 'جنس غير محدد',
+                              weight: parts[2] || 'وزن غير محدد'
+                            };
+                          }
+                          return {
+                            category: 'فئة غير محددة',
+                            gender: 'جنس غير محدد',
+                            weight: 'وزن غير محدد'
+                          };
                         };
-                        const renderMatch = (idx: number) => {
-                          const m = pairings.matches[idx];
-                          const a1 = m.athlete1Id ? participants.find(r => r.athlete.id === m.athlete1Id)?.athlete : undefined;
-                          const a2 = m.athlete2Id ? participants.find(r => r.athlete.id === m.athlete2Id)?.athlete : undefined;
-                          const c1 = a1?.clubId ? participants.find(r => r.athlete.id === (a1?.id || ''))?.club : undefined;
-                          const c2 = a2?.clubId ? participants.find(r => r.athlete.id === (a2?.id || ''))?.club : undefined;
-                          const l1 = c1?.leagueId ? leaguesMap[c1.leagueId] : undefined;
-                          const l2 = c2?.leagueId ? leaguesMap[c2.leagueId] : undefined;
-                          const finished = (m.status ?? 'pending') === 'finished';
-                          const wId = m.winnerId;
-                          const isFinal = (m.round || 1) === maxRound && (m.stage || 'main') === 'main';
-                          const isBronze = (m.stage || 'main') === 'bronze';
-                          const placeholder1 = (m.from1 != null)
-                            ? (isBronze ? `الخاسر من مباراة #${(m.from1 as number) + 1}` : `الفائز من مباراة #${(m.from1 as number) + 1}`)
-                            : '—';
-                          const placeholder2 = (m.from2 != null)
-                            ? (isBronze ? `الخاسر من مباراة #${(m.from2 as number) + 1}` : `الفائز من مباراة #${(m.from2 as number) + 1}`)
-                            : '—';
-                          const a1Label = a1
-                            ? `${a1.firstNameAr || a1.firstName || ''} ${a1.lastNameAr || a1.lastName || ''}`
-                            : placeholder1;
-                          const a2Label = a2
-                            ? `${a2.firstNameAr || a2.firstName || ''} ${a2.lastNameAr || a2.lastName || ''}`
-                            : (m.athlete2Id === null ? 'باي (يتأهل تلقائياً)' : placeholder2);
-                          return (
-                            <div key={idx} className="list-group-item d-flex justify-content-between align-items-center" dir="rtl">
-                              <div className="d-flex align-items-center gap-2 text-end flex-grow-1 justify-content-end">
-                                <div>
-                                  <div className="fw-bold">
-                                    {a1Label}
-                                    {finished && wId && a1 && wId === a1.id && (
-                                      isFinal ? <span className="badge bg-warning text-dark ms-2">ذهبية</span> : isBronze ? <span className="badge bg-danger ms-2">برونزية</span> : <span className="badge bg-success ms-2">فائز</span>
-                                    )}
-                                    {finished && wId && a1 && wId !== a1.id && (
-                                      isFinal ? <span className="badge bg-secondary ms-2">فضية</span> : isBronze ? <span className="badge bg-light text-dark ms-2">مركز رابع</span> : <span className="badge bg-secondary ms-2">خاسر</span>
-                                    )}
-                                  </div>
-                                  {a1 && <div className="text-muted small">{(c1?.nameAr || c1?.name || '—')}{l1 ? ` — ${l1.wilayaNameAr || l1.nameAr}` : ''}</div>}
-                                </div>
-                                <ImageWithFallback inputSrc={a1?.image || undefined} fallbackSrc={'/vite.svg'} alt="a1" boxWidth={36} boxHeight={36} fixedBox style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                              </div>
-                              <div className="mx-3 fw-bold">VS</div>
-                              <div className="d-flex align-items-center gap-2 flex-grow-1">
-                                <ImageWithFallback inputSrc={a2?.image || undefined} fallbackSrc={'/vite.svg'} alt="a2" boxWidth={36} boxHeight={36} fixedBox style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                                <div className="text-end">
-                                  <div className="fw-bold">
-                                    {a2Label}
-                                    {finished && wId && a2 && wId === a2.id && (
-                                      isFinal ? <span className="badge bg-warning text-dark ms-2">ذهبية</span> : isBronze ? <span className="badge bg-danger ms-2">برونزية</span> : <span className="badge bg-success ms-2">فائز</span>
-                                    )}
-                                    {finished && wId && a2 && wId !== a2.id && (
-                                      isFinal ? <span className="badge bg-secondary ms-2">فضية</span> : isBronze ? <span className="badge bg-light text-dark ms-2">مركز رابع</span> : <span className="badge bg-secondary ms-2">خاسر</span>
-                                    )}
-                                  </div>
-                                  {a2 && <div className="text-muted small">{(c2?.nameAr || c2?.name || '—')}{l2 ? ` — ${l2.wilayaNameAr || l2.nameAr}` : ''}</div>}
-                                </div>
-                              </div>
-                              <div className="ms-3">
-                                {/* شارة نوع المباراة */}
-                                {isFinal && <span className="badge bg-warning text-dark me-2">مباراة الذهبية</span>}
-                                {isBronze && <span className="badge bg-danger me-2">مباراة البرونزية</span>}
-                                {m.mat && <span className="badge bg-primary">البساط {m.mat}</span>}
-                                {finished && <span className="badge bg-info ms-2">تمت</span>}
-                                <span className="badge bg-light text-dark ms-2">مباراة #{idx+1}</span>
+                        
+                        // If no groups, show message
+                        if (groups.length === 0) {
+                          return <div className="alert alert-info">لا توجد جداول متاحة حالياً.</div>;
+                        }
+                        
+                        // Find active group
+                        const activeGroup = groups.find(g => g.groupKey === activeBracketTab) || groups[0];
+                        const activeGroupInfo = parseGroupKey(activeGroup.groupKey);
+                        
+                        return (
+                          <div>
+                            {/* Tabs for different brackets */}
+                            <div className="bracket-tabs mb-4">
+                              <div className="d-flex flex-wrap gap-2" dir="rtl">
+                                {groups.map((group) => {
+                                  const groupInfo = parseGroupKey(group.groupKey);
+                                  return (
+                                    <button
+                                      key={group.groupKey}
+                                      className={`btn btn-sm ${activeBracketTab === group.groupKey ? 'btn-primary' : 'btn-outline-primary'}`}
+                                      onClick={() => setActiveBracketTab(group.groupKey)}
+                                      style={{ whiteSpace: 'nowrap' }}
+                                    >
+                                      {groupInfo.category} - {groupInfo.gender} - {groupInfo.weight}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
-                          );
-                        };
-                        return Array.from(byRound.keys()).sort((a,b)=>a-b).map(r => (
-                          <div key={`round-${r}`} className="mb-4">
-                            <h5 className="mb-2">{roundName(r)}</h5>
-                            <div className="list-group">
-                              {byRound.get(r)!.map(renderMatch)}
+                            
+                            {/* Display matches for active bracket tab */}
+                            <div className="bracket-content">
+                              <h5 className="mb-3">
+                                {activeGroupInfo.category} - {activeGroupInfo.gender} - {activeGroupInfo.weight}
+                              </h5>
+                              
+                              {/* Group matches by round within this group */}
+                              {(() => {
+                                const byRound = new Map<number, { match: PairMatch, index: number }[]>();
+                                activeGroup.matches.forEach((m) => {
+                                  const globalIndex = pairings.matches.indexOf(m); // Get global index
+                                  const r = m.round || 1;
+                                  if (!byRound.has(r)) byRound.set(r, []);
+                                  byRound.get(r)!.push({ match: m, index: globalIndex });
+                                });
+                                
+                                const maxRound = Math.max(...Array.from(byRound.keys()));
+                                const roundName = (r: number) => {
+                                  const dist = maxRound - r;
+                                  if (dist === 0) return 'النهائي';
+                                  if (dist === 1) return 'نصف النهائي';
+                                  if (dist === 2) return 'ربع النهائي';
+                                  return `الدور ${r}`;
+                                };
+                                
+                                const renderMatch = (matchData: { match: PairMatch, index: number }) => {
+                                  const m = matchData.match;
+                                  const idx = matchData.index;
+                                  const a1 = m.athlete1Id ? participants.find(r => r.athlete.id === m.athlete1Id)?.athlete : undefined;
+                                  const a2 = m.athlete2Id ? participants.find(r => r.athlete.id === m.athlete2Id)?.athlete : undefined;
+                                  const c1 = a1?.clubId ? participants.find(r => r.athlete.id === (a1?.id || ''))?.club : undefined;
+                                  const c2 = a2?.clubId ? participants.find(r => r.athlete.id === (a2?.id || ''))?.club : undefined;
+                                  const l1 = c1?.leagueId ? leaguesMap[c1.leagueId] : undefined;
+                                  const l2 = c2?.leagueId ? leaguesMap[c2.leagueId] : undefined;
+                                  const finished = (m.status ?? 'pending') === 'finished';
+                                  const wId = m.winnerId;
+                                  const isFinal = (m.round || 1) === maxRound && (m.stage || 'main') === 'main';
+                                  const isBronze = (m.stage || 'main') === 'bronze';
+                                  const placeholder1 = (m.from1 != null)
+                                    ? (isBronze ? `الخاسر من مباراة #${(m.from1 as number) + 1}` : `الفائز من مباراة #${(m.from1 as number) + 1}`)
+                                    : '—';
+                                  const placeholder2 = (m.from2 != null)
+                                    ? (isBronze ? `الخاسر من مباراة #${(m.from2 as number) + 1}` : `الفائز من مباراة #${(m.from2 as number) + 1}`)
+                                    : '—';
+                                  const a1Label = a1
+                                    ? `${a1.firstNameAr || a1.firstName || ''} ${a1.lastNameAr || a1.lastName || ''}`
+                                    : placeholder1;
+                                  const a2Label = a2
+                                    ? `${a2.firstNameAr || a2.firstName || ''} ${a2.lastNameAr || a2.lastName || ''}`
+                                    : (m.athlete2Id === null ? 'باي (يتأهل تلقائياً)' : placeholder2);
+                                  return (
+                                    <div key={idx} className="list-group-item match-item d-flex justify-content-between align-items-center" dir="rtl">
+                                      <div className="competitor competitor-right d-flex align-items-center gap-2 text-end flex-grow-1 justify-content-end minw-0">
+                                        <div className="text-end">
+                                          <div className="fw-bold text-truncate">
+                                            {a1Label}
+                                            {finished && wId && a1 && wId === a1.id && (
+                                              isFinal ? <span className="badge bg-warning text-dark ms-2">ذهبية</span> : isBronze ? <span className="badge bg-danger ms-2">برونزية</span> : <span className="badge bg-success ms-2">فائز</span>
+                                            )}
+                                            {finished && wId && a1 && wId !== a1.id && (
+                                              isFinal ? <span className="badge bg-secondary ms-2">فضية</span> : isBronze ? <span className="badge bg-light text-dark ms-2">مركز رابع</span> : <span className="badge bg-secondary ms-2">خاسر</span>
+                                            )}
+                                          </div>
+                                          {a1 && <div className="text-muted small text-truncate">{(c1?.nameAr || c1?.name || '—')}{l1 ? ` — ${l1.wilayaNameAr || l1.nameAr}` : ''}</div>}
+                                        </div>
+                                        <ImageWithFallback inputSrc={a1?.image || undefined} fallbackSrc={'/vite.svg'} alt="a1" boxWidth={36} boxHeight={36} fixedBox style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                      </div>
+                                      <div className="vs-container"><span className="vs-badge">VS</span></div>
+                                      <div className="competitor competitor-left d-flex align-items-center gap-2 flex-grow-1 minw-0">
+                                        <ImageWithFallback inputSrc={a2?.image || undefined} fallbackSrc={'/vite.svg'} alt="a2" boxWidth={36} boxHeight={36} fixedBox style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                                        <div className="text-end">
+                                          <div className="fw-bold text-truncate">
+                                            {a2Label}
+                                            {finished && wId && a2 && wId === a2.id && (
+                                              isFinal ? <span className="badge bg-warning text-dark ms-2">ذهبية</span> : isBronze ? <span className="badge bg-danger ms-2">برونزية</span> : <span className="badge bg-success ms-2">فائز</span>
+                                            )}
+                                            {finished && wId && a2 && wId !== a2.id && (
+                                              isFinal ? <span className="badge bg-secondary ms-2">فضية</span> : isBronze ? <span className="badge bg-light text-dark ms-2">مركز رابع</span> : <span className="badge bg-secondary ms-2">خاسر</span>
+                                            )}
+                                          </div>
+                                          {a2 && <div className="text-muted small text-truncate">{(c2?.nameAr || c2?.name || '—')}{l2 ? ` — ${l2.wilayaNameAr || l2.nameAr}` : ''}</div>}
+                                        </div>
+                                      </div>
+                                      <div className="ms-3 match-badges">
+                                        {/* شارة نوع المباراة */}
+                                        {isFinal && <span className="badge bg-warning text-dark me-2">مباراة الذهبية</span>}
+                                        {isBronze && <span className="badge bg-danger me-2">مباراة البرونزية</span>}
+                                        {m.mat && <span className="badge bg-primary">البساط {m.mat}</span>}
+                                        {finished && <span className="badge bg-info ms-2">تمت</span>}
+                                        <span className="badge bg-light text-dark ms-2">مباراة #{idx+1}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                };
+                                
+                                return Array.from(byRound.keys()).sort((a,b)=>a-b).map(r => (
+                                  <div key={`round-${r}`} className="mb-4">
+                                    <h6 className="mb-2">{roundName(r)}</h6>
+                                    <div className="list-group">
+                                      {byRound.get(r)!.map(renderMatch)}
+                                    </div>
+                                  </div>
+                                ));
+                              })()}
                             </div>
                           </div>
-                        ));
+                        );
                       })()}
                     </div>
                   ) : participants.length === 0 ? (

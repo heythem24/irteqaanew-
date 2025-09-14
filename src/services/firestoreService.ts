@@ -238,12 +238,17 @@ export class PairingsService {
     const matches = Array.isArray(docInfo.data.matches) ? [...docInfo.data.matches] : [];
     if (matchIndex < 0 || matchIndex >= matches.length) throw new Error('فهرس مباراة غير صالح');
     const prev = matches[matchIndex] || {};
-    // منع التقدم للدور التالي قبل اكتمال كل مباريات الدور السابق (لنفس المرحلة)
+    // منع التقدم للدور التالي قبل اكتمال كل مباريات الدور السابق (لنفس المرحلة ولنفس المجموعة)
     const stage = (prev as any).stage || 'main';
     const roundNum: number | undefined = (prev as any).round;
+    const groupKey: string = (prev as any).groupKey || '';
     if (roundNum && roundNum > 1) {
       const prevRound = roundNum - 1;
-      const prevRoundMatches = matches.filter((mm: any) => (mm?.round || 1) === prevRound && ((mm?.stage) || 'main') === stage);
+      const prevRoundMatches = matches.filter((mm: any) => (
+        (mm?.round || 1) === prevRound &&
+        ((mm?.stage) || 'main') === stage &&
+        ((mm?.groupKey) || '') === groupKey
+      ));
       if (prevRoundMatches.length > 0 && prevRoundMatches.some((mm: any) => (mm?.status || 'pending') !== 'finished')) {
         throw new Error('لا يمكن إعلان فائز قبل اكتمال جميع مباريات الدور السابق.');
       }
@@ -266,8 +271,15 @@ export class PairingsService {
       const tIdx = updated.nextIndex as number;
       if (tIdx >= 0 && tIdx < matches.length) {
         const tgt = { ...(matches[tIdx] || {}) } as any;
-        if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
-        matches[tIdx] = tgt;
+        // التحقق من أن الفائز ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
+        const sourceGroupKey = (updated as any).groupKey;
+        const targetGroupKey = (tgt as any).groupKey;
+        
+        // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
+        if (sourceGroupKey === targetGroupKey) {
+          if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
+          matches[tIdx] = tgt;
+        }
       }
     }
     // انشر الخاسر إلى مباراة البرونزية إن كانت معرفة
@@ -278,11 +290,18 @@ export class PairingsService {
       const lbIdx = updated.loserNextIndex as number;
       if (lbIdx >= 0 && lbIdx < matches.length) {
         const lb = { ...(matches[lbIdx] || {}) } as any;
-        if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
-        // تأكيد أن مباراة البرونزية تبقى قيد الانتظار حتى تأكيدها يدوياً
-        lb.status = 'pending';
-        lb.winnerId = null;
-        matches[lbIdx] = lb;
+        // التحقق من أن الخاسر ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
+        const sourceGroupKey = (updated as any).groupKey;
+        const targetGroupKey = (lb as any).groupKey;
+        
+        // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
+        if (sourceGroupKey === targetGroupKey) {
+          if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
+          // تأكيد أن مباراة البرونزية تبقى قيد الانتظار حتى تأكيدها يدوياً
+          lb.status = 'pending';
+          lb.winnerId = null;
+          matches[lbIdx] = lb;
+        }
       }
     }
     await updateDoc(doc(db, 'pairings', docInfo.id), { matches });
@@ -295,12 +314,17 @@ export class PairingsService {
     const matches = Array.isArray(docInfo.data.matches) ? [...docInfo.data.matches] : [];
     if (matchIndex < 0 || matchIndex >= matches.length) throw new Error('فهرس مباراة غير صالح');
     const prev = matches[matchIndex] || {};
-    // منع التعديل على مباراة دور لاحق قبل اكتمال كل مباريات الدور السابق (نفس المرحلة)
+    // منع التعديل على مباراة دور لاحق قبل اكتمال كل مباريات الدور السابق (نفس المرحلة ونفس المجموعة)
     const stage2 = (prev as any).stage || 'main';
     const roundNum2: number | undefined = (prev as any).round;
+    const groupKey2: string = (prev as any).groupKey || '';
     if (roundNum2 && roundNum2 > 1) {
       const prevRound = roundNum2 - 1;
-      const prevRoundMatches = matches.filter((mm: any) => (mm?.round || 1) === prevRound && ((mm?.stage) || 'main') === stage2);
+      const prevRoundMatches = matches.filter((mm: any) => (
+        (mm?.round || 1) === prevRound &&
+        ((mm?.stage) || 'main') === stage2 &&
+        ((mm?.groupKey) || '') === groupKey2
+      ));
       if (prevRoundMatches.length > 0 && prevRoundMatches.some((mm: any) => (mm?.status || 'pending') !== 'finished')) {
         throw new Error('لا يمكن تعديل النتيجة قبل اكتمال جميع مباريات الدور السابق.');
       }
@@ -323,8 +347,15 @@ export class PairingsService {
       const tIdx = updated.nextIndex as number;
       if (tIdx >= 0 && tIdx < matches.length) {
         const tgt = { ...(matches[tIdx] || {}) } as any;
-        if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
-        matches[tIdx] = tgt;
+        // التحقق من أن الفائز ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
+        const sourceGroupKey = (updated as any).groupKey;
+        const targetGroupKey = (tgt as any).groupKey;
+        
+        // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
+        if (sourceGroupKey === targetGroupKey) {
+          if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
+          matches[tIdx] = tgt;
+        }
       }
     }
     // انشر الخاسر المعدّل إلى مباراة البرونزية إن كانت معرفة
@@ -335,11 +366,18 @@ export class PairingsService {
       const lbIdx = updated.loserNextIndex as number;
       if (lbIdx >= 0 && lbIdx < matches.length) {
         const lb = { ...(matches[lbIdx] || {}) } as any;
-        if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
-        // أبق مباراة البرونزية قيد الانتظار دائماً حتى تأكيدها
-        lb.status = 'pending';
-        lb.winnerId = null;
-        matches[lbIdx] = lb;
+        // التحقق من أن الخاسر ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
+        const sourceGroupKey = (updated as any).groupKey;
+        const targetGroupKey = (lb as any).groupKey;
+        
+        // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
+        if (sourceGroupKey === targetGroupKey) {
+          if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
+          // أبق مباراة البرونزية قيد الانتظار دائماً حتى تأكيدها
+          lb.status = 'pending';
+          lb.winnerId = null;
+          matches[lbIdx] = lb;
+        }
       }
     }
     await updateDoc(doc(db, 'pairings', docInfo.id), { matches });

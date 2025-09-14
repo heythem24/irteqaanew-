@@ -154,10 +154,23 @@
     font-size: 1rem;
   }
   
-  .club-page .btn {
-    margin-bottom: 10px;
-    width: 100%;
+  /* Make header CTA buttons compact and inline on mobile */
+  .club-page .animate__delay-3s {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: nowrap;
   }
+  .club-page .animate__delay-3s .btn {
+    font-size: 0.95rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    max-width: 48%;
+    flex: 1 1 0;
+    white-space: nowrap;
+  }
+  .club-page .animate__delay-3s .btn i.me-2 { margin-right: 0.35rem !important; }
   
   .club-page .stat-card {
     margin-bottom: 1rem;
@@ -166,4 +179,14 @@
   .club-page .nav-custom .nav-link {
     margin: 5px 0;
   }
+}
+
+/* Ultra small phones */
+@media (max-width: 380px) {
+  .club-page .animate__delay-3s .btn {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.7rem;
+    max-width: 49%;
+  }
+  .club-page .animate__delay-3s { gap: 0.4rem; }
 }

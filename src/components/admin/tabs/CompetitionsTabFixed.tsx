@@ -182,8 +182,6 @@ const CompetitionsTab: React.FC = () => {
       parts.forEach((p) => {
         const a = usersMap.get(p.athleteId);
         if (!a) return;
-        // Ensure all required fields are present
-        if (!a.dateOfBirth) return; // Skip athletes without date of birth
         rows.push({ athlete: a, club: a.clubId ? clubsMap.get(a.clubId) : undefined });
       });
       setParticipantsForPairing(rows);
@@ -199,13 +197,9 @@ const CompetitionsTab: React.FC = () => {
     }
   };
 
-  // ملاحظة: تمت إزالة دالة shuffleArray غير المستخدمة
-
   // توليد شجرة أدوار كاملة مع احتساب الـ Bye والوصل بين المباريات
   const generatePairings = () => {
     const comp = pairingCompetition;
-    if (!comp) return;
-    
     // Helper: map numeric weight to closest competition class label (e.g., "-66", "+100")
     const toWeightClass = (categoryAr: string, gender: 'male' | 'female', w?: number): string | null => {
       if (w == null || isNaN(w)) return null;
@@ -213,108 +207,52 @@ const CompetitionsTab: React.FC = () => {
       if (!spec) return null;
       const classes = spec.weights[gender] || [];
       for (const cls of classes) {
-        if (cls.startsWith('+')) { 
-          const lim = parseInt(cls.slice(1), 10); 
-          if (w > lim) return cls; 
-        }
-        else if (cls.startsWith('-')) { 
-          const lim = parseInt(cls.slice(1), 10); 
-          if (w <= lim) return cls; 
-        }
+        if (cls.startsWith('+')) { const lim = parseInt(cls.slice(1), 10); if (w > lim) return cls; }
+        else if (cls.startsWith('-')) { const lim = parseInt(cls.slice(1), 10); if (w <= lim) return cls; }
       }
       return null;
     };
 
+    // Filter participants to valid, SAME category, gender, and selected weight class of this competition
+    const filtered = participantsForPairing.filter(row => {
+      const a = row.athlete as any;
+      const gender = (a.gender as 'male' | 'female') || null;
+      const dob = a.dateOfBirth as Date | undefined;
+      if (!gender || !dob) return false;
+      const cat = getCategoryByDOBToday(dob);
+      if (!cat) return false;
+      const categoryAr = cat.nameAr;
+      const allowed = comp?.weights?.[categoryAr]?.[gender];
+      if (!Array.isArray(allowed) || allowed.length === 0) return false;
+      const cls = toWeightClass(categoryAr, gender, a.weight as number | undefined);
+      return !!cls && allowed.includes(cls);
+    });
+
     // Partition by strict key (category, gender, weight class)
     const groupsMap = new Map<string, Array<{ athlete: User; club?: Club }>>();
     const keyOf = (row: { athlete: User }) => {
-      const a = row.athlete;
-      // Fix: Ensure gender is properly extracted and validated
-      const gender: 'male' | 'female' = (a.gender === 'male' || a.gender === 'female') ? a.gender : 'male'; // Default to male if undefined
-      const dob = a.dateOfBirth;
+      const a = row.athlete as any;
+      const gender = (a.gender as 'male' | 'female') || 'male';
+      const dob = a.dateOfBirth as Date | undefined;
       const cat = getCategoryByDOBToday(dob);
       const categoryAr = cat?.nameAr || '';
-      const cls = toWeightClass(categoryAr, gender, a.weight) || '';
+      const cls = toWeightClass(categoryAr, gender, a.weight as number | undefined) || '';
       return `${categoryAr}|${gender}|${cls}`;
     };
     
-    // Filter participants to valid, SAME category, gender, and selected weight class of this competition
-    const filtered = participantsForPairing.filter(row => {
-      const a = row.athlete;
-      // Fix: Properly validate gender value
-      const gender: 'male' | 'female' = (a.gender === 'male' || a.gender === 'female') ? a.gender : 'male';
-      const dob = a.dateOfBirth;
-      
-      // Fix: Check if required data exists
-      if (!dob) return false;
-      
-      const cat = getCategoryByDOBToday(dob);
-      if (!cat) return false;
-      
-      const categoryAr = cat.nameAr;
-      // Fix: Check if weights are defined for this category and gender
-      const allowedWeights = comp.weights?.[categoryAr]?.[gender];
-      if (!Array.isArray(allowedWeights) || allowedWeights.length === 0) return false;
-      
-      const cls = toWeightClass(categoryAr, gender, a.weight);
-      // Fix: Ensure weight class is valid and allowed
-      return !!cls && allowedWeights.includes(cls);
-    });
-    
-    // Debug: Log filtering results
-    console.log('Participants filtering results:', {
-      totalParticipants: participantsForPairing.length,
-      filteredParticipants: filtered.length,
-      participants: participantsForPairing.map(p => ({
-        id: p.athlete.id,
-        name: `${p.athlete.firstNameAr || p.athlete.firstName} ${p.athlete.lastNameAr || p.athlete.lastName}`,
-        gender: p.athlete.gender,
-        weight: p.athlete.weight,
-        dob: p.athlete.dateOfBirth
-      }))
-    });
-    
-    // Group participants by category, gender, and weight class
+    // Create groups for each category/gender/weight combination
     for (const row of filtered) {
       const k = keyOf(row);
       if (!groupsMap.has(k)) groupsMap.set(k, []);
       groupsMap.get(k)!.push(row);
     }
     
-    // Debug: Log grouping results
-    console.log('Grouping results:', {
-      groupsCount: groupsMap.size,
-      groups: Array.from(groupsMap.entries()).map(([key, list]) => ({
-        key,
-        count: list.length,
-        participants: list.map(p => ({
-          id: p.athlete.id,
-          name: `${p.athlete.firstNameAr || p.athlete.firstName} ${p.athlete.lastNameAr || p.athlete.lastName}`,
-          gender: p.athlete.gender,
-          weight: p.athlete.weight
-        }))
-      }))
-    });
-    
-    // Process each group separately to create brackets
+    // Generate matches for each group separately
     const allMatches: PairMatch[] = [];
-    let groupIndex = 0;
-    // Running offset to make intra-group indices (nextIndex/from1/from2) global
     let matchOffset = 0;
     
-    // Store group information to maintain gender separation
-    const groupInfoMap = new Map<string, { gender: 'male' | 'female', category: string, weight: string }>();
-    
-    groupsMap.forEach((list, key) => {
+    groupsMap.forEach((list, groupKey) => {
       if (list.length === 0) return;
-      
-      // Extract group information for later reference
-      const [category, gender, weight] = key.split('|');
-      groupInfoMap.set(key, { 
-        gender: gender as 'male' | 'female', 
-        category, 
-        weight 
-      });
       
       // يمكن مستقبلاً تمرير ترتيب (Seeding) كمصفوفة معرفات رياضيين لتُمنح الـ Byes للأعلى تصنيفاً
       const seeding: string[] = []; // TODO: ربط لاحقاً من الواجهة الإدارية عند توفر التصنيف
@@ -365,10 +303,10 @@ const CompetitionsTab: React.FC = () => {
           let nextSlot: 1 | 2 | undefined;
           if (prelimCount > 0 && rIdx === 0) {
             // كل مباراة تصفية تتجه مباشرة إلى المباراة المناظرة في الدور الرئيسي الأول في الخانة 1
-            nextIndex = (roundCounts.length > 1) ? ((cursor + count) + pos + matchOffset) : undefined; // baseIndexPerRound[1] يساوي cursor+count هنا
+            nextIndex = (roundCounts.length > 1) ? (cursor + count) + pos : undefined; // baseIndexPerRound[1] يساوي cursor+count هنا
             nextSlot = 1;
           } else {
-            nextIndex = rIdx < roundCounts.length - 1 ? ((baseIndexPerRound[rIdx + 1] ?? (cursor + count)) + Math.floor(pos / 2) + matchOffset) : undefined;
+            nextIndex = rIdx < roundCounts.length - 1 ? (baseIndexPerRound[rIdx + 1] ?? (cursor + count)) + Math.floor(pos / 2) : undefined;
             nextSlot = (rIdx < roundCounts.length - 1) ? ((pos % 2 === 0) ? 1 : 2) : undefined;
           }
           // from1/from2: من الجولة السابقة
@@ -379,7 +317,7 @@ const CompetitionsTab: React.FC = () => {
             if (prelimCount > 0 && rIdx === 1) {
               // الدور الرئيسي الأول: أول prelimCount مباريات تأتي من التصفيات 1:1 في from1
               if (pos < prelimCount) {
-                from1 = baseIndexPerRound[0] + pos + matchOffset;
+                from1 = baseIndexPerRound[0] + pos;
                 from2 = undefined; // الطرف الثاني لاعب مباشر
               } else {
                 // بقية المباريات تأتي من نفس الدور السابق (الدور الرئيسي لا يوجد قبله تصفيات لهذه المواقع)
@@ -388,8 +326,8 @@ const CompetitionsTab: React.FC = () => {
               }
             } else {
               // ربط قياسي 2->1 للأدوار اللاحقة
-              from1 = prevBase + (pos * 2) + matchOffset;
-              from2 = prevBase + (pos * 2 + 1) + matchOffset;
+              from1 = prevBase + (pos * 2);
+              from2 = prevBase + (pos * 2 + 1);
             }
           }
           matches[globalIndex] = {
@@ -399,20 +337,17 @@ const CompetitionsTab: React.FC = () => {
             status: 'pending',
             winnerId: null,
             round: rIdx + 1,
-            nextIndex,
+            nextIndex: nextIndex !== undefined ? nextIndex + matchOffset : undefined,
             nextSlot,
-            from1,
-            from2,
-            // Add group identifier to distinguish brackets
-            groupKey: key,
-            groupIndex: groupIndex
+            from1: from1 !== undefined ? from1 + matchOffset : undefined,
+            from2: from2 !== undefined ? from2 + matchOffset : undefined,
           } as PairMatch;
         }
         cursor += count;
       }
       const maxRound = roundCounts.length; // النهائي هو round = maxRound (قد يزيد بوجود تصفيات)
 
-      // دورة البساط 1 -> 2 -> 3 -> 1 -> ...
+      // دورة البسطات 1 -> 2 -> 3 -> 1 -> ...
       const nextMat = (() => {
         let idx = 0;
         const mats: Array<1 | 2 | 3> = [1, 2, 3];
@@ -476,12 +411,10 @@ const CompetitionsTab: React.FC = () => {
           athlete2Id: undefined,
           status: 'pending',
           winnerId: null,
-          round: maxRound, // نفس رقم نهائي لأغراض الترتيب، لكن بفصل stage
+          round: maxRound, // نفس رقم النهائي لأغراض الترتيب، لكن بفصل stage
           stage: 'bronze',
-          from1: (semiBase + 0) + matchOffset,
-          from2: (semiBase + 1) + matchOffset,
-          groupKey: key,
-          groupIndex: groupIndex
+          from1: semiBase + 0 !== undefined ? (semiBase + 0) + matchOffset : undefined,
+          from2: semiBase + 1 !== undefined ? (semiBase + 1) + matchOffset : undefined
         } as PairMatch);
         for (let s = 0; s < semiCount; s++) {
           const sIdx = semiBase + s;
@@ -494,7 +427,7 @@ const CompetitionsTab: React.FC = () => {
           matches[finalIndex].mat = 1; // النهائي على البساط 1
         }
         if (matches[bronzeIndex]) {
-          // اجعل البرونزية على بساط مختلف عن النهائي
+          // اجعل البرونزية على بسط مختلف عن النهائي
           const finalMat = matches[finalIndex]?.mat || 1;
           matches[bronzeIndex].mat = finalMat === 1 ? 2 : 1;
         }
@@ -521,25 +454,32 @@ const CompetitionsTab: React.FC = () => {
         }
       }
 
-      // Add all matches from this group to the main array
-      allMatches.push(...matches);
-      groupIndex++;
-      // Increase offset so next group's indices are shifted correctly in the global matches array
+      // Add matches to the overall list with proper offset
+      allMatches.push(...matches.map(match => ({
+        ...match,
+        // Adjust indices to account for previous groups
+        nextIndex: match.nextIndex !== undefined ? match.nextIndex : undefined,
+        from1: match.from1 !== undefined ? match.from1 : undefined,
+        from2: match.from2 !== undefined ? match.from2 : undefined,
+        loserNextIndex: match.loserNextIndex !== undefined ? match.loserNextIndex : undefined
+      })));
+      
+      // Update offset for next group
       matchOffset += matches.length;
     });
 
     if (allMatches.length === 0) {
       setGeneratedMatches([]);
-      setAlert({ type: 'danger', message: 'لا يوجد مشاركون مطابقون للفئات/الأوزان المحددة لهذه البطولة. تأكد من أن الرياضيين لديهم الجنس والوزن والفئة العمرية المطلوبة.' });
+      setAlert({ type: 'danger', message: 'لا يوجد مشاركون مطابقون للفئات/الأوزان المحددة لهذه البطولة' });
       return;
     }
 
     setGeneratedMatches(allMatches);
-    
-    // Show success message with number of groups processed
-    const groupCount = groupsMap.size;
-    const participantCount = filtered.length;
-    setAlert({ type: 'success', message: `تم إنشاء القرعة لجميع المجموعات (${groupCount} مجموعة، ${participantCount} رياضي)` });
+    if (groupsMap.size > 1) {
+      setAlert({ type: 'success', message: `تم إنشاء القرعة لجميع المجموعات (${groupsMap.size} مجموعة)` });
+    } else {
+      setAlert({ type: 'success', message: 'تم إنشاء القرعة بنجاح' });
+    }
   };
 
   const savePairings = async () => {
@@ -661,7 +601,7 @@ const CompetitionsTab: React.FC = () => {
     const diff = start.getTime() - now.getTime();
     if (diff <= 0) return null;
     const s = Math.floor(diff / 1000);
-    const days = Math.floor(s / 86600);
+    const days = Math.floor(s / 86400);
     const hrs = Math.floor((s % 86400) / 3600);
     const mins = Math.floor((s % 3600) / 60);
     if (days > 0) return `بعد ${days} يوم${days === 1 ? '' : ''}`;
@@ -1112,7 +1052,7 @@ const CompetitionsTab: React.FC = () => {
                             <div className="mb-2 fw-bold text-end">ذكور</div>
                             <Row>
                               {weights.male.length === 0 ? (
-                                <div className="text-muted text-end">لا توجد أوزان معرفية لهذه الفئة</div>
+                                <div className="text-muted text-end">لا توجد أوزان معرفة لهذه الفئة</div>
                               ) : weights.male.map(w => (
                                 <Col key={`m-${categoryAr}-${w}`} md={4} className="mb-2">
                                   <Form.Check
@@ -1131,7 +1071,7 @@ const CompetitionsTab: React.FC = () => {
                             <div className="mb-2 fw-bold text-end">إناث</div>
                             <Row>
                               {weights.female.length === 0 ? (
-                                <div className="text-muted text-end">لا توجد أوزان معرفية لهذه الفئة</div>
+                                <div className="text-muted text-end">لا توجد أوزان معرفة لهذه الفئة</div>
                               ) : weights.female.map(w => (
                                 <Col key={`f-${categoryAr}-${w}`} md={4} className="mb-2">
                                   <Form.Check
@@ -1507,82 +1447,37 @@ const CompetitionsTab: React.FC = () => {
                   {generatedMatches.length === 0 ? (
                     <div className="text-muted">لم يتم توليد قرعة بعد.</div>
                   ) : (
-                    <div>
-                      {/* Group the matches by groupKey for better visualization */}
-                      {(() => {
-                        // Create groups map from matches
-                        const groupsMap = new Map<string, PairMatch[]>();
-                        const groupNames = new Map<string, string>();
-                        
-                        generatedMatches.forEach(match => {
-                          const key = (match as any).groupKey || 'غير محدد';
-                          if (!groupsMap.has(key)) {
-                            groupsMap.set(key, []);
-                            // Parse key to get readable name
-                            const [category, gender, weight] = key.split('|');
-                            const genderText = gender === 'male' ? 'ذكور' : gender === 'female' ? 'إناث' : 'غير محدد';
-                            groupNames.set(key, `${category} - ${genderText} - ${weight || 'غير محدد'}`);
-                          }
-                          groupsMap.get(key)!.push(match);
-                        });
-                        
-                        // Show a summary of all groups first
-                        const groupSummary = Array.from(groupsMap.entries()).map(([groupKey, matches]) => {
-                          const groupName = groupNames.get(groupKey) || 'مجموعة غير محددة';
-                          return `${groupName} (${matches.length} مباراة)`;
-                        });
-                        
+                    <div className="list-group" style={{ maxHeight: 300, overflowY: 'auto' }}>
+                      {generatedMatches.map((m, idx) => {
+                        const a1 = participantsForPairing.find(r => r.athlete.id === m.athlete1Id)?.athlete;
+                        const a2 = m.athlete2Id ? participantsForPairing.find(r => r.athlete.id === m.athlete2Id)?.athlete : undefined;
+                        const c1 = a1?.clubId ? participantsForPairing.find(r => r.athlete.id === m.athlete1Id)?.club : undefined;
+                        const c2 = a2?.clubId ? participantsForPairing.find(r => r.athlete.id === m.athlete2Id!)?.club : undefined;
+                        const l1 = c1?.leagueId ? leaguesMap[c1.leagueId] : undefined;
+                        const l2 = c2?.leagueId ? leaguesMap[c2.leagueId] : undefined;
                         return (
-                          <div>
-                            <div className="mb-3 p-2 bg-light rounded">
-                              <strong>المجموعات المُنشأة:</strong>
-                              <div className="mt-1">
-                                {groupSummary.map((summary, idx) => (
-                                  <span key={idx} className="badge bg-primary me-2 mb-1">{summary}</span>
-                                ))}
-                              </div>
+                          <div key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                            <div className="text-end flex-grow-1">
+                              <div className="fw-bold">{a1 ? `${a1.firstNameAr || a1.firstName || ''} ${a1.lastNameAr || a1.lastName || ''}` : 'غير معروف'}</div>
+                              <div className="text-muted small">{(c1?.nameAr || c1?.name || '—')}{l1 ? ` — ${l1.wilayaNameAr || l1.nameAr}` : ''}</div>
                             </div>
-                            
-                            {Array.from(groupsMap.entries()).map(([groupKey, matches]) => (
-                              <div key={groupKey} className="mb-4">
-                                <h6 className="bg-light p-2 rounded">{groupNames.get(groupKey) || 'مجموعة غير محددة'}</h6>
-                                <div className="list-group" style={{ maxHeight: 200, overflowY: 'auto' }}>
-                                  {matches.map((m, idx) => {
-                                    const a1 = participantsForPairing.find(r => r.athlete.id === m.athlete1Id)?.athlete;
-                                    const a2 = m.athlete2Id ? participantsForPairing.find(r => r.athlete.id === m.athlete2Id)?.athlete : undefined;
-                                    const c1 = a1?.clubId ? participantsForPairing.find(r => r.athlete.id === m.athlete1Id)?.club : undefined;
-                                    const c2 = a2?.clubId ? participantsForPairing.find(r => r.athlete.id === m.athlete2Id!)?.club : undefined;
-                                    const l1 = c1?.leagueId ? leaguesMap[c1.leagueId] : undefined;
-                                    const l2 = c2?.leagueId ? leaguesMap[c2.leagueId] : undefined;
-                                    return (
-                                      <div key={idx} className="list-group-item d-flex justify-content-between align-items-center">
-                                        <div className="text-end flex-grow-1">
-                                          <div className="fw-bold">{a1 ? `${a1.firstNameAr || a1.firstName || ''} ${a1.lastNameAr || a1.lastName || ''}` : 'غير معروف'}</div>
-                                          <div className="text-muted small">{(c1?.nameAr || c1?.name || '—')}{l1 ? ` — ${l1.wilayaNameAr || l1.nameAr}` : ''}</div>
-                                        </div>
-                                        <div className="mx-3 fw-bold">VS</div>
-                                        <div className="text-end flex-grow-1">
-                                          {a2 ? (
-                                            <>
-                                              <div className="fw-bold">{`${a2.firstNameAr || a2.firstName || ''} ${a2.lastNameAr || a2.lastName || ''}`}</div>
-                                              <div className="text-muted small">{(c2?.nameAr || c2?.name || '—')}{l2 ? ` — ${l2.wilayaNameAr || l2.nameAr}` : ''}</div>
-                                            </>
-                                          ) : (
-                                            <div className="text-muted">باي (يتأهل تلقائياً)</div>
-                                          )}
-                                        </div>
-                                        <div className="ms-3">
-                                          <span className="badge bg-primary">البساط {m.mat || 1}</span>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
+                            <div className="mx-3 fw-bold">VS</div>
+                            <div className="text-end flex-grow-1">
+                              {a2 ? (
+                                <>
+                                  <div className="fw-bold">{`${a2.firstNameAr || a2.firstName || ''} ${a2.lastNameAr || a2.lastName || ''}`}</div>
+                                  <div className="text-muted small">{(c2?.nameAr || c2?.name || '—')}{l2 ? ` — ${l2.wilayaNameAr || l2.nameAr}` : ''}</div>
+                                </>
+                              ) : (
+                                <div className="text-muted">باي (يتأهل تلقائياً)</div>
+                              )}
+                            </div>
+                            <div className="ms-3">
+                              <span className="badge bg-primary">البساط {m.mat || 1}</span>
+                            </div>
                           </div>
                         );
-                      })()}
+                      })}
                     </div>
                   )}
                 </div>

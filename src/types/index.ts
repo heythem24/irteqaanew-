@@ -37,6 +37,9 @@ export interface PairMatch {
   from2?: number; // فهرس المباراة السابقة التي تزوّد athlete2Id
   // المرحلة: رئيسية أو برونزية
   stage?: 'main' | 'bronze';
+  // Grouping information for tournament brackets
+  groupKey?: string; // Key identifying the category/gender/weight group
+  groupIndex?: number; // Index of the group for ordering
 }
 
 export interface Pairings {

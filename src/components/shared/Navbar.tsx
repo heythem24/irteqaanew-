@@ -439,13 +439,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                 <i className="fas fa-user-graduate me-2"></i>
                 المدرب
               </NavDropdown.Item>
-              <NavDropdown.Item
-                as={Link}
-                to={`/login?role=coach&clubId=${currentClub?.id}`}
-              >
-                <i className="fas fa-tachometer-alt me-2"></i>
-                لوحة تحكم المدرب
-              </NavDropdown.Item>
+              
               <NavDropdown.Item
                 as={Link}
                 to={`/login?role=physical_trainer&clubId=${currentClub?.id}`}

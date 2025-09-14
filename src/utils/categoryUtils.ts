@@ -90,6 +90,22 @@ export const CATEGORIES: CategorySpec[] = [
   },
 ];
 
+// Remove Arabic diacritics and normalize hamza/taa marbuta variants for robust mapping
+function normalizeArabic(input: string): string {
+  return input
+    .normalize('NFKD')
+    // Remove diacritics
+    .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06ED]/g, '')
+    // Normalize alef/hamza forms
+    .replace(/[\u0622\u0623\u0625\u0671]/g, '\u0627')
+    // Normalize taa marbuta to haa for mapping consistency
+    .replace(/\u0629/g, '\u0647')
+    // Remove tatweel
+    .replace(/\u0640/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 // Map various inputs (case-insensitive) to Arabic labels
 const CATEGORY_LABEL_MAP: Record<string, string> = {
   'senior': 'أكابر',
@@ -112,11 +128,30 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
   'Poussin': 'براعم',
   'Mini-poussin': 'براعم صغار',
   'Eveil': 'مصغر',
+  // Arabic variants without hamza/diacritics
+  'اكابر': 'أكابر',
+  'اواسط': 'أواسط',
+  'ناشئين': 'ناشئين',
+  'اشبال': 'أشبال',
+  'صغار': 'صغار',
+  'اصاغر': 'أصاغر',
+  'براعم': 'براعم',
+  'براعم صغار': 'براعم صغار',
+  'مصغر': 'مصغر',
 };
 
 export function normalizeCategoryLabel(category: string): string {
   if (!category) return '';
-  return CATEGORY_LABEL_MAP[category] || CATEGORY_LABEL_MAP[category.toLowerCase()] || category;
+  const direct = CATEGORY_LABEL_MAP[category] || CATEGORY_LABEL_MAP[category.toLowerCase()];
+  if (direct) return direct;
+  // Arabic normalization fallback
+  const ar = normalizeArabic(category);
+  // Build a normalized map for Arabic keys
+  const normalizedMap: Record<string, string> = {};
+  Object.entries(CATEGORY_LABEL_MAP).forEach(([k, v]) => {
+    normalizedMap[normalizeArabic(k)] = v;
+  });
+  return normalizedMap[ar] || category;
 }
 
 export interface ComputedCategory {

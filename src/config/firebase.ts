@@ -30,8 +30,8 @@ const app = initializeApp(firebaseConfig);
 export const analytics = getAnalytics(app);
 // Firestore with long-polling to avoid QUIC/fetch stream issues behind certain proxies
 export const db = initializeFirestore(app, {
-  // Force long polling to avoid QUIC/HTTP3 issues in some networks
-  experimentalForceLongPolling: true,
+  // Auto-detect long polling when needed to avoid QUIC/HTTP3 issues
+  experimentalAutoDetectLongPolling: true,
 });           // Firestore Database (NoSQL)
 export const auth = getAuth(app);              // Authentication
 export const storage = getStorage(app);        // Cloud Storage

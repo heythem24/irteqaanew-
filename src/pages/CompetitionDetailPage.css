@@ -425,6 +425,11 @@
   font-size: 0.8rem;
   font-weight: 500;
   margin-left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .gold-badge {
@@ -510,15 +515,110 @@
   gap: 1rem;
 }
 
+/* Match list items (brackets tab) */
+.match-item {
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.match-item .minw-0 { min-width: 0; }
+.match-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+  max-width: 40%;
+  overflow: hidden;
+}
+.match-badges .badge {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* VS label and competitors alignment */
+.vs-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.5rem;
+  min-width: 48px;
+}
+.vs-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 28px;
+  line-height: 1;
+  border-radius: 14px;
+  font-weight: 700;
+  background: #e9ecef;
+  color: #495057;
+}
+.competitor {
+  min-width: 0; /* allow truncation inside */
+}
+.competitor-right .fw-bold,
+.competitor-left .fw-bold {
+  max-width: 100%;
+}
+
+@media (max-width: 768px) {
+  .match-item {
+    gap: 0.5rem;
+  }
+  .vs-container {
+    min-width: auto;
+    padding: 0 0.25rem;
+  }
+  .vs-badge {
+    width: 34px;
+    height: 24px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+  }
+}
+
+/* On small screens, let badges take full width and scale down */
+@media (max-width: 768px) {
+  .match-badges {
+    max-width: 100%;
+    flex: 1 1 100%;
+    margin-top: 0.25rem;
+  }
+  .match-badges .badge {
+    font-size: 0.8rem;
+    padding: 0.2rem 0.5rem;
+    white-space: normal;        /* allow wrapping on small screens */
+    overflow-wrap: anywhere;    /* break long tokens safely */
+  }
+  .match-item > .mx-3 {
+    order: 0;
+    margin-inline: 0.5rem;
+  }
+  /* prevent horizontal scrolling from list paddings */
+  .bracket-container,
+  .list-group,
+  .list-group-item.match-item {
+    overflow-x: hidden;
+  }
+}
+
 .athlete-card {
   display: flex;
   align-items: center;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 10px;
-  padding: 1rem;
+  padding: 0.75rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
   transition: all 0.3s ease;
+  overflow: hidden;
+  max-width: 100%;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .athlete-card:hover {
@@ -542,7 +642,10 @@
 .athlete-name {
   font-weight: 600;
   margin-bottom: 0.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .athlete-details {
@@ -552,8 +655,11 @@
 }
 
 .detail-item {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #6c757d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .note-section {
@@ -676,76 +782,364 @@
 }
 
 /* Responsive Adjustments */
+/* Match status and badge fixes */
+.match-status {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+  font-size: 0.9em;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  margin: 0 2px;
+}
+
+/* Fix for match number and mat number */
+.match-number,
+.mat-number,
+.match-number-badge,
+.mat-number-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  vertical-align: middle;
+  font-size: 0.85em;
+  padding: 0.2em 0.6em;
+  border-radius: 10px;
+  background: #f1f3f5;
+  color: #495057;
+  font-weight: 500;
+  margin: 0 2px;
+  line-height: 1.2;
+}
+
+/* Ensure all text in match cards is properly contained */
+.match-card .card-body {
+  overflow: hidden;
+}
+
+/* Fix for long text in badges */
+.badge {
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Fix for match status text */
+.match-status-text {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85em;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  margin: 2px;
+  line-height: 1.2;
+}
+
+/* Status specific colors */
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+  border-color: #c3e6cb;
+}
+
+.status-upcoming {
+  background-color: #fff3cd;
+  color: #856404;
+  border-color: #ffeeba;
+}
+
+.status-ongoing {
+  background-color: #cce5ff;
+  color: #004085;
+  border-color: #b8daff;
+}
+
+/* Responsive text adjustments */
+@media (max-width: 576px) {
+  .match-status,
+  .match-status-text,
+  .match-number,
+  .mat-number,
+  .match-number-badge,
+  .mat-number-badge {
+    font-size: 0.75em;
+    padding: 0.15em 0.4em;
+    margin: 1px;
+  }
+  
+  /* Ensure text doesn't wrap in status elements */
+  .badge, 
+  .match-status, 
+  .match-status-text,
+  .match-number,
+  .mat-number {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+/* Fix for table cells */
+.table {
+  table-layout: fixed;
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Default max width, will be overridden by specific columns */
+}
+
+/* Specific column widths for better mobile display */
+.table th:first-child,
+.table td:first-child {
+  max-width: 80px; /* For numbers/IDs */
+  padding-left: 0.5rem;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0.5rem;
+}
+
+/* Status column */
+.table th:nth-child(3),
+.table td:nth-child(3) {
+  max-width: 100px;
+}
+
+/* Time column */
+.table th:nth-child(4),
+.table td:nth-child(4) {
+  max-width: 80px;
+}
+
+/* Mat number column */
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  max-width: 70px;
+}
+
+/* Action buttons column */
+.table th:last-child,
+.table td:last-child {
+  max-width: 120px;
+  white-space: nowrap;
+}
+
+/* Make tables horizontally scrollable on mobile */
+.table-responsive {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table headers stay visible on scroll */
+.table thead th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Add subtle row hover effect */
+.table tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Responsive adjustments for tables */
+@media (max-width: 768px) {
+  .table th,
+  .table td {
+    padding: 0.4rem 0.3rem;
+    font-size: 0.85em;
+  }
+  
+  .table th:first-child,
+  .table td:first-child {
+    padding-left: 0.3rem;
+    max-width: 50px;
+  }
+  
+  .table th:last-child,
+  .table td:last-child {
+    padding-right: 0.3rem;
+    max-width: 100px;
+  }
+  
+  /* Make action buttons smaller on mobile */
+  .btn-sm {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+  }
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
   .competition-detail-page {
-    padding: 1rem;
+    padding: 0.5rem;
+    overflow-x: hidden;
   }
   
   .competition-header {
-    padding: 1rem;
+    padding: 0.75rem;
+    margin: 0 -0.5rem 1rem;
+    border-radius: 0;
   }
   
   .competition-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+    margin: 0.5rem 0;
   }
   
   .competition-logo {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .competition-dates, .competition-location {
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
   }
   
   .main-tabs,
   .competition-tabs {
-    flex-direction: column;
-    border-radius: 12px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+    margin: 0 -0.5rem;
+    -webkit-overflow-scrolling: touch;
   }
   
   .main-tab-button,
   .tab-button {
-    width: 100%;
-    justify-content: center;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    flex: 0 0 auto;
+    margin: 0 0.25rem;
   }
   
   .tab-content-card {
-    padding: 1rem;
+    padding: 0.75rem;
+    margin: 0 -0.5rem;
+    border-radius: 0;
   }
   
   .info-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
   
   .categories-list,
   .weights-list {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
   
   .gender-weights {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem 0.5rem;
   }
   
   .gender-weights > div:first-child {
     border-left: none;
     border-bottom: 1px solid #eee;
-    padding-left: 0;
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    padding: 0 0 1rem 0;
+    margin: 0 0 1rem 0;
   }
   
+  /* Match details specific fixes */
   .match-content {
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.75rem;
+    margin: 0 -0.5rem;
+    padding: 0.75rem;
   }
   
   .athlete-container {
     width: 100%;
+    padding: 0.5rem;
   }
   
   .vs-container {
-    padding: 0.5rem;
+    padding: 0.25rem;
+    margin: 0.5rem 0;
   }
   
   .athletes-grid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  /* Table official panel improvements */
+  .card {
+    margin: 0 -0.5rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  
+  /* Fix text overflow in match details */
+  .athlete-card, .match-card {
+    overflow: hidden;
+  }
+  
+  .athlete-name, .athlete-details {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* Adjust modal for mobile */
+  .modal-content {
+    margin: 0.5rem;
+    border-radius: 12px;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .btn {
+    white-space: normal;
+    word-wrap: break-word;
   }
 }
 
