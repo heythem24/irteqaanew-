@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation, Link } from 'react-router-dom';
+import { Navigate, useLocation, Link, useParams, useNavigate } from 'react-router-dom';
+
 import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
 import { UsersService } from '../services/firestoreService';
 import { ClubsService } from '../services/firestoreService';
@@ -12,9 +13,11 @@ const AthleteLoginPage: React.FC = () => {
   const [club, setClub] = useState<any>(null);
   
   const location = useLocation();
+  const navigate = useNavigate();
+  const params = useParams<{ clubId: string }>();
   const searchParams = new URLSearchParams(location.search);
-  const clubId = searchParams.get('clubId');
-  
+  const clubId = params.clubId || searchParams.get('clubId') || undefined;
+
   useEffect(() => {
     const fetchClub = async () => {
       if (clubId) {
@@ -45,7 +48,7 @@ const AthleteLoginPage: React.FC = () => {
         if (currentUser.role === 'athlete' && currentUser.clubId === clubId) {
           console.log('===AthleteLogin Debug: User already logged in as athlete for this club===');
           // Redirect to athlete page
-          window.location.href = `/club/${clubId}/athlete/${currentUser.id}`;
+          navigate(`/club/${clubId}/athlete/${currentUser.id}`, { replace: true });
           return;
         } else {
           // Logout current user if not an athlete for this club
@@ -63,7 +66,7 @@ const AthleteLoginPage: React.FC = () => {
         if (user.role === 'athlete' && user.clubId === clubId) {
           console.log('===AthleteLogin Debug: User is athlete for this club===');
           // Redirect to athlete page
-          window.location.href = `/club/${clubId}/athlete/${user.id}`;
+          navigate(`/club/${clubId}/athlete/${user.id}`, { replace: true });
         } else {
           console.error('===AthleteLogin Debug: User is not an athlete for this club===');
           UsersService.logout();
