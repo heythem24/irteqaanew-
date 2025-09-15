@@ -45,6 +45,8 @@ export interface Treatment {
   treatmentType: string;
   startDate: Date;
   endDate?: Date;
+  // عدد الأيام المتوقع للعلاج؛ يُستخدم لحساب "الأيام المتبقية" إن لم تُحدد endDate
+  expectedDuration?: number;
   frequency: string;
   notes?: string;
 }

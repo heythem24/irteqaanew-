@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Form, Button, Row, Col, Card, Alert } from 'react-bootstrap';
-import type { Injury } from '../../types/medical';
-import { MedicalService } from '../../services/medicalService';
+import { Modal, Form, Button, Row, Col, Alert } from 'react-bootstrap';
+import type { Injury, BodyPart } from '../../types/medical';
 
 interface Props {
   athleteId: string;
@@ -9,30 +8,32 @@ interface Props {
   onCancel: () => void;
 }
 
-const bodyPartOptions = [
-  'head',
-  'neck',
-  'shoulder',
-  'elbow',
-  'wrist',
-  'hand',
-  'chest',
-  'back',
-  'abdomen',
-  'hip',
-  'thigh',
-  'knee',
-  'calf',
-  'ankle',
-  'foot'
-] as const;
+// استخدم قيماً داخلية (بالإنجليزية) مطابقة للنوع BodyPart، واعرض تسميات عربية للمستخدم
+const bodyPartOptions: { value: BodyPart; label: string }[] = [
+  { value: 'head', label: 'رأس' },
+  { value: 'neck', label: 'رقبة' },
+  { value: 'shoulder', label: 'كتف' },
+  { value: 'elbow', label: 'مرفق' },
+  { value: 'wrist', label: 'معصم' },
+  { value: 'hand', label: 'يد' },
+  { value: 'chest', label: 'صدر' },
+  { value: 'back', label: 'ظهر' },
+  { value: 'abdomen', label: 'بطن' },
+  { value: 'hip', label: 'ورك' },
+  { value: 'thigh', label: 'فخذ' },
+  { value: 'knee', label: 'ركبة' },
+  { value: 'calf', label: 'عضلة الساق' },
+  { value: 'ankle', label: 'كاحل' },
+  { value: 'foot', label: 'قدم' }
+];
 
 const InjuryReportForm: React.FC<Props> = ({ athleteId, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ injuryLocation: string; bodyPart: BodyPart; painLevel: number; howItHappened: string; reportDate: string }>({
     injuryLocation: '',
-    bodyPart: bodyPartOptions[0],
+    bodyPart: bodyPartOptions[0].value,
     painLevel: 5,
-    howItHappened: ''
+    howItHappened: '',
+    reportDate: new Date().toISOString().split('T')[0]
   });
 
   const [showAlert, setShowAlert] = useState(false);
@@ -40,7 +41,7 @@ const InjuryReportForm: React.FC<Props> = ({ athleteId, onSubmit, onCancel }) =>
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.injuryLocation.trim() || !formData.howItHappened.trim()) {
+    if (!formData.injuryLocation.trim() || !formData.howItHappened.trim() || !formData.reportDate) {
       setShowAlert(true);
       return;
     }
@@ -53,7 +54,7 @@ const InjuryReportForm: React.FC<Props> = ({ athleteId, onSubmit, onCancel }) =>
       severity: formData.painLevel >= 7 ? 'severe' : formData.painLevel >= 4 ? 'moderate' : 'mild',
       status: 'active',
       painLevel: formData.painLevel,
-      reportDate: new Date(),
+      reportDate: new Date(`${formData.reportDate}T00:00:00`),
       treatmentNotes: formData.howItHappened
     };
 
@@ -97,12 +98,27 @@ const InjuryReportForm: React.FC<Props> = ({ athleteId, onSubmit, onCancel }) =>
                   value={formData.bodyPart}
                   onChange={handleInputChange}
                 >
-                  {bodyPartOptions.map(part => (
-                    <option key={part} value={part}>
-                      {part}
+                  {bodyPartOptions.map(p => (
+                    <option key={p.value} value={p.value}>
+                      {p.label}
                     </option>
                   ))}
                 </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
+
+          <Row>
+            <Col md={6}>
+              <Form.Group className="mb-3">
+                <Form.Label>تاريخ الإبلاغ/الإصابة</Form.Label>
+                <Form.Control
+                  type="date"
+                  name="reportDate"
+                  value={formData.reportDate}
+                  onChange={handleInputChange}
+                  required
+                />
               </Form.Group>
             </Col>
           </Row>

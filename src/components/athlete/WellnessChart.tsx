@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatMonthDay } from '../../utils/date';
 import type { DailyWellness } from '../../types/medical';
 
 interface Props {
@@ -174,12 +175,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
           if (!showLabel) return null;
           
           return (
-            <span key={index}>
-              {new Date(item.date).toLocaleDateString('ar-SA', {
-                month: 'short',
-                day: 'numeric'
-              })}
-            </span>
+            <span key={index}>{formatMonthDay(item.date)}</span>
           );
         })}
       </div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Button, Badge, Form, Modal, Row, Col, ProgressBar, Table } from 'react-bootstrap';
+import { formatDate } from '../../utils/date';
 import { MedicalService } from '../../services/medicalService';
 
 interface TreatmentTrackerProps {
@@ -32,6 +33,13 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
 
   const [showProgressModal, setShowProgressModal] = useState(false);
 
+  // Force periodic re-render so that "الأيام المتبقية" تتحدث تلقائياً
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60 * 1000); // كل دقيقة
+    return () => clearInterval(id);
+  }, []);
+
   const getTreatmentTypeLabel = (type: string) => {
     switch (type) {
       case 'physical_therapy': return 'علاج طبيعي';
@@ -53,19 +61,74 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
     return 'danger';
   };
 
+  // احسب التقدّم والزمن ديناميكياً من التواريخ/المدة المتوقعة
+  const computeDurationDays = (t: any) => {
+    if (t.endDate) {
+      const start = new Date(t.startDate as any);
+      const end = new Date(t.endDate as any);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+        const e = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        return Math.max(1, Math.ceil((e.getTime() - s.getTime()) / (1000*60*60*24)));
+      }
+    }
+    return (typeof t.expectedDuration === 'number' && !isNaN(t.expectedDuration)) ? Math.max(1, t.expectedDuration) : 7;
+  };
+
+  const computeDaysSinceStart = (t: any, nowBase?: Date) => {
+    const now = nowBase || new Date(nowTick);
+    let start = new Date(t.startDate as any);
+    if (isNaN(start.getTime())) start = new Date();
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.max(0, Math.floor((n.getTime() - s.getTime()) / (1000*60*60*24)));
+  };
+
+  const computeProgress = (t: any) => {
+    const total = computeDurationDays(t);
+    // إذا لدينا endDate في الماضي، فالتقدم 100%
+    if (t.endDate) {
+      const end = new Date(t.endDate as any);
+      if (!isNaN(end.getTime()) && end.getTime() < Date.now()) return 100;
+    }
+    const daysDone = computeDaysSinceStart(t);
+    const pct = Math.floor((daysDone / total) * 100);
+    return Math.max(0, Math.min(100, pct));
+  };
+
   const getStatusBadge = (treatment: any) => {
-    if (treatment.progress >= 100) {
-      return <Badge bg="success">مكتمل</Badge>;
-    } else if (treatment.progress > 0) {
-      return <Badge bg="warning">قيد التنفيذ</Badge>;
-    } else {
+    let start = new Date(treatment.startDate as any);
+    if (isNaN(start.getTime())) start = new Date();
+    const now = new Date(nowTick);
+    const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+    const n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const total = computeDurationDays(treatment);
+    const endDay = new Date(s);
+    endDay.setDate(s.getDate() + total);
+
+    if (n.getTime() < s.getTime()) {
       return <Badge bg="secondary">لم يبدأ</Badge>;
     }
+    if (n.getTime() >= endDay.getTime()) {
+      return <Badge bg="success">مكتمل</Badge>;
+    }
+    return <Badge bg="warning">قيد التنفيذ</Badge>;
   };
 
   const handleSaveTreatment = () => {
     if (!athleteId || !newTreatment.treatmentType) return;
     
+    const start = newTreatment.startDate || new Date();
+    const exp = (typeof newTreatment.expectedDuration === 'number' && !isNaN(newTreatment.expectedDuration))
+      ? newTreatment.expectedDuration
+      : 7;
+    const computedEnd = (() => {
+      const d = new Date(start);
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + exp);
+      return d;
+    })();
+
     const treatment = {
       id: selectedTreatment?.id || MedicalService.generateId(),
       athleteId: athleteId,
@@ -73,8 +136,9 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
       treatmentType: newTreatment.treatmentType || '',
       frequency: newTreatment.frequency || '',
       notes: newTreatment.notes || '',
-      startDate: newTreatment.startDate || new Date(),
-      expectedDuration: newTreatment.expectedDuration || 7,
+      startDate: start,
+      expectedDuration: exp,
+      endDate: newTreatment.endDate || computedEnd,
       progress: newTreatment.progress || 0,
       progressHistory: selectedTreatment?.progressHistory || []
     };
@@ -164,16 +228,40 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
   };
 
   const calculateDaysRemaining = (treatment: any) => {
-    const startDate = new Date(treatment.startDate);
-    const expectedDuration = treatment.expectedDuration || 7;
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + expectedDuration);
-    
-    const now = new Date();
-    const diffTime = endDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays > 0 ? diffDays : 0;
+    try {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      let start = new Date(treatment.startDate as any);
+      if (isNaN(start.getTime())) start = new Date();
+      const now = new Date(nowTick);
+      // طبيع التاريخين إلى بداية اليوم لتفادي مشاكل المناطق الزمنية
+      const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      // إن وُجد endDate، استخدمه مباشرة
+      if (treatment.endDate) {
+        const end = new Date(treatment.endDate as any);
+        if (!isNaN(end.getTime())) {
+          const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+          const diff = Math.ceil((endDay.getTime() - nowDay.getTime()) / msPerDay);
+          if (!import.meta.env.PROD) {
+            console.debug('[RemainingDays][Staff] using endDate', { id: treatment.id, startDay, endDay, nowDay, diff });
+          }
+          return diff > 0 ? diff : 0;
+        }
+      }
+
+      const expectedDuration = typeof treatment.expectedDuration === 'number' && !isNaN(treatment.expectedDuration)
+        ? treatment.expectedDuration
+        : 7;
+      const daysSinceStart = Math.floor((nowDay.getTime() - startDay.getTime()) / msPerDay);
+      const remaining = expectedDuration - daysSinceStart;
+      if (!import.meta.env.PROD) {
+        console.debug('[RemainingDays][Staff] using expectedDuration', { id: treatment.id, startDay, nowDay, expectedDuration, daysSinceStart, remaining });
+      }
+      return remaining > 0 ? remaining : 0;
+    } catch {
+      return 0;
+    }
   };
 
   const toDateInputValue = (d: any): string => {
@@ -247,16 +335,20 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
                     <td>
                       <div className="d-flex align-items-center">
                         <ProgressBar 
-                          now={treatment.progress} 
-                          variant={getProgressColor(treatment.progress)}
+                          now={computeProgress(treatment)} 
+                          variant={getProgressColor(computeProgress(treatment))}
                           style={{ width: '100px', height: '20px' }}
                           className="me-2"
                         />
-                        <span>{treatment.progress}%</span>
+                        <span>{computeProgress(treatment)}%</span>
                       </div>
                     </td>
                     <td>{getStatusBadge(treatment)}</td>
-                    <td>{calculateDaysRemaining(treatment)} يوم</td>
+                    <td
+                      title={`start=${formatDate(treatment.startDate)}; end=${treatment.endDate ? formatDate(treatment.endDate) : '—'}; exp=${typeof treatment.expectedDuration === 'number' ? treatment.expectedDuration : '—'}; remaining=${calculateDaysRemaining(treatment)}`}
+                    >
+                      {calculateDaysRemaining(treatment)} يوم
+                    </td>
                     <td>
                       <div className="d-flex gap-1">
                         <Button 
@@ -266,14 +358,7 @@ const TreatmentTracker: React.FC<TreatmentTrackerProps> = ({
                         >
                           تعديل
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline-success"
-                          onClick={() => handleUpdateProgressClick(treatment)}
-                          disabled={treatment.progress >= 100}
-                        >
-                          تحديث التقدم
-                        </Button>
+                        {/* التقدم أصبح ديناميكي؛ نخفي زر التحديث اليدوي */}
                         <Button 
                           size="sm" 
                           variant="outline-danger"

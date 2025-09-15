@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { formatDate } from '../../utils/date';
 import { Modal, Form, Button, Row, Col, Card } from 'react-bootstrap';
 import type { DailyWellness } from '../../types/medical';
 import { MedicalService } from '../../services/medicalService';
@@ -161,9 +162,7 @@ const DailyWellnessForm: React.FC<Props> = ({ athleteId, onSubmit, onCancel }) =
             <h6 className="text-muted">
               كيف تشعر اليوم؟ يستغرق هذا التقييم أقل من دقيقة واحدة
             </h6>
-            <small className="text-muted">
-              التاريخ: {new Date().toLocaleDateString('ar-SA')}
-            </small>
+            <small className="text-muted">التاريخ: {formatDate(new Date())}</small>
           </div>
 
           <ScaleSlider

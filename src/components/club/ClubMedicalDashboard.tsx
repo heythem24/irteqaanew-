@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { formatDate, formatDateTime } from '../../utils/date';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Alert, Tabs, Tab, Form, Modal, Table } from 'react-bootstrap';
 import { MedicalService } from '../../services/medicalService';
@@ -386,7 +387,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                             <div>{alert.message}</div>
                           </div>
                           <small className="text-muted">
-                            {new Date(alert.triggeredDate).toLocaleString('ar-SA')}
+                            {formatDate(alert.triggeredDate)}
                           </small>
                         </div>
                       </Alert>
@@ -421,7 +422,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                         {wellness.slice(0, 5).map((w) => (
                           <tr key={w.id}>
                             <td>{getAthleteName(w.athleteId)}</td>
-                            <td>{new Date(w.date).toLocaleDateString('ar-SA')}</td>
+                            <td>{formatDate(w.date)}</td>
                             <td>
                               <Badge bg={getWellnessScoreColor(w.wellnessScore)}>
                                 {w.wellnessScore.toFixed(1)}
@@ -475,7 +476,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                       {wellness.map((w) => (
                         <tr key={w.id}>
                           <td>{getAthleteName(w.athleteId)}</td>
-                          <td>{new Date(w.date).toLocaleDateString('ar-SA')}</td>
+                          <td>{formatDate(w.date)}</td>
                           <td>
                             <Badge bg={getWellnessScoreColor(w.wellnessScore)}>
                               {w.wellnessScore.toFixed(1)}
@@ -518,7 +519,6 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                         <th>مستوى الألم</th>
                         <th>الحالة</th>
                         <th>تاريخ الإبلاغ</th>
-                        <th>التاريخ المتوقع للعودة</th>
                         <th>ملاحظات العلاج</th>
                       </tr>
                     </thead>
@@ -535,12 +535,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                                injury.status === InjuryStatus.RECOVERED ? 'تم الشفاء' : 'مزمنة'}
                             </Badge>
                           </td>
-                          <td>{new Date(injury.reportDate).toLocaleDateString('ar-SA')}</td>
-                          <td>
-                            {injury.expectedReturnDate ?
-                              new Date(injury.expectedReturnDate).toLocaleDateString('ar-SA') :
-                              '-'}
-                          </td>
+                          <td>{formatDate(injury.reportDate)}</td>
                           <td>{injury.treatmentNotes || '-'}</td>
                         </tr>
                       ))}
@@ -612,7 +607,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                                  appointment.appointmentType === 'therapy' ? 'علاج طبيعي' :
                                  appointment.appointmentType === 'followup' ? 'متابعة' : appointment.appointmentType}
                               </td>
-                              <td>{new Date(appointment.date).toLocaleDateString('ar-SA')}</td>
+                              <td>{formatDate(appointment.date)}</td>
                               <td>{appointment.time}</td>
                               <td>{appointment.location}</td>
                               <td>{appointment.doctorName}</td>
@@ -666,9 +661,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                         <div>
                           <h6 className="alert-heading">{alert.type}</h6>
                           <p className="mb-1">{alert.message}</p>
-                          <small className="text-muted">
-                            {new Date(alert.triggeredDate).toLocaleString('ar-SA')}
-                          </small>
+                          <small className="text-muted">{formatDateTime(alert.triggeredDate)}</small>
                         </div>
                         <Badge bg={getAlertSeverityColor(alert.severity)}>
                           {alert.severity === AlertSeverity.CRITICAL ? 'عاجل' :
@@ -743,9 +736,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                   
                   <div className="mt-3">
                     <small className="text-muted">
-                      آخر تحديث: {medicalProfile.updatedAt ?
-                        new Date(medicalProfile.updatedAt).toLocaleString('ar-SA') :
-                        'غير محدد'}
+                      آخر تحديث: {medicalProfile.updatedAt ? formatDateTime(medicalProfile.updatedAt) : 'غير محدد'}
                     </small>
                   </div>
                 </div>
@@ -837,9 +828,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                                       <strong>{alert.type}</strong>
                                       <div>{alert.message}</div>
                                     </div>
-                                    <small className="text-muted">
-                                      {new Date(alert.triggeredDate).toLocaleDateString('ar-SA')}
-                                    </small>
+                                    <small className="text-muted">{formatDate(alert.triggeredDate)}</small>
                                   </div>
                                 </Alert>
                               ))}
@@ -884,9 +873,7 @@ const ClubMedicalDashboard: React.FC<ClubMedicalDashboardProps> = ({ clubId }) =
                         <div>
                           <h6 className="alert-heading">{notification.title}</h6>
                           <p className="mb-1">{notification.message}</p>
-                          <small className="text-muted">
-                            {new Date(notification.timestamp).toLocaleString('ar-SA')}
-                          </small>
+                          <small className="text-muted">{formatDateTime(notification.timestamp)}</small>
                         </div>
                         <div className="d-flex flex-column align-items-end">
                           <Badge bg={

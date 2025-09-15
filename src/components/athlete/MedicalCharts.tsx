@@ -11,6 +11,7 @@ import {
   ArcElement,
 } from 'chart.js';
 import { Line, Pie } from 'react-chartjs-2';
+import { formatDate } from '../../utils/date';
 import { Card } from 'react-bootstrap';
 import type { DailyWellness, InjuryRecord, MedicalAppointment, Treatment } from '../../types/medical';
 import { InjuryStatus } from '../../types/medical';
@@ -124,7 +125,7 @@ const MedicalCharts: React.FC<MedicalChartsProps> = ({ type, data }) => {
         const sortedWellness = wellness.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
         const wellnessChartData = {
-          labels: sortedWellness.map(w => new Date(w.date).toLocaleDateString('ar-SA')),
+          labels: sortedWellness.map(w => formatDate(w.date)),
           datasets: [{
             label: 'مؤشر الصحة',
             data: sortedWellness.map(w => w.wellnessScore),

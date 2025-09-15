@@ -100,7 +100,9 @@ export class MedicalService {
       if (value === undefined) {
         return; // drop undefined keys
       }
-      if (value && typeof value === 'object' && !(value instanceof Date)) {
+      // Preserve Firestore Timestamp and JS Date as-is
+      const isFirestoreTimestamp = typeof (value as any)?.toDate === 'function' && typeof (value as any)?.toMillis === 'function';
+      if (value && typeof value === 'object' && !(value instanceof Date) && !isFirestoreTimestamp) {
         result[key] = this.sanitizeForFirestore(value as any);
       } else {
         result[key] = value;
@@ -516,11 +518,56 @@ export class MedicalService {
       const snap = await getDocs(qT);
       const items = snap.docs.map(d => {
         const data: any = d.data();
+        if (!import.meta.env.PROD) {
+          console.debug('[MedicalService.getTreatments] raw doc', d.id, {
+            keys: Object.keys(data),
+            startDate: data.startDate,
+            endDate: data.endDate,
+            expectedDuration: data.expectedDuration,
+            types: {
+              startDate: data.startDate ? (typeof data.startDate) : 'undefined',
+              endDate: data.endDate ? (typeof data.endDate) : 'undefined',
+              expectedDuration: typeof data.expectedDuration
+            }
+          });
+        }
+        // حاول قراءة startDate مع التعامل مع حقول قديمة محتملة مثل start أو date
+        let startDate: Date | undefined = data.startDate?.toDate?.() || (data.startDate ? new Date(data.startDate) : undefined);
+        if (!startDate || isNaN(startDate.getTime())) {
+          startDate = data.start?.toDate?.() || (data.start ? new Date(data.start) : undefined) || data.date?.toDate?.() || (data.date ? new Date(data.date) : undefined);
+        }
+        if (!startDate || isNaN(startDate.getTime())) {
+          startDate = new Date(); // افتراضي: اليوم لتفادي Invalid Date في العرض والحساب
+        }
+        // endDate اختيارية؛ تعامل مع حقول قديمة محتملة
+        let endDate: Date | undefined = data.endDate ? (data.endDate.toDate?.() || new Date(data.endDate)) : undefined;
+        if (endDate && isNaN(endDate.getTime())) endDate = undefined;
+        if (!endDate && data.end) {
+          const e = data.end.toDate?.() || new Date(data.end);
+          endDate = isNaN(e.getTime()) ? undefined : e;
+        }
+        let expectedDuration: number | undefined = typeof data.expectedDuration === 'number'
+          ? data.expectedDuration
+          : (data.expectedDuration != null ? parseInt(String(data.expectedDuration)) : undefined);
+        // Backfill expectedDuration from dates if missing
+        if ((expectedDuration == null || isNaN(expectedDuration)) && startDate && endDate) {
+          const msPerDay = 1000 * 60 * 60 * 24;
+          const sDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+          const eDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+          expectedDuration = Math.max(1, Math.ceil((eDay.getTime() - sDay.getTime()) / msPerDay));
+        }
+        if (typeof expectedDuration === 'number' && expectedDuration <= 0) {
+          expectedDuration = 1;
+        }
+        if (expectedDuration == null || isNaN(expectedDuration)) {
+          expectedDuration = 7; // افتراضي
+        }
         return {
           id: d.id,
           ...data,
-          startDate: data.startDate?.toDate?.() || new Date(data.startDate),
-          endDate: data.endDate ? (data.endDate.toDate?.() || new Date(data.endDate)) : undefined
+          startDate,
+          endDate,
+          expectedDuration
         } as Treatment;
       });
       return items.sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
@@ -538,6 +585,15 @@ export class MedicalService {
         startDate: Timestamp.fromDate(new Date(treatment.startDate)),
         endDate: treatment.endDate ? Timestamp.fromDate(new Date(treatment.endDate)) : undefined
       });
+      if (!import.meta.env.PROD) {
+        console.debug('[MedicalService.saveTreatment] payload', {
+          id: treatment.id,
+          athleteId: treatment.athleteId,
+          startDate: payload.startDate,
+          endDate: payload.endDate,
+          expectedDuration: payload.expectedDuration,
+        });
+      }
       await setDoc(docRef, payload);
       // Emit update event
       this.emitUpdate({ athleteId: treatment.athleteId, source: 'treatment' });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatDate, formatTime } from '../../utils/date';
 import { Navigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Button, Badge, Alert, Tabs, Tab, Table } from 'react-bootstrap';
 import './MedicalDashboard.css';
@@ -43,6 +44,8 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
   const [appointments, setAppointments] = useState<MedicalAppointment[]>([]);
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [staffNotifications, setStaffNotifications] = useState<any[]>([]);
+  // tick to force periodic refresh of computed fields like remaining days
+  const [nowTick, setNowTick] = useState<number>(Date.now());
   
   const [activeTab, setActiveTab] = useState('overview');
   const [showWellnessForm, setShowWellnessForm] = useState(false);
@@ -119,9 +122,48 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
     }
   };
 
+  // helper to compute remaining days for treatments
+  const calculateDaysRemaining = (t: Treatment) => {
+    try {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const start = new Date(t.startDate as any);
+      if (isNaN(start.getTime())) return '-';
+      const now = new Date(nowTick);
+      const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const nowDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (t.endDate) {
+        const end = new Date(t.endDate as any);
+        const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+        const diff = Math.ceil((endDay.getTime() - nowDay.getTime()) / msPerDay);
+        if (!import.meta.env.PROD) {
+          console.debug('[RemainingDays][Athlete] using endDate', { id: (t as any).id, startDay, endDay, nowDay, diff });
+        }
+        return (diff > 0 ? diff : 0) + ' يوم';
+      }
+
+      const expectedDuration = (t as any).expectedDuration;
+      const durationDays = (typeof expectedDuration === 'number' && !isNaN(expectedDuration)) ? expectedDuration : 7;
+      const daysSinceStart = Math.floor((nowDay.getTime() - startDay.getTime()) / msPerDay);
+      const remaining = durationDays - daysSinceStart;
+      if (!import.meta.env.PROD) {
+        console.debug('[RemainingDays][Athlete] using expectedDuration', { id: (t as any).id, startDay, nowDay, durationDays, daysSinceStart, remaining });
+      }
+      return (remaining > 0 ? remaining : 0) + ' يوم';
+    } catch {
+      return '-';
+    }
+  };
+
   useEffect(() => {
     loadDashboardData();
   }, [athleteId]);
+
+  // periodic tick each minute to re-render and recalc remaining days
+  useEffect(() => {
+    const id = setInterval(() => setNowTick(Date.now()), 60 * 1000);
+    return () => clearInterval(id);
+  }, []);
 
   // Refresh when other parts of the app update medical data (e.g., staff creates an appointment)
   useEffect(() => {
@@ -312,9 +354,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                 <span className="me-2">{getAlertIcon(alert.severity)}</span>
                                 <div className="flex-grow-1">
                                   <small className="fw-bold d-block">{alert.message}</small>
-                                  <small className="text-muted">
-                                    {new Date(alert.triggeredDate).toLocaleDateString('ar-SA')}
-                                  </small>
+                                  <small className="text-muted">{formatDate(alert.triggeredDate)}</small>
                                 </div>
                               </div>
                             </Alert>
@@ -376,7 +416,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                           <small>مستوى الألم: {injury.painLevel}/10</small>
                                         </p>
                                         <p className="mb-1">
-                                          <small>التاريخ: {new Date(injury.reportDate).toLocaleDateString('ar-SA')}</small>
+                                          <small>التاريخ: {formatDate(injury.reportDate)}</small>
                                         </p>
                                       </div>
                                       <Badge
@@ -386,9 +426,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                       </Badge>
                                     </div>
                                     {injury.expectedReturnDate && (
-                                      <small className="text-muted">
-                                        العودة المتوقعة: {new Date(injury.expectedReturnDate).toLocaleDateString('ar-SA')}
-                                      </small>
+                                      <small className="text-muted">العودة المتوقعة: {formatDate(injury.expectedReturnDate)}</small>
                                     )}
                                   </Card.Body>
                                 </Card>
@@ -493,7 +531,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                               <tbody>
                                 {appointments.map((appointment) => (
                                   <tr key={appointment.id}>
-                                    <td>{new Date(appointment.date).toLocaleDateString('ar-SA')}</td>
+                                    <td>{formatDate(appointment.date)}</td>
                                     <td>{appointment.time}</td>
                                     <td>{appointment.appointmentType}</td>
                                     <td>{appointment.location}</td>
@@ -547,6 +585,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                   <th>تاريخ البدء</th>
                                   <th>التكرار</th>
                                   <th>الحالة</th>
+                                  <th>الأيام المتبقية</th>
                                   <th>ملاحظات</th>
                                 </tr>
                               </thead>
@@ -554,17 +593,39 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                 {treatments.map((treatment) => (
                                   <tr key={treatment.id}>
                                     <td>{treatment.treatmentType}</td>
-                                    <td>{new Date(treatment.startDate).toLocaleDateString('ar-SA')}</td>
+                                    <td>{formatDate(treatment.startDate)}</td>
                                     <td>{treatment.frequency}</td>
                                     <td>
-                                      <Badge
-                                        bg={
-                                          !treatment.endDate ? 'warning' : 'success'
+                                      {(() => {
+                                        // ديناميكية الحالة حسب الزمن
+                                        const msPerDay = 1000 * 60 * 60 * 24;
+                                        const now = new Date(nowTick);
+                                        let start = new Date(treatment.startDate as any);
+                                        if (isNaN(start.getTime())) start = new Date();
+                                        const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+                                        const n = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                                        // احسب مدة العلاج
+                                        let total: number;
+                                        if (treatment.endDate) {
+                                          const e0 = new Date(treatment.endDate as any);
+                                          const e = new Date(e0.getFullYear(), e0.getMonth(), e0.getDate());
+                                          total = Math.max(1, Math.ceil((e.getTime() - s.getTime()) / msPerDay));
+                                        } else {
+                                          const exp = (treatment as any).expectedDuration;
+                                          total = (typeof exp === 'number' && !isNaN(exp)) ? Math.max(1, exp) : 7;
                                         }
-                                      >
-                                        {!treatment.endDate ? 'جاري' : 'مكتمل'}
-                                      </Badge>
+                                        const endDay = new Date(s);
+                                        endDay.setDate(s.getDate() + total);
+                                        if (n.getTime() < s.getTime()) {
+                                          return <Badge bg="secondary">لم يبدأ</Badge>;
+                                        }
+                                        if (n.getTime() >= endDay.getTime()) {
+                                          return <Badge bg="success">مكتمل</Badge>;
+                                        }
+                                        return <Badge bg="warning">قيد التنفيذ</Badge>;
+                                      })()}
                                     </td>
+                                    <td>{calculateDaysRemaining(treatment)}</td>
                                     <td>{treatment.notes || '-'}</td>
                                   </tr>
                                 ))}
@@ -676,7 +737,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                   <small>{notification.message}</small>
                                   <div className="mt-1">
                                     <small className="text-muted">
-                                      {new Date(notification.timestamp).toLocaleDateString('ar-SA')} {new Date(notification.timestamp).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                                      {formatDate(notification.timestamp)} {formatTime(notification.timestamp)}
                                     </small>
                                   </div>
                                 </div>
