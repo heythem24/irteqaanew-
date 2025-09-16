@@ -31,6 +31,126 @@ const CompetitionDetailPage: React.FC = () => {
   // Bracket tab state
   const [activeBracketTab, setActiveBracketTab] = useState<string>('');
 
+  // Helpers: parse group key and collect medal winners for printing certificates
+  type MedalType = 'gold' | 'silver' | 'bronze';
+  const parseGroupKey = (key: string) => {
+    const parts = (key || '').split('|');
+    if (parts.length >= 3) {
+      return {
+        category: parts[0] || 'فئة غير محددة',
+        gender: parts[1] === 'male' ? 'ذكور' : parts[1] === 'female' ? 'إناث' : parts[1] || 'جنس غير محدد',
+        weight: parts[2] || 'وزن غير محدد'
+      };
+    }
+    return { category: 'فئة غير محددة', gender: 'جنس غير محدد', weight: 'وزن غير محدد' };
+  };
+
+  const collectMedalWinners = (medal: MedalType) => {
+    if (!pairings) return [] as Array<{ athlete?: User; club?: Club; info: ReturnType<typeof parseGroupKey> }>;
+    // Build groups
+    const groupsMap = new Map<string, PairMatch[]>();
+    pairings.matches.forEach(m => {
+      const key = m.groupKey || 'غير محدد';
+      if (!groupsMap.has(key)) groupsMap.set(key, []);
+      groupsMap.get(key)!.push(m);
+    });
+    const getAth = (id?: string | null) => id ? participants.find(r=>r.athlete.id===id)?.athlete : undefined;
+    const getClub = (ath?: User) => ath?.clubId ? participants.find(r=>r.athlete.id === (ath?.id || ''))?.club : undefined;
+    const results: Array<{ athlete?: User; club?: Club; info: ReturnType<typeof parseGroupKey> }> = [];
+    groupsMap.forEach((matches, groupKey) => {
+      const info = parseGroupKey(groupKey);
+      const maxRound = Math.max(...matches.map(m => m.round || 1));
+      const finalMatch = matches.find(m => (m.round || 1) === maxRound && (m.stage || 'main') === 'main');
+      const bronzeMatch = matches.find(m => (m.stage || 'main') === 'bronze');
+      if (medal === 'gold' && finalMatch?.winnerId) {
+        const a = getAth(finalMatch.winnerId);
+        results.push({ athlete: a, club: getClub(a), info });
+      } else if (medal === 'silver' && finalMatch && finalMatch.status === 'finished' && finalMatch.winnerId) {
+        const a1 = getAth(finalMatch.athlete1Id);
+        const a2 = getAth(finalMatch.athlete2Id);
+        const loser = finalMatch.winnerId === a1?.id ? a2 : a1;
+        results.push({ athlete: loser, club: getClub(loser), info });
+      } else if (medal === 'bronze' && bronzeMatch?.winnerId) {
+        const a = getAth(bronzeMatch.winnerId);
+        results.push({ athlete: a, club: getClub(a), info });
+      }
+    });
+    return results.filter(r => !!r.athlete);
+  };
+
+  const printCertificates = (medal: MedalType) => {
+    const winners = collectMedalWinners(medal);
+    if (!competition) return;
+    const titleMap: Record<MedalType, { ar: string; color: string }>= {
+      gold: { ar: 'الميدالية الذهبية', color: '#C9A227' },
+      silver: { ar: 'الميدالية الفضية', color: '#9E9E9E' },
+      bronze: { ar: 'الميدالية البرونزية', color: '#CD7F32' },
+    };
+    const w = window.open('', '_blank');
+    if (!w) return;
+    const css = `
+      body { direction: rtl; font-family: 'Tahoma', Arial, sans-serif; background: #f6f7fb; margin: 0; }
+      .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 10mm auto; background: white; position: relative; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+      .cert { border: 6px double #333; padding: 24px 24px 25px 24px; height: 100%; position: relative; }
+      .header { text-align: center; margin-bottom: 16px; }
+      .title { font-size: 28px; font-weight: 800; margin: 8px 0; }
+      .subtitle { font-size: 16px; color: #555; }
+      .medal { font-size: 22px; font-weight: 700; margin: 12px 0; }
+      .row { display: flex; justify-content: space-between; margin: 8px 0; }
+      .field { width: 48%; font-size: 15px; }
+      .label { color: #666; font-weight: 600; }
+      .value { font-weight: 700; }
+      .footer { position: absolute; bottom: 16px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 13px; color: #666; }
+      .badge { display: inline-block; padding: 6px 10px; border-radius: 8px; font-weight: 700; }
+      .sep { height: 1px; background: #eee; margin: 12px 0; }
+      @media print { body { background: white; } .page { box-shadow: none; margin: 0; width: auto; min-height: auto; page-break-after: always; } }
+    `;
+    const certs = winners.map((r, idx) => {
+      const a = r.athlete!;
+      const info = r.info;
+      const medalCfg = titleMap[medal];
+      const genderAr = info.gender;
+      const catAr = info.category;
+      const weight = info.weight;
+      const clubName = r.club?.nameAr || r.club?.name || '—';
+      const fullName = `${a.firstNameAr || a.firstName || ''} ${a.lastNameAr || a.lastName || ''}`.trim();
+      const dateStr = `${new Date(competition.startDate).toLocaleDateString('ar-DZ')} - ${new Date(competition.endDate).toLocaleDateString('ar-DZ')}`;
+      return `
+        <div class="page">
+          <div class="cert">
+            <div class="header">
+              <div class="subtitle">${competition.level === 'national' ? 'بطولة وطنية' : competition.level === 'regional' ? 'بطولة جهوية' : 'بطولة تابعة لرابطة'}</div>
+              <div class="title">${competition.nameAr || competition.name}</div>
+              <div class="subtitle">${competition.placeAr || competition.place || ''} — ${dateStr}</div>
+              <div class="medal" style="color:${medalCfg.color}">${medalCfg.ar}</div>
+            </div>
+            <div class="sep"></div>
+            <div class="row"><div class="field"><span class="label">الرياضي:</span> <span class="value">${fullName}</span></div><div class="field"><span class="label">النادي:</span> <span class="value">${clubName}</span></div></div>
+            <div class="row"><div class="field"><span class="label">الجنس:</span> <span class="value">${genderAr}</span></div><div class="field"><span class="label">الفئة العمرية:</span> <span class="value">${catAr}</span></div></div>
+            <div class="row"><div class="field"><span class="label">الفئة الوزنية:</span> <span class="value">${weight}</span></div><div class="field"><span class="label">الرتبة:</span> <span class="value">${medalCfg.ar}</span></div></div>
+            <div class="footer"><div>توقيع اللجنة المنظمة</div><div>الختم الرسمي</div></div>
+          </div>
+        </div>
+      `;
+    }).join('\n');
+    w.document.write(`<!DOCTYPE html><html dir="rtl"><head><meta charset="utf-8"/><title>شهادات ${titleMap[medal].ar}</title><style>${css}</style></head><body>${certs}</body></html>`);
+    w.document.close();
+    w.focus();
+    setTimeout(() => { w.print(); w.close(); }, 200);
+  };
+
+  // Determine if medals are decided (show print buttons even if status is not 'finished')
+  const getMedalAvailability = () => {
+    try {
+      const gold = collectMedalWinners('gold').length > 0;
+      const silver = collectMedalWinners('silver').length > 0;
+      const bronze = collectMedalWinners('bronze').length > 0;
+      return { gold, silver, bronze };
+    } catch {
+      return { gold: false, silver: false, bronze: false };
+    }
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -281,6 +401,26 @@ const CompetitionDetailPage: React.FC = () => {
             {activeTab === 'brackets' && (
               <div className="brackets-tab">
                 <h2>جداول المنافسة</h2>
+                {/* Print certificates toolbar: show when competition is finished OR medals are decided */}
+                {(() => {
+                  const statusFinished = deriveStatus(competition) === 'finished';
+                  const avail = getMedalAvailability();
+                  const shouldShow = statusFinished || avail.gold || avail.silver || avail.bronze;
+                  if (!shouldShow) return null;
+                  return (
+                    <div className="mb-3 d-flex flex-wrap gap-2" dir="rtl">
+                      <button className="btn btn-outline-warning btn-sm" onClick={() => printCertificates('gold')} disabled={!avail.gold && !statusFinished}>
+                        <i className="fas fa-medal me-2"></i> طباعة شهادات الذهبية
+                      </button>
+                      <button className="btn btn-outline-secondary btn-sm" onClick={() => printCertificates('silver')} disabled={!avail.silver && !statusFinished}>
+                        <i className="fas fa-medal me-2"></i> طباعة شهادات الفضية
+                      </button>
+                      <button className="btn btn-outline-danger btn-sm" onClick={() => printCertificates('bronze')} disabled={!avail.bronze && !statusFinished}>
+                        <i className="fas fa-medal me-2"></i> طباعة شهادات البرونزية
+                      </button>
+                    </div>
+                  );
+                })()}
                 <div className="bracket-container" dir="rtl">
                   {currentStatus === 'upcoming' && !(pairings && pairings.matches.length > 0) ? (
                     <div className="alert alert-secondary" dir="rtl">

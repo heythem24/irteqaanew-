@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import type { Staff, League } from '../../types';
 import { UsersService } from '../../services/firestoreService';
 
+import LeagueAthleteRoster from './LeagueAthleteRoster';
+
 const ProfileHeader: React.FC<{ president: Staff; leagueName: string }> = ({ president, leagueName }) => (
   <Card className="mb-4">
     <Card.Body>
@@ -62,6 +64,9 @@ const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ pre
             <Nav.Link eventKey="contact">معلومات الاتصال</Nav.Link>
           </Nav.Item>
           <Nav.Item>
+            <Nav.Link eventKey="roster">قائمة الرياضيين</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
             <Nav.Link eventKey="responsibilities">المسؤوليات</Nav.Link>
           </Nav.Item>
         </Nav>
@@ -77,6 +82,9 @@ const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ pre
               <p><strong>البريد الإلكتروني:</strong> {president.email || 'غير متوفر'}</p>
               <p><strong>الهاتف:</strong> {president.phone || 'غير متوفر'}</p>
             </InfoCard>
+          </Tab.Pane>
+          <Tab.Pane eventKey="roster">
+            <LeagueAthleteRoster league={league} />
           </Tab.Pane>
           <Tab.Pane eventKey="responsibilities">
             <Row>
