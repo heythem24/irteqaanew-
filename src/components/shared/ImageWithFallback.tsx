@@ -5,6 +5,7 @@ interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElemen
   inputSrc?: string | null;
   fallbackSrc: string;
   forceHttps?: boolean;
+  useCloudinaryFetch?: boolean; // if true and cloud name is provided, use Cloudinary fetch for remote images
   // If provided, we will set explicit width/height attributes to stabilize layout
   boxWidth?: number | string;
   boxHeight?: number | string;
@@ -17,10 +18,38 @@ const ensureHttps = (url?: string | null): string | undefined => {
   return /^https:\/\//.test(url) ? url : undefined;
 };
 
+// Try to read Cloudinary cloud name from both Vite and CRA env conventions
+const getCloudName = (): string | undefined => {
+  try {
+    const vite = (import.meta as any)?.env?.VITE_CLOUDINARY_CLOUD_NAME as string | undefined;
+    // @ts-ignore
+    const cra = (typeof process !== 'undefined' ? (process.env?.REACT_APP_CLOUDINARY_CLOUD_NAME as string | undefined) : undefined);
+    return vite || cra || undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const buildCloudinaryFetchUrl = (src: string, opts: { w?: number | string; h?: number | string }): string | undefined => {
+  const cloud = getCloudName();
+  if (!cloud) return undefined;
+  if (!/^https?:\/\//.test(src)) return undefined; // fetch only for remote URLs
+  const w = typeof opts.w === 'number' ? opts.w : undefined;
+  const h = typeof opts.h === 'number' ? opts.h : undefined;
+  const transforms: string[] = ['f_auto', 'q_auto'];
+  if (w || h) transforms.push('c_fill');
+  if (w) transforms.push(`w_${w}`);
+  if (h) transforms.push(`h_${h}`);
+  const t = transforms.join(',');
+  const encoded = encodeURIComponent(src);
+  return `https://res.cloudinary.com/${cloud}/image/fetch/${t}/${encoded}`;
+};
+
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   inputSrc,
   fallbackSrc,
   forceHttps = true,
+  useCloudinaryFetch = true,
   boxWidth,
   boxHeight,
   fixedBox = true,
@@ -28,7 +57,15 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   onError,
   ...imgProps
 }) => {
-  const initial = (forceHttps ? ensureHttps(inputSrc) : (inputSrc || undefined)) || fallbackSrc;
+  let initial: string | undefined;
+  const cloud = getCloudName();
+  if (useCloudinaryFetch && cloud && typeof inputSrc === 'string' && /^https?:\/\//.test(inputSrc)) {
+    // Route remote image through Cloudinary fetch to guarantee https and optimization
+    initial = buildCloudinaryFetchUrl(inputSrc, { w: boxWidth as any, h: boxHeight as any }) || undefined;
+  }
+  if (!initial) {
+    initial = (forceHttps ? ensureHttps(inputSrc) : (inputSrc || undefined)) || fallbackSrc;
+  }
   const [currentSrc, setCurrentSrc] = React.useState<string>(initial);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {

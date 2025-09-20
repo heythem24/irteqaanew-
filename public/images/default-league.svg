@@ -1,0 +1,19 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="League placeholder">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e5f0ff"/>
+      <stop offset="100%" stop-color="#c7d2fe"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" fill="url(#g)"/>
+  <g transform="translate(120,120)">
+    <circle cx="0" cy="0" r="86" fill="#ffffff" opacity="0.7"/>
+    <circle cx="0" cy="0" r="72" fill="#e0e7ff"/>
+    <g fill="#6366f1">
+      <path d="M-40 10 a40 40 0 1 1 80 0 q-40 20 -80 0z"/>
+      <circle cx="-12" cy="-6" r="8"/>
+      <circle cx="12" cy="-6" r="8"/>
+    </g>
+  </g>
+  <text x="120" y="220" text-anchor="middle" font-family="Arial, Helvetica, 'Segoe UI', sans-serif" font-size="14" fill="#4b5563">League Image</text>
+</svg>
