@@ -6,6 +6,7 @@ import AthleteProfile from '../components/athlete/AthleteProfile';
 import BeltsAndPromotions from '../components/athlete/BeltsAndPromotions';
 import TechnicalProfile from '../components/athlete/TechnicalProfile';
 import AthleteMedicalDashboard from '../components/athlete/AthleteMedicalDashboard';
+import JudoBeltsCurriculum from '../components/athlete/JudoBeltsCurriculum.tsx';
 import { UsersService as UserService, ClubsService } from '../services/firestoreService';
 import '../components/athlete/AthleteProfile.css';
 
@@ -412,25 +413,6 @@ const AthletePage: React.FC = () => {
               </Nav.Item>
               <Nav.Item>
                 <Nav.Link
-                  active={activeTab === 'medical'}
-                  onClick={() => setActiveTab('medical')}
-                  className={`px-4 py-3 fw-bold ${activeTab === 'medical' ? 'bg-white text-primary shadow' : ''}`}
-                  style={{
-                    border: 'none',
-                    borderRadius: '0.5rem 0.5rem 0 0',
-                    transition: 'all 0.3s ease',
-                    cursor: 'pointer',
-                    backgroundColor: activeTab === 'medical' ? 'white' : 'transparent',
-                    color: activeTab === 'medical' ? '#0d6efd' : 'rgba(255,255,255,0.9)'
-                  }}
-                  dir="rtl"
-                >
-                  <i className="fas fa-heartbeat me-2"></i>
-                  المركز الصحي
-                </Nav.Link>
-              </Nav.Item>
-              <Nav.Item>
-                <Nav.Link
                   as={Link}
                   to={`/club/${clubId}/athlete/${athlete.id}/chat`}
                   className={`px-4 py-3 fw-bold`}
@@ -446,6 +428,44 @@ const AthletePage: React.FC = () => {
                 >
                   <i className="fas fa-comments me-2"></i>
                   الدردشة
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'curriculum'}
+                  onClick={() => setActiveTab('curriculum')}
+                  className={`px-4 py-3 fw-bold ${activeTab === 'curriculum' ? 'bg-white text-primary shadow' : ''}`}
+                  style={{
+                    border: 'none',
+                    borderRadius: '0.5rem 0.5rem 0 0',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    backgroundColor: activeTab === 'curriculum' ? 'white' : 'transparent',
+                    color: activeTab === 'curriculum' ? '#0d6efd' : 'rgba(255,255,255,0.9)'
+                  }}
+                  dir="rtl"
+                >
+                  <i className="fas fa-book-open me-2"></i>
+                  منهاج الأحزمة
+                </Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link
+                  active={activeTab === 'medical'}
+                  onClick={() => setActiveTab('medical')}
+                  className={`px-4 py-3 fw-bold ${activeTab === 'medical' ? 'bg-white text-primary shadow' : ''}`}
+                  style={{
+                    border: 'none',
+                    borderRadius: '0.5rem 0.5rem 0 0',
+                    transition: 'all 0.3s ease',
+                    cursor: 'pointer',
+                    backgroundColor: activeTab === 'medical' ? 'white' : 'transparent',
+                    color: activeTab === 'medical' ? '#0d6efd' : 'rgba(255,255,255,0.9)'
+                  }}
+                  dir="rtl"
+                >
+                  <i className="fas fa-heartbeat me-2"></i>
+                  المركز الصحي
                 </Nav.Link>
               </Nav.Item>
             </Nav>
@@ -478,6 +498,11 @@ const AthletePage: React.FC = () => {
                     athleteId={athlete.id} 
                     athleteName={`${athlete.firstNameAr} ${athlete.lastNameAr}`} 
                   />
+                </div>
+              )}
+              {activeTab === 'curriculum' && (
+                <div className="fade-in-up">
+                  <JudoBeltsCurriculum />
                 </div>
               )}
             </Card.Body>

@@ -58,6 +58,8 @@ const CompetitionDetailPage: React.FC = () => {
     const getClub = (ath?: User) => ath?.clubId ? participants.find(r=>r.athlete.id === (ath?.id || ''))?.club : undefined;
     const results: Array<{ athlete?: User; club?: Club; info: ReturnType<typeof parseGroupKey> }> = [];
     groupsMap.forEach((matches, groupKey) => {
+      // If a specific bracket tab is active, restrict to that group only
+      if (activeBracketTab && groupKey !== activeBracketTab) return;
       const info = parseGroupKey(groupKey);
       const maxRound = Math.max(...matches.map(m => m.round || 1));
       const finalMatch = matches.find(m => (m.round || 1) === maxRound && (m.stage || 'main') === 'main');
@@ -89,23 +91,32 @@ const CompetitionDetailPage: React.FC = () => {
     const w = window.open('', '_blank');
     if (!w) return;
     const css = `
-      body { direction: rtl; font-family: 'Tahoma', Arial, sans-serif; background: #f6f7fb; margin: 0; }
-      .page { width: 210mm; min-height: 297mm; padding: 20mm; margin: 10mm auto; background: white; position: relative; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-      .cert { border: 6px double #333; padding: 24px 24px 25px 24px; height: 100%; position: relative; }
-      .header { text-align: center; margin-bottom: 16px; }
+      @page { size: A4 landscape; margin: 0; }
+      body { direction: rtl; font-family: 'Tahoma', Arial, sans-serif; background: #fff; margin: 0; }
+      .page { width: 297mm; height: 210mm; margin: 0; padding: 0; background: white; position: relative; }
+      .cert { border: 6px double #333; padding: 15mm 15mm 20mm 15mm; width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; }
+      .header { text-align: center; margin: 10mm 0 8mm 0; }
       .title { font-size: 28px; font-weight: 800; margin: 8px 0; }
       .subtitle { font-size: 16px; color: #555; }
       .medal { font-size: 22px; font-weight: 700; margin: 12px 0; }
-      .row { display: flex; justify-content: space-between; margin: 8px 0; }
+      .content { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 8mm; }
+      .row { display: flex; justify-content: space-between; }
       .field { width: 48%; font-size: 15px; }
       .label { color: #666; font-weight: 600; }
       .value { font-weight: 700; }
-      .footer { position: absolute; bottom: 16px; left: 24px; right: 24px; display: flex; justify-content: space-between; font-size: 13px; color: #666; }
+      .footer { margin-top: auto; display: flex; justify-content: space-between; font-size: 13px; color: #666; padding-top: 8mm; border-top: 1px solid #ddd; }
       .badge { display: inline-block; padding: 6px 10px; border-radius: 8px; font-weight: 700; }
-      .sep { height: 1px; background: #eee; margin: 12px 0; }
-      @media print { body { background: white; } .page { box-shadow: none; margin: 0; width: auto; min-height: auto; page-break-after: always; } }
+      .sep { height: 1px; background: #eee; margin: 6mm 0; }
+      @media print {
+        body { background: white; }
+        .page { margin: 0; width: 297mm; height: 210mm; }
+        /* Only insert page break before subsequent pages to avoid trailing blank page */
+        .page + .page { page-break-before: always; }
+      }
     `;
-    const certs = winners.map((r, idx) => {
+    // اطبع شهادة واحدة فقط في صفحة واحدة حتى لو وُجد أكثر من فائز ضمن نفس الاختيار
+    const selected = winners.slice(0, 1);
+    const certs = selected.map((r, idx) => {
       const a = r.athlete!;
       const info = r.info;
       const medalCfg = titleMap[medal];
@@ -124,10 +135,11 @@ const CompetitionDetailPage: React.FC = () => {
               <div class="subtitle">${competition.placeAr || competition.place || ''} — ${dateStr}</div>
               <div class="medal" style="color:${medalCfg.color}">${medalCfg.ar}</div>
             </div>
-            <div class="sep"></div>
-            <div class="row"><div class="field"><span class="label">الرياضي:</span> <span class="value">${fullName}</span></div><div class="field"><span class="label">النادي:</span> <span class="value">${clubName}</span></div></div>
-            <div class="row"><div class="field"><span class="label">الجنس:</span> <span class="value">${genderAr}</span></div><div class="field"><span class="label">الفئة العمرية:</span> <span class="value">${catAr}</span></div></div>
-            <div class="row"><div class="field"><span class="label">الفئة الوزنية:</span> <span class="value">${weight}</span></div><div class="field"><span class="label">الرتبة:</span> <span class="value">${medalCfg.ar}</span></div></div>
+            <div class="content">
+              <div class="row"><div class="field"><span class="label">الرياضي:</span> <span class="value">${fullName}</span></div><div class="field"><span class="label">النادي:</span> <span class="value">${clubName}</span></div></div>
+              <div class="row"><div class="field"><span class="label">الجنس:</span> <span class="value">${genderAr}</span></div><div class="field"><span class="label">الفئة العمرية:</span> <span class="value">${catAr}</span></div></div>
+              <div class="row"><div class="field"><span class="label">الفئة الوزنية:</span> <span class="value">${weight}</span></div><div class="field"><span class="label">الرتبة:</span> <span class="value">${medalCfg.ar}</span></div></div>
+            </div>
             <div class="footer"><div>توقيع اللجنة المنظمة</div><div>الختم الرسمي</div></div>
           </div>
         </div>
