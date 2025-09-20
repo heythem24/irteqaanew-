@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useSpeedStrengthTests } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 import { getCategoryByDOBToday } from '../../utils/categoryUtils';
@@ -350,7 +351,7 @@ const SpeedStrengthTests: React.FC<SpeedStrengthTestsProps> = ({ clubId }) => {
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="speed-strength-table" dir="rtl">
+          <Table bordered className="speed-strength-table coach-table" dir="rtl">
             <thead>
               <tr className="table-primary">
                 <th className="text-center">الإسم واللقب</th>

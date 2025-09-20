@@ -5,6 +5,7 @@ import { useAttendance } from '../../hooks/useFirestore';
 import { useCoachData } from '../../hooks/useCoachData';
 import { UsersService as UserService } from '../../services/firestoreService';
 import './AttendanceTracker.css';
+import './coach-responsive.css';
 
 interface AttendanceTrackerProps {
   club: Club;
@@ -371,7 +372,7 @@ const AttendanceTracker: React.FC<AttendanceTrackerProps> = ({ club }) => {
 
         {/* Attendance Table */}
         <div className="table-responsive">
-          <Table bordered className="text-center attendance-table">
+          <Table bordered className="text-center attendance-table coach-table">
             <thead className="table-dark">
               <tr>
                 <th className="text-center" dir="rtl" style={{ minWidth: '60px' }}>الرقم</th>

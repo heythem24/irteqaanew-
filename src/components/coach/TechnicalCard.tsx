@@ -4,6 +4,7 @@ import type { Club } from '../../types';
 import { useTechnicalCard } from '../../hooks/useFirestore';
 import { UsersService as UserService } from '../../services/firestoreService';
 import './TechnicalCard.css';
+import './coach-responsive.css';
 
 interface TechnicalCardProps {
   club: Club;
@@ -357,7 +358,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
 
         {/* الجدول الرئيسي */}
         <div className="table-responsive">
-          <Table bordered className="technical-card-table">
+          <Table bordered className="technical-card-table coach-table">
             <thead>
               <tr>
                 <th className="phase-header" colSpan={2} dir="rtl">المراحــل</th>

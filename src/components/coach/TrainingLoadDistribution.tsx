@@ -3,6 +3,7 @@ import { Card, Button, Row, Col, Form, Table } from 'react-bootstrap';
 import type { Club, TrainingData } from '../../types';
 import { useTrainingLoad } from '../../hooks/useTrainingData';
 import './TrainingLoadDistribution.css';
+import './coach-responsive.css';
 
 interface Props {
   club: Club;
@@ -596,7 +597,7 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
 
           {/* الجدول الرئيسي */}
           <div className="table-responsive">
-            <Table bordered className="training-load-table" dir="rtl">
+            <Table bordered className="training-load-table coach-table" dir="rtl">
               <thead>
                 <tr>
                   <th rowSpan={2} className="main-header">

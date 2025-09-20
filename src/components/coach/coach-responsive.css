@@ -1,0 +1,45 @@
+/* Common responsive helpers for coach tables */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Apply to coach tables */
+.coach-table {
+  table-layout: auto;
+  width: 100%;
+}
+
+/* Ensure the first column (labels) wraps and is readable */
+.coach-table th:first-child,
+.coach-table td:first-child {
+  white-space: normal !important;
+  word-break: break-word;
+}
+
+/* Mobile optimizations */
+@media (max-width: 576px) {
+  .coach-table {
+    min-width: 720px; /* ensure horizontal scroll with reasonable width */
+    font-size: 0.9rem;
+  }
+  .coach-table th,
+  .coach-table td {
+    padding: 0.4rem;
+    white-space: nowrap;
+    vertical-align: middle;
+  }
+  /* But allow first column to wrap naturally so its text doesn't get cut */
+  .coach-table th:first-child,
+  .coach-table td:first-child {
+    white-space: normal !important;
+    min-width: 120px; /* give labels breathing room */
+  }
+}
+
+/* Small tablets */
+@media (min-width: 577px) and (max-width: 768px) {
+  .coach-table {
+    min-width: 900px;
+  }
+}

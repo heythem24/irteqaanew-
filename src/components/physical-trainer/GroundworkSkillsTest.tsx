@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useGroundworkSkillsTest } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 import { getCategoryByDOBToday } from '../../utils/categoryUtils';
@@ -304,7 +305,7 @@ const GroundworkSkillsTest: React.FC<GroundworkSkillsTestProps> = ({ clubId }) =
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="groundwork-skills-table" dir="rtl">
+          <Table bordered className="groundwork-skills-table coach-table" dir="rtl">
             <thead>
               <tr className="table-primary">
                 <th rowSpan={2} className="text-center align-middle">الإسم واللقب</th>

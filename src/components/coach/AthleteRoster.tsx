@@ -4,6 +4,7 @@ import type { Club, User } from '../../types';
 import { UsersService as UserService } from '../../services/firestoreService';
 import { useCoachData } from '../../hooks/useCoachData';
 import { getCategoryByDOBToday, getWeightClasses } from '../../utils/categoryUtils';
+import './coach-responsive.css';
 
 interface AthleteRosterProps {
   club: Club;
@@ -544,8 +545,8 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
               hover
               responsive
               dir="rtl"
-              className="text-center align-middle athlete-roster-table"
-              style={{ tableLayout: 'auto', width: '100%', minWidth: '2000px' }}
+              className="text-center align-middle athlete-roster-table coach-table"
+              style={{ tableLayout: 'auto', width: '100%' }}
             >
               <thead>
                 <tr>

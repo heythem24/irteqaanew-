@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card, Table, Form, Row, Col, Button } from 'react-bootstrap';
 import type { Club } from '../../types';
 import { useWeeklySchedule } from '../../hooks/useFirestore';
+import './coach-responsive.css';
 
 interface WeeklyScheduleProps {
   club: Club;
@@ -308,7 +309,7 @@ const WeeklySchedule: React.FC<WeeklyScheduleProps> = ({ club }) => {
 
         {/* جدول البرنامج */}
         <div className="table-responsive">
-          <Table bordered hover className="text-center">
+          <Table bordered hover className="text-center coach-table">
             <thead className="table-dark">
               <tr>
                 <th className="text-center" dir="rtl"></th>

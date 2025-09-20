@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useTeamRecord } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 
@@ -414,7 +415,7 @@ const TeamRecord: React.FC<TeamRecordProps> = ({ clubId }) => {
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="text-center" style={{ fontSize: '0.85rem' }}>
+          <Table bordered className="text-center coach-table" style={{ fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ backgroundColor: '#e3f2fd' }}>
                 <th rowSpan={2} style={{ verticalAlign: 'middle', backgroundColor: '#f5f5f5', minWidth: '120px' }}>

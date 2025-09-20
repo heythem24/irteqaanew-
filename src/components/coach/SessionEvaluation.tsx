@@ -3,6 +3,7 @@ import { Card, Form, Row, Col, Button, ProgressBar, Table } from 'react-bootstra
 import type { Club } from '../../types';
 import { useSessionEvaluation } from '../../hooks/useFirestore';
 import './SessionEvaluation.css';
+import './coach-responsive.css';
 
 interface SessionEvaluationProps {
   club: Club;
@@ -232,7 +233,7 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
 
         {/* جدول تقييم الحصص */}
         <div className="table-responsive">
-          <Table bordered hover className="session-table text-center">
+          <Table bordered hover className="session-table text-center coach-table">
             <thead>
               <tr>
                 <th className="text-center fw-bold" dir="rtl">الشهر</th>

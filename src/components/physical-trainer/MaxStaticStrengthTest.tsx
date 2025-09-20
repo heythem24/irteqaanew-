@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useMaxStaticStrengthTest } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 import { getCategoryByDOBToday } from '../../utils/categoryUtils';
@@ -340,7 +341,7 @@ const MaxStaticStrengthTest: React.FC<MaxStaticStrengthTestProps> = ({ clubId })
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="static-strength-test-table" dir="rtl">
+          <Table bordered className="static-strength-test-table coach-table" dir="rtl">
             <thead>
               <tr className="table-primary">
                 <th className="text-center">الإسم واللقب</th>

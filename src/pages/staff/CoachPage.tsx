@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Container, Spinner } from 'react-bootstrap';
 import CoachDashboard from '../../components/coach/CoachDashboard';
 import { UsersService as UserService, ClubsService } from '../../services/firestoreService';
@@ -128,14 +128,6 @@ const CoachPage: React.FC = () => {
 
   return (
     <>
-      <div className="container mt-4" dir="rtl">
-        <div className="d-flex justify-content-end mb-3">
-          <Link to={`/club/${club.id}/staff/coach/chat`} className="btn btn-outline-primary">
-            <i className="fas fa-comments me-2"></i>
-            الدردشة
-          </Link>
-        </div>
-      </div>
       <CoachDashboard
         coach={coach}
         club={club}

@@ -3,6 +3,7 @@ import { Card, Form, Row, Col, Button, Table } from 'react-bootstrap';
 import type { Club } from '../../types';
 import { useAnnualPlan, useSessionEvaluation } from '../../hooks/useFirestore';
 import './AnnualPlan.css';
+import './coach-responsive.css';
 
 interface AnnualPlanProps {
   club: Club;
@@ -444,7 +445,7 @@ const AnnualPlan: React.FC<AnnualPlanProps> = ({ club }) => {
 
         {/* الجدول الرئيسي */}
         <div className="table-responsive">
-          <Table bordered className="annual-plan-table">
+          <Table bordered className="annual-plan-table coach-table">
             <thead>
               <tr>
                 <th rowSpan={2} className="row-label align-middle" dir="rtl">

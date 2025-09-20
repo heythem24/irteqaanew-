@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useUchiKomiTest } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 import { getCategoryByDOBToday } from '../../utils/categoryUtils';
@@ -209,7 +210,7 @@ const UchiKomiTest: React.FC<UchiKomiTestProps> = ({ clubId }) => {
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table striped bordered hover className="text-center">
+          <Table striped bordered hover className="text-center coach-table">
             <thead className="table-dark">
               <tr>
                 <th rowSpan={2} style={{ verticalAlign: 'middle' }}>الاسم واللقب</th>

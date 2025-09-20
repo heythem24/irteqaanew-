@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useThrowingSkillsTest } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 import { getCategoryByDOBToday } from '../../utils/categoryUtils';
@@ -566,7 +567,7 @@ const ThrowingSkillsTest: React.FC<ThrowingSkillsTestProps> = ({ clubId }) => {
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table striped bordered hover className="text-center" style={{ fontSize: '0.85rem' }}>
+          <Table striped bordered hover className="text-center coach-table" style={{ fontSize: '0.85rem' }}>
             <thead className="table-dark">
               <tr>
                 <th rowSpan={3} style={{ verticalAlign: 'middle', minWidth: '120px' }}>الاسم واللقب</th>
