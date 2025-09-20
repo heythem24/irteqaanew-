@@ -502,7 +502,7 @@ const AthletePage: React.FC = () => {
               )}
               {activeTab === 'curriculum' && (
                 <div className="fade-in-up">
-                  <JudoBeltsCurriculum />
+                  <JudoBeltsCurriculum athleteId={athlete.id} />
                 </div>
               )}
             </Card.Body>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, Badge, Accordion, Nav } from 'react-bootstrap';
+import { db } from '../../config/firebase';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
   <Card className="mb-3 shadow-sm border-0">
@@ -12,9 +14,49 @@ const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title
   </Card>
 );
 
-const JudoBeltsCurriculum: React.FC = () => {
-  const [subTab, setSubTab] = useState<'belts' | 'explain'>('belts');
+type SubTab = 'belts' | 'explain';
+interface Props { athleteId?: string }
+
+const JudoBeltsCurriculum: React.FC<Props> = ({ athleteId }) => {
+  const [subTab, setSubTab] = useState<SubTab>('belts');
   const tabsGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  const loadedRef = useRef(false);
+
+  // Load last selected sub-tab from Firestore for this athlete
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        if (!athleteId) return;
+        const ref = doc(db, 'athlete_curriculum', athleteId);
+        const snap = await getDoc(ref);
+        if (!cancelled && snap.exists()) {
+          const data = snap.data() as any;
+          if (data?.lastSubTab === 'belts' || data?.lastSubTab === 'explain') {
+            setSubTab(data.lastSubTab);
+          }
+        }
+      } catch {}
+      finally {
+        loadedRef.current = true;
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [athleteId]);
+
+  // Persist sub-tab selection per athlete to Firestore (debounced via ref guard)
+  useEffect(() => {
+    const save = async () => {
+      try {
+        if (!athleteId) return;
+        if (!loadedRef.current) return; // avoid immediately overwriting before initial load
+        const ref = doc(db, 'athlete_curriculum', athleteId);
+        await setDoc(ref, { lastSubTab: subTab, updatedAt: serverTimestamp() }, { merge: true });
+      } catch {}
+    };
+    save();
+  }, [athleteId, subTab]);
   return (
     <div>
       {/* Sub-tabs header */}
