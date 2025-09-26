@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Button, Alert, Spinner } from 'react-bootstrap';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Container, Button, Alert, Spinner, Navbar, Nav } from 'react-bootstrap';
 import StaffMemberPage from '../../components/staff/StaffMemberPage';
 import TechnicalDirectorDashboard from '../../components/technical-director/TechnicalDirectorDashboard';
 import { staff as mockStaff, clubs as mockClubs } from '../../data/mockData';
 import { StaffPosition } from '../../types';
 import { ClubsService, UsersService } from '../../services/firestoreService';
-import type { Club, Staff, User } from '../../types';
+import type { Club, Staff } from '../../types';
 
 // Mock data for the technical director as fallback
 const technicalDirectorData = {
@@ -31,10 +31,10 @@ const technicalDirectorData = {
 
 const ClubTechnicalDirectorPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
-  const [showDashboard, setShowDashboard] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const [showDashboard, setShowDashboard] = useState<boolean>(true);
   const [club, setClub] = useState<Club | null>(null);
   const [technicalDirector, setTechnicalDirector] = useState<Staff | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,7 +54,6 @@ const ClubTechnicalDirectorPage: React.FC = () => {
         // Fetch current user data
         const userData = await UsersService.getCurrentUserWithDetails();
         console.log('===ClubTechnicalDirectorPage Debug: Current user data===', userData);
-        if (mounted) setCurrentUser(userData);
         
         // Fetch club from Firestore first
         const clubData = await ClubsService.getClubById(clubId);
@@ -109,7 +108,6 @@ const ClubTechnicalDirectorPage: React.FC = () => {
           
           // Try to get current user as fallback
           const userData = await UsersService.getCurrentUserWithDetails();
-          if (mounted) setCurrentUser(userData);
           
           let directorData: Staff | null = null;
           if (userData && userData.role === 'technical_director') {
@@ -172,6 +170,11 @@ const ClubTechnicalDirectorPage: React.FC = () => {
   // Use the director data from state or fallback to mock data
   const finalDirectorData = technicalDirector || technicalDirectorData;
 
+  const handleLogout = () => {
+    try { UsersService.logout(); } catch {}
+    navigate('/login');
+  };
+
   // Additional information for the technical director
   const additionalInfo = {
     experience: '12+ سنة خبرة تقنية',
@@ -230,29 +233,32 @@ const ClubTechnicalDirectorPage: React.FC = () => {
     );
   }
 
-  // إضافة زر للانتقال إلى لوحة التحكم
-  const dashboardButton = (
-    <div className="text-center mt-4">
-      <Button
-        variant="success"
-        size="lg"
-        onClick={() => setShowDashboard(true)}
-        className="px-4 py-2"
-      >
-        <i className="fas fa-cogs me-2"></i>
-        الانتقال إلى لوحة التحكم التقنية
-      </Button>
-    </div>
-  );
-
   return (
     <div>
+      {/* Top Header with Dashboard and Logout */}
+      <Navbar bg="light" expand="lg" className="mb-3 border-bottom">
+        <Container>
+          <Navbar.Brand className="fw-bold">المدير التقني للنادي</Navbar.Brand>
+          <Navbar.Toggle aria-controls="td-club-navbar" />
+          <Navbar.Collapse id="td-club-navbar">
+            <Nav className="ms-auto d-flex align-items-center gap-2">
+              <Button variant="success" size="sm" onClick={() => setShowDashboard(true)}>
+                <i className="fas fa-cogs me-2"></i>
+                لوحة التحكم التقنية
+              </Button>
+              <Button variant="danger" size="sm" onClick={handleLogout}>
+                تسجيل الخروج
+              </Button>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+
       <StaffMemberPage
         staff={finalDirectorData}
         clubId={clubId}
         additionalInfo={additionalInfo}
       />
-      {dashboardButton}
     </div>
   );
 };

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Nav, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Container, Row, Col, Nav, Card, Button } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import type { Staff, Club } from '../../types';
 import PeriodisationAnnuelle from './PeriodisationAnnuelle';
+import { UsersService } from '../../services/firestoreService';
 
 interface TechnicalDirectorDashboardProps {
   technicalDirector: Staff;
@@ -11,14 +12,20 @@ interface TechnicalDirectorDashboardProps {
 
 const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({ 
   technicalDirector, 
-  club 
+  club,
 }) => {
   const [activeSection, setActiveSection] = useState<string>('periodisation');
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    try { UsersService.logout(); } catch {}
+    navigate('/login');
+  };
 
   const renderContent = () => {
     switch (activeSection) {
       case 'periodisation':
-        return <PeriodisationAnnuelle />;
+        return <PeriodisationAnnuelle clubId={club.id} />;
 
       case 'training-programs':
         return (
@@ -108,15 +115,6 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
         <Container>
           <Row className="align-items-center">
             <Col md={9}>
-              <div className="d-flex align-items-center mb-3">
-                <Link
-                  to={`/club/${club.id}`}
-                  className="btn btn-outline-light me-3"
-                >
-                  <i className="fas fa-arrow-right me-2"></i>
-                  العودة للنادي
-                </Link>
-              </div>
               <h1 className="h3 mb-0 d-flex align-items-center" dir="rtl">
                 <i className="fas fa-cogs me-3"></i>
                 لوحة تحكم المدير التقني - {technicalDirector.firstNameAr} {technicalDirector.lastNameAr}
@@ -129,6 +127,11 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
                 className="img-fluid rounded-circle shadow"
                 style={{ width: '96px', height: '96px', objectFit: 'cover' }}
               />
+              <div className="mt-3">
+                <Button variant="danger" size="sm" onClick={handleLogout}>
+                  تسجيل الخروج
+                </Button>
+              </div>
             </Col>
           </Row>
         </Container>

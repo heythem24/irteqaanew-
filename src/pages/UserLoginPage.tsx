@@ -84,7 +84,7 @@ const UserLoginPage: React.FC = () => {
 
     const clubRoles = [
       'club_president', 'coach', 'physical_trainer', 'club_general_secretary', 
-      'club_treasurer', 'medical_staff', 'athlete'
+      'club_treasurer', 'medical_staff', 'athlete', 'technical_director'
     ];
 
     if (clubRoles.includes(role) && !clubId) {
@@ -123,6 +123,7 @@ const UserLoginPage: React.FC = () => {
           case 'club_general_secretary': path = `/club/${clubId}/staff/general-secretary`; break;
           case 'club_treasurer': path = `/club/${clubId}/staff/treasurer`; break;
           case 'medical_staff': path = `/club/${clubId}/staff/medical`; break;
+          case 'technical_director': path = `/club/${clubId}/staff/technical-director`; break;
           case 'athlete': path = `/club/${clubId}`; break;
           default: setError('دور النادي غير معروف.'); return;
         }
@@ -132,6 +133,7 @@ const UserLoginPage: React.FC = () => {
         switch (role) {
           case 'league_president': path = '/league/01/staff/president'; break;
           case 'technical_director': path = '/league/01/staff/technical-director'; break;
+          case 'league_technical_director': path = '/league/01/staff/technical-director'; break;
           case 'general_secretary': path = '/league/01/staff/general-secretary'; break;
           case 'treasurer': path = '/league/01/staff/treasurer'; break;
           case 'admin': navigate('/'); break; // Admin goes to homepage for now
@@ -270,6 +272,7 @@ const UserLoginPage: React.FC = () => {
                       <option value="medical_staff">الطاقم الطبي</option>
                       <option value="athlete">رياضي</option>
                       <option value="league_president">رئيس الرابطة</option>
+                      <option value="league_technical_director">المدير التقني للرابطة</option>
                       <option value="technical_director">المدير التقني</option>
                       <option value="general_secretary">الكاتب العام للرابطة</option>
                       <option value="treasurer">أمين مال الرابطة</option>

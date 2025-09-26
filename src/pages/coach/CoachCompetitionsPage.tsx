@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Container, Row, Col, Card, Badge, Spinner, Alert, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { CompetitionsService, UsersService, ClubsService, ParticipationsService } from '../../services/firestoreService';
 import type { Competition, User } from '../../types';
 import ImageWithFallback from '../../components/shared/ImageWithFallback';
@@ -21,6 +21,7 @@ const CoachCompetitionsPage: React.FC = () => {
 
   const currentUser = UsersService.getCurrentUser();
   const clubId = currentUser?.clubId || '';
+  const navigate = useNavigate();
 
   const levelLabelAr = (lv?: string): string => {
     switch (lv) {
@@ -252,7 +253,19 @@ const CoachCompetitionsPage: React.FC = () => {
   }
 
   return (
-    <Container className="py-5" style={{ marginTop: '4.5rem' }}>
+    <>
+      <header className="bg-light border-bottom">
+        <div className="container py-3 d-flex justify-content-between align-items-center" dir="rtl">
+          <div>
+            <Button size="lg" variant="outline-secondary" className="px-4" onClick={() => navigate(-1)}>
+              <i className="fas fa-arrow-right ms-2"></i>
+              عودة
+            </Button>
+          </div>
+          <div className="text-muted">المنافسات</div>
+        </div>
+      </header>
+      <Container className="py-5" style={{ marginTop: '4.5rem' }}>
       <h1 className="text-center mb-5">المنافسات المتاحة</h1>
 
       <Row>
@@ -412,8 +425,9 @@ const CoachCompetitionsPage: React.FC = () => {
           </Col>
         </Row>
       )}
-    </Container>
+
+      </Container>
+    </>
   );
 };
-
 export default CoachCompetitionsPage;

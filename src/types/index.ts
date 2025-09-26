@@ -295,6 +295,7 @@ export interface User {
 export const UserRole = {
   ADMIN: 'admin',
   LEAGUE_PRESIDENT: 'league_president',
+  LEAGUE_TECHNICAL_DIRECTOR: 'league_technical_director',
   TECHNICAL_DIRECTOR: 'technical_director',
   GENERAL_SECRETARY: 'general_secretary',
   TREASURER: 'treasurer',

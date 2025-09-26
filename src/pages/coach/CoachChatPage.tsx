@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Button } from 'react-bootstrap';
 import ChatHub from '../../components/chat/ChatHub';
 import { UsersService } from '../../services/firestoreService';
 
@@ -7,6 +8,7 @@ const CoachChatPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   const [senderId, setSenderId] = useState<string>('');
   const [senderName, setSenderName] = useState<string>('');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
@@ -28,13 +30,26 @@ const CoachChatPage: React.FC = () => {
   }
 
   return (
-    <main className="flex-grow-1">
-      {senderId ? (
-        <ChatHub clubId={clubId} currentUserId={senderId} currentUserName={senderName} currentUserRole="coach" />
-      ) : (
-        <div className="container my-4" dir="rtl"><div className="alert alert-info">جاري تحميل هوية المستخدم…</div></div>
-      )}
-    </main>
+    <>
+      <header className="bg-light border-bottom">
+        <div className="container py-2 d-flex justify-content-between align-items-center" dir="rtl">
+          <div>
+            <Button variant="outline-secondary" size="sm" onClick={() => navigate(-1)}>
+              <i className="fas fa-arrow-right ms-1"></i>
+              عودة
+            </Button>
+          </div>
+          <div className="text-muted small">دردشة النادي</div>
+        </div>
+      </header>
+      <main className="flex-grow-1">
+        {senderId ? (
+          <ChatHub clubId={clubId} currentUserId={senderId} currentUserName={senderName} currentUserRole="coach" />
+        ) : (
+          <div className="container my-4" dir="rtl"><div className="alert alert-info">جاري تحميل هوية المستخدم…</div></div>
+        )}
+      </main>
+    </>
   );
 };
 

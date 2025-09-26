@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Container, Alert, Spinner } from 'react-bootstrap';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Container, Alert, Spinner, Navbar, Nav, Button } from 'react-bootstrap';
 import StaffMemberPage from '../../components/staff/StaffMemberPage';
 import { staff as mockStaff, leagues as mockLeagues } from '../../data/mockData';
 import { StaffPosition } from '../../types';
 import { LeaguesService, UsersService } from '../../services/firestoreService';
-import { StaffService } from '../../services/mockDataService';
-import type { Staff, League, User } from '../../types';
+import type { Staff, League } from '../../types';
 
 // Mock data for the technical director as fallback
 const technicalDirectorData = {
@@ -31,10 +30,20 @@ const technicalDirectorData = {
 
 const TechnicalDirectorPage: React.FC = () => {
   const { wilayaId } = useParams<{ wilayaId: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [technicalDirector, setTechnicalDirector] = useState<Staff | null>(null);
   const [league, setLeague] = useState<League | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Require authentication: if not logged in, redirect to login with role hint
+  useEffect(() => {
+    if (!UsersService.isAuthenticated()) {
+      // Preserve intent to come back and hint the role
+      navigate(`/login?role=league_technical_director`, { state: { from: location } as any });
+    }
+  }, [navigate, location]);
 
   useEffect(() => {
     let mounted = true;
@@ -164,6 +173,11 @@ const TechnicalDirectorPage: React.FC = () => {
   // Use the technical director data from state or fallback to mock data
   const directorData = technicalDirector || technicalDirectorData;
 
+  const handleLogout = () => {
+    try { UsersService.logout(); } catch {}
+    navigate('/login');
+  };
+
   // Additional information for the technical director
   const additionalInfo = {
     experience: '15+ سنة خبرة تقنية',
@@ -213,11 +227,27 @@ const TechnicalDirectorPage: React.FC = () => {
   };
 
   return (
-    <StaffMemberPage
-      staff={directorData}
-      leagueId={wilayaId}
-      additionalInfo={additionalInfo}
-    />
+    <div>
+      {/* Top Header with Logout */}
+      <Navbar bg="light" expand="lg" className="mb-3 border-bottom">
+        <Container>
+          <Navbar.Brand className="fw-bold">المدير التقني للرابطة</Navbar.Brand>
+          <Navbar.Toggle aria-controls="td-league-navbar" />
+          <Navbar.Collapse id="td-league-navbar">
+            <Nav className="ms-auto d-flex align-items-center gap-2">
+              <Button variant="danger" size="sm" onClick={handleLogout}>
+                تسجيل الخروج
+              </Button>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      <StaffMemberPage
+        staff={directorData}
+        leagueId={wilayaId}
+        additionalInfo={additionalInfo}
+      />
+    </div>
   );
 };
 

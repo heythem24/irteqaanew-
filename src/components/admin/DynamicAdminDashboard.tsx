@@ -292,7 +292,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       showAlert('danger', 'الرجاء ملء جميع الحقول المطلوبة');
       return;
     }
-    const clubRequiredRoles: UserRole[] = ['club_president', 'coach', 'physical_trainer', 'club_general_secretary', 'club_treasurer', 'medical_staff', 'athlete'];
+    const clubRequiredRoles: UserRole[] = ['club_president', 'coach', 'physical_trainer', 'club_general_secretary', 'club_treasurer', 'medical_staff', 'athlete', 'technical_director'];
     if (clubRequiredRoles.includes(newUser.role as UserRole) && !newUser.clubId) {
       showAlert('danger', 'الرجاء اختيار نادي لهذا الدور');
       return;
@@ -399,7 +399,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
   
     const getRoleLabel = (role: UserRole) => {
     const roleLabels: Record<UserRole, string> = {
-      'admin': 'مدير النظام', 'league_president': 'رئيس الرابطة', 'technical_director': 'المدير الفني',
+      'admin': 'مدير النظام', 'league_president': 'رئيس الرابطة', 'league_technical_director': 'المدير التقني للرابطة', 'technical_director': 'المدير الفني',
       'general_secretary': 'الأمين العام', 'treasurer': 'أمين الصندوق', 'club_president': 'رئيس النادي',
       'coach': 'المدرب', 'physical_trainer': 'المدرب البدني', 'club_general_secretary': 'أمين النادي',
       'club_treasurer': 'أمين صندوق النادي', 'medical_staff': 'الطاقم الطبي', 'athlete': 'رياضي'
@@ -899,6 +899,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           >
                             <option value="admin">مدير النظام</option>
                             <option value="league_president">رئيس الرابطة</option>
+                            <option value="league_technical_director">المدير التقني للرابطة</option>
                             <option value="technical_director">المدير التقني</option>
                             <option value="general_secretary">الأمين العام</option>
                             <option value="treasurer">أمين الصندوق</option>
@@ -1116,6 +1117,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           >
                             <option value="admin">مدير النظام</option>
                             <option value="league_president">رئيس الرابطة</option>
+                            <option value="league_technical_director">المدير التقني للرابطة</option>
                             <option value="technical_director">المدير التقني</option>
                             <option value="general_secretary">الأمين العام</option>
                             <option value="treasurer">أمين الصندوق</option>

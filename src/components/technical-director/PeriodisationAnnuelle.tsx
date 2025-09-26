@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
 import { Card, Dropdown, Table, Button, ButtonGroup } from 'react-bootstrap';
+import { TechnicalDirectorService } from '../../services/technicalDirectorService';
 
-const PeriodisationAnnuelle: React.FC = () => {
+interface PeriodisationAnnuelleProps {
+  clubId: string;
+}
+
+const PeriodisationAnnuelle: React.FC<PeriodisationAnnuelleProps> = ({ clubId }) => {
   const [selectedMonth, setSelectedMonth] = useState<string>('Septembre');
   const [editableData, setEditableData] = useState<any>(null);
+  const [saving, setSaving] = useState<boolean>(false);
 
   // بيانات الأشهر (10 أشهر فقط من سبتمبر إلى جوان)
   const months = [
@@ -260,11 +266,26 @@ const PeriodisationAnnuelle: React.FC = () => {
     }
   };
 
-  // تهيئة البيانات القابلة للتعديل
+  // تهيئة البيانات القابلة للتعديل مع تحميل بيانات محفوظة من قاعدة البيانات
   React.useEffect(() => {
-    const monthData = monthsData[selectedMonth as keyof typeof monthsData] || monthsData['Septembre'];
-    setEditableData(JSON.parse(JSON.stringify(monthData))); // نسخة عميقة
-  }, [selectedMonth]);
+    let mounted = true;
+    (async () => {
+      // ابدأ بالبيانات الافتراضية للشهر
+      const monthData = monthsData[selectedMonth as keyof typeof monthsData] || monthsData['Septembre'];
+      if (mounted) setEditableData(JSON.parse(JSON.stringify(monthData))); // نسخة عميقة
+
+      // حاول تحميل بيانات محفوظة لهذا النادي وهذا الشهر
+      try {
+        const saved = await TechnicalDirectorService.getPeriodisation(clubId, selectedMonth);
+        if (mounted && saved) {
+          setEditableData(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load saved periodisation, using defaults', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [selectedMonth, clubId]);
 
   const currentMonthData = editableData || monthsData[selectedMonth as keyof typeof monthsData] || monthsData['Septembre'];
 
@@ -280,9 +301,18 @@ const PeriodisationAnnuelle: React.FC = () => {
   };
 
   // دالة لحفظ التغييرات
-  const saveChanges = () => {
-    console.log('تم حفظ التغييرات:', editableData);
-    alert('تم حفظ التغييرات بنجاح!');
+  const saveChanges = async () => {
+    if (!editableData) return;
+    setSaving(true);
+    try {
+      await TechnicalDirectorService.savePeriodisation(clubId, selectedMonth, editableData);
+      alert('تم حفظ التغييرات بنجاح!');
+    } catch (e) {
+      console.error('Save periodisation failed', e);
+      alert('حدث خطأ أثناء الحفظ. حاول مرة أخرى.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   // دالة لإعادة تعيين البيانات
@@ -292,7 +322,8 @@ const PeriodisationAnnuelle: React.FC = () => {
   };
 
   return (
-    <Card className="shadow-sm">
+    <div className="periodisation-responsive">
+      <Card className="shadow-sm">
       <Card.Header className="bg-primary text-white">
         <div className="d-flex justify-content-between align-items-center">
           <h4 className="mb-0">
@@ -322,7 +353,7 @@ const PeriodisationAnnuelle: React.FC = () => {
 
       <Card.Body className="p-0">
         {/* عنوان الشهر والأزرار */}
-        <div className="text-center py-3" style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+        <div className="text-center py-3 month-header" style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
           <h3 className="mb-3 text-danger fw-bold">{selectedMonth}</h3>
 
           {/* أزرار التحكم */}
@@ -331,9 +362,10 @@ const PeriodisationAnnuelle: React.FC = () => {
               variant="success"
               size="sm"
               onClick={saveChanges}
+              disabled={saving}
             >
               <i className="fas fa-save me-1"></i>
-              حفظ التغييرات
+              {saving ? 'جارٍ الحفظ...' : 'حفظ التغييرات'}
             </Button>
             <Button
               variant="warning"
@@ -355,7 +387,7 @@ const PeriodisationAnnuelle: React.FC = () => {
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="mb-0" style={{ fontSize: '0.9rem' }}>
+          <Table bordered className="mb-0 periodisation-table" style={{ fontSize: '0.9rem' }}>
             <thead>
               <tr>
                 {/* العمود الأول */}
@@ -365,8 +397,10 @@ const PeriodisationAnnuelle: React.FC = () => {
                     backgroundColor: '#8B4513', 
                     color: 'white', 
                     verticalAlign: 'middle',
-                    width: '120px',
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    whiteSpace: 'nowrap',
+                    wordBreak: 'normal',
+                    overflow: 'visible'
                   }}
                 >
                   {currentMonthData.mesocycle}
@@ -566,7 +600,7 @@ const PeriodisationAnnuelle: React.FC = () => {
 
               {/* صف الحصص - أعمدة منفصلة للحصص */}
               <tr>
-                <td style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold', textAlign: 'center' }}>
+                <td className="session-header" style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold', textAlign: 'center' }}>
                   <div>Séances</div>
                   <div style={{ fontSize: '0.8rem', marginTop: '5px' }}>Qualité</div>
                 </td>
@@ -574,6 +608,7 @@ const PeriodisationAnnuelle: React.FC = () => {
                 {currentMonthData.sessions.dates.map((date: number, index: number) => (
                   <td
                     key={`session-${index}`}
+                    className="session-cell"
                     style={{
                       textAlign: 'center',
                       padding: '8px',
@@ -594,7 +629,7 @@ const PeriodisationAnnuelle: React.FC = () => {
               {/* صفوف الأنشطة */}
               {Object.entries(currentMonthData.activities).map(([activityName, activityData]) => (
                 <tr key={activityName}>
-                  <td style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold', textAlign: 'center' }}>
+                  <td style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold', textAlign: 'center', whiteSpace: 'nowrap', wordBreak: 'normal', overflow: 'visible' }}>
                     {activityName}
                   </td>
                   {(activityData as number[]).map((isActive: number, index: number) => {
@@ -608,7 +643,7 @@ const PeriodisationAnnuelle: React.FC = () => {
                           backgroundColor = '#FFD700'; // أصفر
                           break;
                         case 'Adresse':
-                          backgroundColor = selectedMonth === 'Octobre' || selectedMonth === 'Novembre' ? '#C0C0C0' : '#FFD700'; // رمادي لأكتوبر ونوفمبر، أصفر لسبتمبر
+                          backgroundColor = selectedMonth === 'Octobre' || selectedMonth === 'Novembre' ? '#C0C0C0' : '#FFD700'; // رمادي لأكتوبر/نوفمبر، أصفر لغيرهما
                           break;
                         case 'Souplesse':
                           backgroundColor = '#9932CC'; // بنفسجي
@@ -675,6 +710,62 @@ const PeriodisationAnnuelle: React.FC = () => {
         </div>
       </Card.Body>
     </Card>
+    {/* Scoped responsive styles */}
+    <style>
+      {`
+        /* Keep first column on a single line (no wrapping) */
+        .periodisation-responsive .periodisation-table th:first-child,
+        .periodisation-responsive .periodisation-table td:first-child {
+          white-space: nowrap !important;
+          word-break: normal !important;
+          overflow-wrap: normal !important;
+          text-overflow: clip !important;
+          overflow: visible !important;
+          width: 220px !important; /* give the first column enough width on desktop */
+          max-width: none !important;
+        }
+
+        @media (max-width: 576px) {
+          .periodisation-responsive .periodisation-table {
+            table-layout: fixed;
+          }
+          /* Tighter layout for sessions cells on small screens */
+          .periodisation-responsive .session-cell {
+            padding: 2px !important;
+            min-width: 32px !important;
+          }
+          .periodisation-responsive .session-cell > div:first-child { /* date */
+            font-size: 0.65rem !important;
+            line-height: 1.05 !important;
+          }
+          .periodisation-responsive .session-cell > div:last-child { /* day */
+            font-size: 0.55rem !important;
+            line-height: 1 !important;
+            color: #666 !important;
+          }
+          .periodisation-responsive .session-header {
+            font-size: 0.75rem !important;
+          }
+          .periodisation-responsive .periodisation-table th:not(:first-child),
+          .periodisation-responsive .periodisation-table td:not(:first-child) {
+            padding: 4px !important;
+            font-size: 0.7rem !important;
+            word-break: break-word;
+            white-space: normal !important;
+            min-width: 36px !important;
+          }
+          /* Narrower first column width on mobile while keeping single line */
+          .periodisation-responsive .periodisation-table th:first-child,
+          .periodisation-responsive .periodisation-table td:first-child {
+            width: 150px !important;
+          }
+          .periodisation-responsive .month-header h3 {
+            font-size: 1rem;
+          }
+        }
+      `}
+    </style>
+    </div>
   );
 };
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Button, Modal, Form, Alert, Spinner, Badge, ProgressBar } from 'react-bootstrap';
 import type { Athlete } from '../../types';
 import { UsersService as UserService } from '../../services/firestoreService';
-import { setDoc, updateDoc, doc, addDoc, collection } from 'firebase/firestore';
+import { setDoc, updateDoc, doc, addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 
 interface BeltManagementProps {
@@ -88,23 +88,26 @@ const BeltManagement: React.FC<BeltManagementProps> = ({ club }) => {
     }
 
     try {
-      // Update athlete's current belt
+      const newBelt = beltLevels[currentBelt.level];
+
+      // Update athlete's current belt (use server timestamps for rules compatibility)
       await updateDoc(doc(db, 'users', selectedAthlete.id), {
-        belt: beltLevels[currentBelt.level],
-        beltAr: beltLevels[currentBelt.level],
-        updatedAt: new Date()
+        belt: newBelt,
+        beltAr: newBelt,
+        updatedAt: serverTimestamp()
       });
 
-      // Add to belt history
+      // Add to belt history (store both string date and timestamp for robust querying)
       await addDoc(collection(db, 'beltHistory'), {
         athleteId: selectedAthlete.id,
-        belt: beltLevels[currentBelt.level],
-        date: promotionDate,
+        belt: newBelt,
+        date: promotionDate, // ISO string (YYYY-MM-DD)
+        dateTs: Timestamp.fromDate(new Date(promotionDate)),
         examiner: 'المدرب',
         grade: grade,
         notes: notes,
-        createdAt: new Date().toISOString(),
-        previousBelt: selectedAthlete.beltAr
+        previousBelt: selectedAthlete.beltAr,
+        createdAt: serverTimestamp()
       });
 
       alert('تم ترقية الرياضي بنجاح!');
