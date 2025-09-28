@@ -2,7 +2,8 @@ import React from 'react';
 import { Card, Row, Col, Table, Container } from 'react-bootstrap';
 import type { Athlete } from '../../types';
 import { useEffect, useState } from 'react';
-import { UsersService } from '../../services/firestoreService';
+import { UsersService, ClubsService } from '../../services/firestoreService';
+import { useBodyCompositionCalculator, useMorphologicalTraits } from '../../hooks/usePhysicalTests';
 
 interface TechnicalProfileProps {
   athlete: Athlete;
@@ -16,6 +17,9 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
   const [bloodType, setBloodType] = useState<string>('');
   const [dob, setDob] = useState<Date | undefined>(undefined);
   const [gender, setGender] = useState<'male' | 'female'>('male');
+  const [belt, setBelt] = useState<string>('');
+  const [clubName, setClubName] = useState<string>('');
+  const [coachName, setCoachName] = useState<string>('');
 
   // Compute display name from Arabic if available
   const displayName = (athlete.name && athlete.name.trim().length > 0)
@@ -36,6 +40,10 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
         setBloodType(user.bloodType || '');
         setDob(user.dateOfBirth ? new Date(user.dateOfBirth) : (athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined));
         setGender((user.gender as 'male' | 'female') || athlete.gender || 'male');
+        setBelt((user as any).beltAr || user.belt || (athlete as any).beltAr || (athlete as any).belt || '');
+
+        // Derive sport age from possible fields on the user document
+        // sport age not needed here anymore; we show chronological age in the sports info table
       } catch (e) {
         // On error, fall back to whatever is in athlete prop
         setFatherName((athlete as any).fatherName || '');
@@ -44,11 +52,58 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
         setBloodType((athlete as any).bloodType || '');
         setDob(athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined);
         setGender(athlete.gender || 'male');
+        setBelt((athlete as any).beltAr || (athlete as any).belt || '');
       }
     };
     fetchUser();
     return () => { mounted = false; };
   }, [athlete]);
+
+  // Fetch club and coach information based on athlete.clubId
+  useEffect(() => {
+    let mounted = true;
+    const loadClubAndCoach = async () => {
+      try {
+        if (!athlete?.clubId) {
+          setClubName(athlete.club || '');
+          return;
+        }
+        const club = await ClubsService.getClubById(athlete.clubId);
+        if (!mounted) return;
+        const cName = club?.nameAr || club?.name || athlete.club || '';
+        setClubName(cName || '');
+        let resolvedCoachId: string | undefined = club?.coachId;
+        let coachDisplayName = '';
+        if (resolvedCoachId) {
+          try {
+            const coach = await UsersService.getUserById(resolvedCoachId);
+            if (!mounted) return;
+            coachDisplayName = coach ? `${coach.firstNameAr || coach.firstName || ''} ${coach.lastNameAr || coach.lastName || ''}`.trim() || (coach as any).username || '' : '';
+          } catch {}
+        }
+        // Fallback: find a coach user in this club if coachId missing or name empty
+        if ((!resolvedCoachId || !coachDisplayName) && (club?.id || athlete.clubId)) {
+          try {
+            const allUsers = await UsersService.getAllUsers();
+            const coachUser = allUsers.find(u => (u.role as any) === 'coach' && String(u.clubId) === String(club?.id || athlete.clubId));
+            if (coachUser) {
+              resolvedCoachId = coachUser.id;
+              coachDisplayName = `${coachUser.firstNameAr || coachUser.firstName || ''} ${coachUser.lastNameAr || coachUser.lastName || ''}`.trim() || (coachUser as any).username || '';
+            }
+          } catch {}
+        }
+        setCoachName(coachDisplayName);
+
+        // sport age from roster not needed; we rely on chronological age
+      } catch {
+        if (!mounted) return;
+        setClubName(athlete.club || '');
+        setCoachName('');
+      }
+    };
+    loadClubAndCoach();
+    return () => { mounted = false; };
+  }, [athlete?.clubId, athlete?.club]);
 
   const calculateAge = (date?: Date) => {
     if (!date) return undefined;
@@ -77,6 +132,40 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
   const age = calculateAge(dob ?? (athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined));
   const ageCategory = getAgeCategory(age);
   const classLabel = getGenderClass(gender || athlete.gender || 'male');
+
+  // Load physical trainer datasets by club for auto-fill
+  const clubId = athlete.clubId;
+  const { data: bodyCompData } = useBodyCompositionCalculator(clubId);
+  const { data: morphoData } = useMorphologicalTraits(clubId);
+
+  // Resolve athlete's row by athleteId or name
+  const displayFullName = displayName;
+  const findByAthlete = <T extends any>(list: T[]): any | undefined => {
+    if (!Array.isArray(list)) return undefined;
+    // Prefer athleteId match
+    const byId = list.find((r: any) => r.athleteId === athlete.id);
+    if (byId) return byId;
+    // Fallback by name match
+    const byName = list.find((r: any) => (r.name || '').trim() === displayFullName.trim());
+    return byName;
+  };
+
+  const bodyComp = findByAthlete(bodyCompData) as any | undefined;
+  const morpho = findByAthlete(morphoData) as any | undefined;
+
+  // Compute BMI and lean mass percentage if data available
+  const heightCm = athlete.height || 0;
+  const weightKg = athlete.weight || 0;
+  const bmi = heightCm > 0 ? Number((weightKg / Math.pow(heightCm / 100, 2)).toFixed(2)) : undefined;
+  const fatPercent = typeof bodyComp?.bodyFatPercentage === 'number' && bodyComp.bodyFatPercentage > 0
+    ? Number(bodyComp.bodyFatPercentage.toFixed(1))
+    : undefined;
+  const leanMassKg = typeof bodyComp?.leanMassKg === 'number' && bodyComp.leanMassKg > 0
+    ? Number(bodyComp.leanMassKg.toFixed(2))
+    : undefined;
+  const leanMassPercent = (leanMassKg && weightKg > 0)
+    ? Number(((leanMassKg / weightKg) * 100).toFixed(1))
+    : undefined;
 
   // طباعة القياسات البدنية - طباعة الجدول فقط بدون الهيدر والفوتر والقوائم العلوية
   const printPhysicalMeasurements = () => {
@@ -180,6 +269,22 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
     border: '2px solid #000',
     borderRadius: '0px',
     margin: '20px 0'
+  };
+  const headerCellStyle: React.CSSProperties = {
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    lineHeight: '1'
+  };
+
+  const tableWrapperStyle: React.CSSProperties = {
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch'
+  };
+
+  const tableStyle: React.CSSProperties = {
+    minWidth: '650px'
   };
 
   return (
@@ -290,22 +395,22 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
 
       <Card style={cardStyle} className="mb-4">
         <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table bordered className="m-0">
+          <div className="table-responsive" style={tableWrapperStyle}>
+            <Table bordered className="m-0" style={tableStyle}>
               <thead>
                 <tr style={{backgroundColor: '#f8f9fa'}}>
-                  <th className="text-center">الطول /سم</th>
-                  <th className="text-center">الوزن /كلغ</th>
-                  <th className="text-center">الفئة الوزنية</th>
-                  <th className="text-center">مؤشر كتلة الجسم BMI الوزن(كلغ)/الطول²(م)</th>
-                  <th className="text-center">نسبة الدهون %</th>
-                  <th className="text-center">كتلة العضلات %(كلغ)</th>
-                  <th className="text-center">العرض بين الكتفين (سم)</th>
-                  <th className="text-center">طول الذراع (سم)</th>
-                  <th className="text-center">طول الفخذ (سم)</th>
-                  <th className="text-center">محيط الصدر (سم)</th>
-                  <th className="text-center">محيط الذراع (سم)</th>
-                  <th className="text-center">محيط الفخذ (سم)</th>
+                  <th style={headerCellStyle}>الطول /سم</th>
+                  <th style={headerCellStyle}>الوزن /كلغ</th>
+                  <th style={headerCellStyle}>الفئة الوزنية</th>
+                  <th style={headerCellStyle}>مؤشر كتلة الجسم</th>
+                  <th style={headerCellStyle}>نسبة الدهون %</th>
+                  <th style={headerCellStyle}>كتلة العضلات %(كلغ)</th>
+                  <th style={headerCellStyle}>العرض بين الكتفين (سم)</th>
+                  <th style={headerCellStyle}>طول الذراع (سم)</th>
+                  <th style={headerCellStyle}>طول الفخذ (سم)</th>
+                  <th style={headerCellStyle}>محيط الصدر (سم)</th>
+                  <th style={headerCellStyle}>محيط الذراع (سم)</th>
+                  <th style={headerCellStyle}>محيط الفخذ (سم)</th>
                 </tr>
               </thead>
               <tbody>
@@ -313,9 +418,9 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
                   <td style={{height: '40px'}}>{athlete.height || ''}</td>
                   <td>{athlete.weight || ''}</td>
                   <td>{athlete.weightCategory || ''}</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
+                  <td>{bmi ?? ''}</td>
+                  <td>{fatPercent ?? ''}</td>
+                  <td>{leanMassPercent !== undefined ? `${leanMassPercent}% (${leanMassKg} كغ)` : ''}</td>
                   <td></td>
                   <td></td>
                   <td></td>
@@ -339,26 +444,26 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
 
       <Card style={cardStyle} className="mb-4">
         <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table bordered className="m-0">
+          <div className="table-responsive" style={tableWrapperStyle}>
+            <Table bordered className="m-0" style={tableStyle}>
               <thead>
                 <tr style={{backgroundColor: '#f8f9fa'}}>
-                  <th className="text-center">نوع الجسم تحليل/جسماني/لحمي</th>
-                  <th className="text-center">شكل الكتفية طويل/عكس عريض/مربع</th>
-                  <th className="text-center">قوة القبضة قوي/متوسط/ضعيف</th>
-                  <th className="text-center">الحركة المتميزة مرتفعة/متوسط/منخفضة</th>
-                  <th className="text-center">سرعة رد الفعل سريع/متوسط/بطيء</th>
-                  <th className="text-center">قدرة التحمل جيد/متوسط/منخفض</th>
+                  <th style={headerCellStyle}>نوع الجسم تحليل/جسماني/لحمي</th>
+                  <th style={headerCellStyle}>شكل الكتفية طويل/عكس عريض/مربع</th>
+                  <th style={headerCellStyle}>قوة القبضة قوي/متوسط/ضعيف</th>
+                  <th style={headerCellStyle}>الحركة المتميزة مرتفعة/متوسط/منخفضة</th>
+                  <th style={headerCellStyle}>سرعة رد الفعل سريع/متوسط/بطيء</th>
+                  <th style={headerCellStyle}>قدرة التحمل جيد/متوسط/منخفض</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{height: '50px'}}></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
+                  <td style={{height: '50px'}}>{morpho?.bodyType || ''}</td>
+                  <td>{morpho?.stature || ''}</td>
+                  <td>{morpho?.gripStrength || ''}</td>
+                  <td>{morpho?.physicalFlexibility || ''}</td>
+                  <td>{morpho?.reactionSpeed || ''}</td>
+                  <td>{morpho?.enduranceStrength || ''}</td>
                 </tr>
               </tbody>
             </Table>
@@ -376,25 +481,27 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
 
       <Card style={cardStyle} className="mb-4">
         <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table bordered className="m-0">
+          <div className="table-responsive" style={tableWrapperStyle}>
+            <Table bordered className="m-0" style={tableStyle}>
               <thead>
                 <tr style={{backgroundColor: '#f8f9fa'}}>
-                  <th className="text-center">النادي</th>
-                  <th className="text-center">المدرب</th>
-                  <th className="text-center">الحزام</th>
-                  <th className="text-center">العمر الرياضي</th>
-                  <th className="text-center">أسلوب اللعب يمين/يسار/كلاهما</th>
-                  <th className="text-center">أشهر الحركات التقنية</th>
-                  <th className="text-center">القدرة السيطرة على الخصم ممتاز/جيد/متوسط/ضعيف</th>
+                  <th style={headerCellStyle}>النادي</th>
+                  <th style={headerCellStyle}>المدرب</th>
+                  <th style={headerCellStyle}>الحزام</th>
+                  <th style={headerCellStyle}>العمر </th>
+                  <th style={headerCellStyle}>أسلوب اللعب يمين/يسار/كلاهما</th>
+                  <th style={headerCellStyle}>أشهر الحركات التقنية</th>
+                  <th style={headerCellStyle}>القدرة السيطرة على الخصم ممتاز/جيد/متوسط/ضعيف</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td style={{height: '40px'}}>{athlete.club || ''}</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
+                  <td style={{height: '40px', whiteSpace: 'normal', wordBreak: 'break-word'}}>
+                    {clubName || athlete.club || ''}
+                  </td>
+                  <td>{coachName || ''}</td>
+                  <td>{belt || ''}</td>
+                  <td>{age !== undefined ? `${age} سنة` : ''}</td>
                   <td></td>
                   <td></td>
                   <td></td>
@@ -415,18 +522,18 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
 
       <Card style={cardStyle} className="mb-4">
         <Card.Body className="p-0">
-          <div className="table-responsive">
-            <Table bordered className="m-0">
+          <div className="table-responsive" style={tableWrapperStyle}>
+            <Table bordered className="m-0" style={tableStyle}>
               <thead>
                 <tr style={{backgroundColor: '#f8f9fa'}}>
-                  <th className="text-center">بطل ولائي مع سنة</th>
-                  <th className="text-center">بطل جهوي مع سنة</th>
-                  <th className="text-center">بطل وطني مع سنة</th>
-                  <th className="text-center">بطل عربي مع سنة</th>
-                  <th className="text-center">بطل قاري مع سنة</th>
-                  <th className="text-center">بطل عالمي مع سنة</th>
-                  <th className="text-center">بطل أولمبي مع سنة</th>
-                  <th className="text-center">التصنيف الدولي (العربي المحلي)</th>
+                  <th style={headerCellStyle}>بطل ولائي مع سنة</th>
+                  <th style={headerCellStyle}>بطل جهوي مع سنة</th>
+                  <th style={headerCellStyle}>بطل وطني مع سنة</th>
+                  <th style={headerCellStyle}>بطل عربي مع سنة</th>
+                  <th style={headerCellStyle}>بطل قاري مع سنة</th>
+                  <th style={headerCellStyle}>بطل عالمي مع سنة</th>
+                  <th style={headerCellStyle}>بطل أولمبي مع سنة</th>
+                  <th style={headerCellStyle}>التصنيف الدولي (العربي المحلي)</th>
                 </tr>
               </thead>
               <tbody>

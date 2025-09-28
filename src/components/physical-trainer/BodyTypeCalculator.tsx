@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
+import '../coach/coach-responsive.css';
 import { useBodyTypeCalculator } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
 
@@ -56,7 +57,7 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
     return 'ممتلئ';
   };
 
-  const [athletes, setAthletes] = useState<AthleteData[]>([
+  const [athletes] = useState<AthleteData[]>([
     {
       id: 1,
       name: '',
@@ -131,8 +132,14 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
   const { athletes: clubAthletes } = useClubAthletes(clubId);
   
   const [localAthletes, setLocalAthletes] = useState<AthleteData[]>(athletesList.length > 0 ? athletesList : initializeAthletes());
-  const [showAlert, setShowAlert] = useState(false);
+  
   const [saving, setSaving] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollByAmount = (amount: number) => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   // Update local state when Firestore data changes - MOVED BEFORE CONDITIONAL RETURN
   React.useEffect(() => {
@@ -240,8 +247,6 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
     setSaving(true);
     try {
       await saveData(localAthletes);
-      setShowAlert(true);
-      setTimeout(() => setShowAlert(false), 3000);
     } catch (err) {
       console.error('Error saving data:', err);
     } finally {
@@ -407,90 +412,98 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
           </Col>
         </Row>
 
-        {/* الجدول */}
-        <div className="table-responsive">
-          <Table bordered className="body-type-table" dir="rtl">
-            <thead>
-              <tr className="table-primary">
-                <th className="text-center">الرقم</th>
-                <th className="text-center">الإسم واللقب</th>
-                <th className="text-center">السن</th>
-                <th className="text-center">الوزن كغ</th>
-                <th className="text-center">الوزن بالرطل</th>
-                <th className="text-center">الطول/ سم</th>
-                <th className="text-center">البوصة</th>
-                <th className="text-center">رطل\البوصة</th>
-                <th className="text-center">نمط الجسم</th>
-              </tr>
-            </thead>
-            <tbody>
-              {localAthletes.map((athlete) => (
-                <tr key={athlete.id}>
-                  <td className="text-center align-middle">
-                    <strong>{athlete.id}</strong>
-                  </td>
-                  <td className="text-center">
-                    <div className="py-1">{athlete.name}</div>
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      value={athlete.age || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'age', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="السن"
-                      min="0"
-                    />
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      step="0.01"
-                      value={athlete.weight || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'weight', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="الوزن"
-                      min="0"
-                    />
-                  </td>
-                  <td className="text-center align-middle">
-                    <span className="fw-bold text-primary">
-                      {athlete.weightPounds > 0 ? athlete.weightPounds.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      value={athlete.height || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'height', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="الطول"
-                      min="0"
-                    />
-                  </td>
-                  <td className="text-center align-middle">
-                    <span className="fw-bold text-primary">
-                      {athlete.heightInches > 0 ? athlete.heightInches.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle">
-                    <span className="fw-bold text-success">
-                      {athlete.bodyTypeIndex > 0 ? athlete.bodyTypeIndex.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle">
-                    <span className={`fw-bold ${
-                      athlete.bodyType === 'نحيف' ? 'text-info' :
-                      athlete.bodyType === 'متوسط' ? 'text-success' :
-                      athlete.bodyType === 'ممتلئ' ? 'text-warning' : ''
-                    }`}>
-                      {athlete.bodyType}
-                    </span>
-                  </td>
+        {/* الجدول داخل كاروسيل أفقي */}
+        <div className="scroll-carousel">
+          <button type="button" className="scroll-btn left" aria-label="يسار" onClick={() => scrollByAmount(-320)}>
+            <i className="fas fa-chevron-right"></i>
+          </button>
+          <div className="table-responsive scroll-area" ref={scrollAreaRef}>
+            <Table bordered className="body-type-table coach-table" dir="rtl">
+              <thead>
+                <tr className="table-primary">
+                  <th className="text-center">الرقم</th>
+                  <th className="text-center">الإسم واللقب</th>
+                  <th className="text-center">السن</th>
+                  <th className="text-center">الوزن كغ</th>
+                  <th className="text-center">الوزن بالرطل</th>
+                  <th className="text-center">الطول/ سم</th>
+                  <th className="text-center">البوصة</th>
+                  <th className="text-center">رطل\\البوصة</th>
+                  <th className="text-center">نمط الجسم</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {localAthletes.map((athlete) => (
+                  <tr key={athlete.id}>
+                    <td className="text-center align-middle">
+                      <strong>{athlete.id}</strong>
+                    </td>
+                    <td className="text-center">
+                      <div className="py-1">{athlete.name}</div>
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        value={athlete.age || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'age', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="السن"
+                        min="0"
+                      />
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        value={athlete.weight || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'weight', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="الوزن"
+                        min="0"
+                      />
+                    </td>
+                    <td className="text-center align-middle">
+                      <span className="fw-bold text-primary">
+                        {athlete.weightPounds > 0 ? athlete.weightPounds.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        value={athlete.height || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'height', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="الطول"
+                        min="0"
+                      />
+                    </td>
+                    <td className="text-center align-middle">
+                      <span className="fw-bold text-primary">
+                        {athlete.heightInches > 0 ? athlete.heightInches.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle">
+                      <span className="fw-bold text-success">
+                        {athlete.bodyTypeIndex > 0 ? athlete.bodyTypeIndex.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle">
+                      <span className={`fw-bold ${
+                        athlete.bodyType === 'نحيف' ? 'text-info' :
+                        athlete.bodyType === 'متوسط' ? 'text-success' :
+                        athlete.bodyType === 'ممتلئ' ? 'text-warning' : ''
+                      }`}>
+                        {athlete.bodyType}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <button type="button" className="scroll-btn right" aria-label="يمين" onClick={() => scrollByAmount(320)}>
+            <i className="fas fa-chevron-left"></i>
+          </button>
         </div>
 
         <style>
@@ -504,14 +517,16 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
               font-weight: bold;
               text-align: center;
               vertical-align: middle;
-              padding: 12px 8px;
+              padding: 10px 6px;
               border: 2px solid #1976d2;
+              white-space: normal;
             }
             
             .body-type-table td {
               vertical-align: middle;
-              padding: 8px;
+              padding: 6px;
               border: 1px solid #ddd;
+              white-space: normal;
             }
             
             .body-type-table input {
@@ -524,6 +539,78 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
             .body-type-table input:focus {
               border-color: #007bff;
               box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            }
+
+            /* حاوية الكاروسيل */
+            .scroll-carousel {
+              position: relative;
+            }
+            .scroll-area {
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              scroll-snap-type: x proximity;
+            }
+            .scroll-btn {
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              background: rgba(255,255,255,0.9);
+              border: 1px solid #ddd;
+              border-radius: 50%;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+              z-index: 2;
+            }
+            .scroll-btn.left { left: 4px; }
+            .scroll-btn.right { right: 4px; }
+
+            @media (max-width: 576px) {
+              .body-type-table.coach-table {
+                min-width: 980px; /* إجبار التمرير الأفقي بدل تكسير الأحرف */
+                font-size: 12px;
+              }
+
+              /* اجعل أغلب الأعمدة لا تلتف لتجنب نزول الحروف تحت بعضها */
+              .body-type-table.coach-table th,
+              .body-type-table.coach-table td {
+                padding: 0.45rem;
+                white-space: nowrap;
+              }
+
+              /* اسم الرياضي يسمح له بالالتفاف الطبيعي */
+              .body-type-table.coach-table th:nth-child(2),
+              .body-type-table.coach-table td:nth-child(2) {
+                min-width: 200px;
+                white-space: normal;
+              }
+
+              /* الأعمدة الرقمية تعطيها عرضاً أدنى مناسباً */
+              .body-type-table.coach-table th:nth-child(3),
+              .body-type-table.coach-table td:nth-child(3) { min-width: 120px; }
+              .body-type-table.coach-table th:nth-child(4),
+              .body-type-table.coach-table td:nth-child(4) { min-width: 130px; }
+              .body-type-table.coach-table th:nth-child(5),
+              .body-type-table.coach-table td:nth-child(5) { min-width: 150px; }
+              .body-type-table.coach-table th:nth-child(6),
+              .body-type-table.coach-table td:nth-child(6) { min-width: 130px; }
+              .body-type-table.coach-table th:nth-child(7),
+              .body-type-table.coach-table td:nth-child(7) { min-width: 150px; }
+              .body-type-table.coach-table th:nth-child(8),
+              .body-type-table.coach-table td:nth-child(8) { min-width: 150px; }
+              .body-type-table.coach-table th:nth-child(9),
+              .body-type-table.coach-table td:nth-child(9) { min-width: 150px; }
+
+              /* إظهار أزرار التمرير على الهاتف فقط */
+              .scroll-btn { display: flex; }
+            }
+
+            @media (min-width: 577px) {
+              /* إخفاء الأزرار على الشاشات المتوسطة والكبيرة */
+              .scroll-btn { display: none; }
             }
           `}
         </style>

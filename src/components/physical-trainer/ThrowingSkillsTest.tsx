@@ -834,6 +834,20 @@ const ThrowingSkillsTest: React.FC<ThrowingSkillsTestProps> = ({ clubId }) => {
             </tbody>
           </Table>
         </div>
+
+        <style>
+          {`
+            .coach-table th {
+              white-space: normal !important;
+              word-break: break-word;
+            }
+
+            .coach-table td {
+              white-space: normal;
+              word-break: break-word;
+            }
+          `}
+        </style>
       </Card.Body>
     </Card>
   );

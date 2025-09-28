@@ -402,13 +402,16 @@ const GroundworkSkillsTest: React.FC<GroundworkSkillsTestProps> = ({ clubId }) =
               vertical-align: middle;
               padding: 10px 6px;
               border: 2px solid #1976d2;
-              white-space: nowrap;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .groundwork-skills-table td {
               vertical-align: middle;
               padding: 6px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .groundwork-skills-table input {

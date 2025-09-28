@@ -428,13 +428,16 @@ const MorphologicalTraits: React.FC<MorphologicalTraitsProps> = ({ clubId }) => 
               vertical-align: middle;
               padding: 10px 6px;
               border: 2px solid #1976d2;
-              white-space: nowrap;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .morphological-table td {
               vertical-align: middle;
               padding: 6px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .morphological-table input,

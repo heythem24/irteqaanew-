@@ -465,12 +465,16 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
               vertical-align: middle;
               padding: 8px 4px;
               border: 2px solid #1976d2;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .endurance-test-table td {
               vertical-align: middle;
               padding: 4px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .endurance-test-table input {

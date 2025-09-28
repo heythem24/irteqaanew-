@@ -28,7 +28,7 @@
 
 /* تصميم رؤوس الأعمدة */
 .phase-header {
-  width: 12%;
+  width: 10%;
   background-color: #28a745 !important;
 }
 
@@ -38,7 +38,7 @@
 }
 
 .content-header {
-  width: 30%;
+  width: 22%;
   background-color: #28a745 !important;
 }
 
@@ -49,17 +49,17 @@
 }
 
 .formations-header {
-  width: 20%;
+  width: 16%;
   background-color: #28a745 !important;
 }
 
 .duration-header {
-  width: 10%;
+  width: 18%;
   background-color: #28a745 !important;
 }
 
 .notes-header {
-  width: 14%;
+  width: 8%;
   background-color: #28a745 !important;
 }
 
@@ -106,13 +106,20 @@
 }
 
 /* تحسين حقول الإدخال */
+
+.technical-card-table textarea.form-control {
+  min-height: 120px;
+  overflow-y: hidden;
+  resize: none;
+  white-space: pre-wrap;
+}
+
 .technical-card-table .form-control {
   border: none;
   background: transparent;
-  font-size: 0.75rem;
-  padding: 0.2rem;
+  font-size: 0.8rem;
+  padding: 0.3rem;
   text-align: right;
-  resize: none;
 }
 
 .technical-card-table .form-control:focus {
@@ -124,13 +131,14 @@
 .objectives-input,
 .formations-input,
 .notes-input {
-  min-height: 60px;
-  line-height: 1.3;
+  min-height: 130px;
+  line-height: 1.4;
 }
 
 .content-input {
   text-align: center;
   font-weight: bold;
+  min-height: 120px;
 }
 
 .duration-input {
@@ -163,7 +171,6 @@
 .content-cell {
   background-color: #fff;
   text-align: center;
-  width: 6%;
 }
 
 .formations-cell {
@@ -173,6 +180,7 @@
 .duration-cell {
   background-color: #fff;
   text-align: center;
+  width: 18%;
 }
 
 .notes-cell {
@@ -221,20 +229,26 @@
 }
 
 .formations-input {
-  min-height: 120px;
-  line-height: 1.3;
-  font-family: monospace;
+  min-height: 130px;
+  line-height: 1.4;
+  font-family: inherit;
 }
 
 .duration-input {
-  text-align: center !important;
+  text-align: right !important;
   font-weight: bold;
-  min-height: 80px;
+  min-height: 180px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.duration-cell .form-control {
+  width: 100%;
 }
 
 .notes-input {
-  min-height: 120px;
-  line-height: 1.3;
+  min-height: 150px;
+  line-height: 1.5;
 }
 
 /* تصميم صفوف المراحل */
@@ -286,30 +300,49 @@
   font-size: 1rem;
 }
 
+
+.second-page-header {
+  position: relative;
+  z-index: 10;
+  overflow: visible;
+}
+
+.second-page-header .form-control,
+.second-page-header .form-select {
+  min-width: 240px;
+}
+
+.analysis-subject-box {
+  position: relative;
+  z-index: 1;
+  margin-top: 20px;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .technical-card-table {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
   }
-  
+
   .technical-card-table th,
   .technical-card-table td {
+    padding: 0.3rem;
+  }
+
+  .technical-card-table .form-control {
+    font-size: 0.7rem;
     padding: 0.2rem;
   }
-  
-  .technical-card-table .form-control {
-    font-size: 0.65rem;
-    padding: 0.15rem;
-  }
-  
+
   .objectives-input,
   .formations-input,
-  .notes-input {
-    min-height: 100px;
-  }
-  
+  .notes-input,
   .content-input {
-    min-height: 100px;
+    min-height: 110px;
+  }
+
+  .duration-input {
+    min-height: 80px;
   }
 }
 
@@ -317,53 +350,63 @@
   .technical-card-table {
     font-size: 0.65rem;
   }
-  
+
   .technical-card-table th,
   .technical-card-table td {
+    padding: 0.2rem;
+  }
+
+  .technical-card-table .form-control {
+    font-size: 0.62rem;
     padding: 0.15rem;
   }
-  
-  .technical-card-table .form-control {
-    font-size: 0.6rem;
-    padding: 0.1rem;
-  }
-  
+
   .objectives-input,
   .formations-input,
-  .notes-input {
-    min-height: 80px;
-  }
-  
+  .notes-input,
   .content-input {
-    min-height: 80px;
+    min-height: 95px;
   }
-  
+
   .duration-input {
-    min-height: 60px;
+    min-height: 70px;
+  }
+
+  .second-page-header .form-control,
+  .second-page-header .form-select {
+    min-width: 200px;
   }
 }
 
 @media (max-width: 768px) {
   .technical-card-table {
-    font-size: 0.6rem;
+    font-size: 0.58rem;
   }
-  
+
+  .technical-card-table th,
+  .technical-card-table td {
+    padding: 0.15rem;
+  }
+
   .technical-card-table .form-control {
     font-size: 0.55rem;
+    padding: 0.1rem;
   }
-  
+
   .objectives-input,
   .formations-input,
-  .notes-input {
-    min-height: 60px;
-  }
-  
+  .notes-input,
   .content-input {
+    min-height: 80px;
+  }
+
+  .duration-input {
     min-height: 60px;
   }
-  
-  .duration-input {
-    min-height: 40px;
+
+  .second-page-header .form-control,
+  .second-page-header .form-select {
+    min-width: 180px;
   }
 }
 
@@ -416,4 +459,51 @@
 .card-header h5 {
   font-weight: bold;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Print rules */
+@media print {
+  /* Make first part (up to trainer evaluation) end with a page break */
+  .trainer-evaluation {
+    page-break-after: always;
+  }
+
+  /* Hide non-analysis content after the page break */
+  .second-page-header,
+  .analysis-subject-box,
+  .table-responsive,
+  .technical-card-table,
+  .card-header,
+  .trainer-evaluation + *:not(.second-page-analysis-block) {
+    display: none !important;
+  }
+
+  /* Improve readability of table and inputs on print */
+  .technical-card-table th,
+  .technical-card-table td {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    padding: 6px !important;
+    border: 1px solid #000 !important;
+  }
+
+  .form-control,
+  .form-select {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #000 !important;
+  }
+
+  textarea.form-control {
+    height: auto !important;
+    overflow: visible !important;
+    white-space: pre-wrap !important;
+  }
+
+  /* Ensure the analysis section appears alone on page 2 */
+  .second-page-analysis-block {
+    display: block !important;
+    page-break-inside: avoid;
+  }
 }

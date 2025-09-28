@@ -33,7 +33,7 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
             <Card.Header className="bg-success text-white">
               <h4 className="mb-0 text-center" dir="rtl">
                 <i className="fas fa-clipboard-list me-2"></i>
-                البرامج التدريبية
+               البرامج التدريبية والتكوين
               </h4>
             </Card.Header>
             <Card.Body className="p-4">
@@ -90,7 +90,7 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
             <Card.Header className="bg-danger text-white">
               <h4 className="mb-0 text-center" dir="rtl">
                 <i className="fas fa-chart-line me-2"></i>
-                تطوير الرياضيين
+               التطوير والإنتقاء
               </h4>
             </Card.Header>
             <Card.Body className="p-4">
@@ -148,7 +148,7 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
                 className="mx-2 fw-bold mb-2"
               >
                 <i className="fas fa-calendar-alt me-2"></i>
-                Périodisation Annuelle
+                البرنامج السنوي
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -158,7 +158,7 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
                 className="mx-2 fw-bold mb-2"
               >
                 <i className="fas fa-clipboard-list me-2"></i>
-                البرامج التدريبية
+               البرامج التدريبية والتكوين
               </Nav.Link>
             </Nav.Item>
             <Nav.Item>
@@ -188,7 +188,7 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
                 className="mx-2 fw-bold mb-2"
               >
                 <i className="fas fa-chart-line me-2"></i>
-                تطوير الرياضيين
+               التطوير والإنتقاء
               </Nav.Link>
             </Nav.Item>
           </Nav>

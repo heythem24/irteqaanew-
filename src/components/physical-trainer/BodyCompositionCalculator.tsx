@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Table, Form, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
 import { useBodyCompositionCalculator } from '../../hooks/usePhysicalTests';
 import { useClubAthletes } from '../../hooks/useClubAthletes';
+import '../coach/coach-responsive.css';
 
 interface AthleteBodyComposition {
   id: number;
@@ -130,6 +131,12 @@ const BodyCompositionCalculator: React.FC<BodyCompositionCalculatorProps> = ({ c
 
   const [athletesList, setAthletesList] = useState<AthleteBodyComposition[]>(initializeAthletes());
   const [saving, setSaving] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const scrollByAmount = (amount: number) => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
 
   // Load data from Firestore when available
   useEffect(() => {
@@ -416,96 +423,104 @@ const BodyCompositionCalculator: React.FC<BodyCompositionCalculatorProps> = ({ c
           </Col>
         </Row>
 
-        {/* الجدول */}
-        <div className="table-responsive">
-          <Table bordered className="body-composition-table" dir="rtl">
-            <thead>
-              <tr className="table-warning">
-                <th className="text-center">الإسم واللقب</th>
-                <th className="text-center">السن</th>
-                <th className="text-center">الوزن (كغ)</th>
-                <th className="text-center bg-success text-white">الوزن بالرطل</th>
-                <th className="text-center">نسبة الدهون (%)</th>
-                <th className="text-center bg-info text-white">نسبة الدهون بالرطل</th>
-                <th className="text-center bg-info text-white">نسبة الدهون بالكغ</th>
-                <th className="text-center bg-primary text-white">كتلة الجسم بالرطل</th>
-                <th className="text-center bg-primary text-white">كتلة الجسم بالكغ</th>
-                <th className="text-center bg-secondary text-white">المعيار</th>
-              </tr>
-            </thead>
-            <tbody>
-              {athletesList.map((athlete) => (
-                <tr key={athlete.id}>
-                  <td className="text-center">
-                    <div className="py-1">{athlete.name}</div>
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      value={athlete.age || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'age', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="السن"
-                      min="0"
-                    />
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      step="0.01"
-                      value={athlete.weight || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'weight', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="الوزن"
-                      min="0"
-                    />
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-success">
-                      {athlete.weightPounds > 0 ? athlete.weightPounds.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center">
-                    <Form.Control
-                      type="number"
-                      step="0.1"
-                      value={athlete.bodyFatPercentage || ''}
-                      onChange={(e) => updateAthlete(athlete.id, 'bodyFatPercentage', Number(e.target.value))}
-                      className="text-center"
-                      placeholder="نسبة الدهون"
-                      min="0"
-                      max="100"
-                    />
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-info">
-                      {athlete.fatWeightPounds > 0 ? athlete.fatWeightPounds.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-info">
-                      {athlete.fatWeightKg > 0 ? athlete.fatWeightKg.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-primary">
-                      {athlete.leanMassPounds > 0 ? athlete.leanMassPounds.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-primary">
-                      {athlete.leanMassKg > 0 ? athlete.leanMassKg.toFixed(2) : ''}
-                    </span>
-                  </td>
-                  <td className="text-center align-middle bg-light">
-                    <span className="fw-bold text-secondary">
-                      {athlete.standard}
-                    </span>
-                  </td>
+        {/* الجدول داخل كاروسيل أفقي */}
+        <div className="scroll-carousel">
+          <button type="button" className="scroll-btn left" aria-label="يسار" onClick={() => scrollByAmount(-320)}>
+            <i className="fas fa-chevron-right"></i>
+          </button>
+          <div className="table-responsive scroll-area" ref={scrollAreaRef}>
+            <Table bordered className="body-composition-table coach-table" dir="rtl">
+              <thead>
+                <tr className="table-warning">
+                  <th className="text-center">الإسم واللقب</th>
+                  <th className="text-center">السن</th>
+                  <th className="text-center">الوزن (كغ)</th>
+                  <th className="text-center bg-success text-white">الوزن بالرطل</th>
+                  <th className="text-center">نسبة الدهون (%)</th>
+                  <th className="text-center bg-info text-white">نسبة الدهون بالرطل</th>
+                  <th className="text-center bg-info text-white">نسبة الدهون بالكغ</th>
+                  <th className="text-center bg-primary text-white">كتلة الجسم بالرطل</th>
+                  <th className="text-center bg-primary text-white">كتلة الجسم بالكغ</th>
+                  <th className="text-center bg-secondary text-white">المعيار</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {athletesList.map((athlete) => (
+                  <tr key={athlete.id}>
+                    <td className="text-center">
+                      <div className="py-1">{athlete.name}</div>
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        value={athlete.age || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'age', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="السن"
+                        min="0"
+                      />
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        step="0.01"
+                        value={athlete.weight || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'weight', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="الوزن"
+                        min="0"
+                      />
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-success">
+                        {athlete.weightPounds > 0 ? athlete.weightPounds.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center">
+                      <Form.Control
+                        type="number"
+                        step="0.1"
+                        value={athlete.bodyFatPercentage || ''}
+                        onChange={(e) => updateAthlete(athlete.id, 'bodyFatPercentage', Number(e.target.value))}
+                        className="text-center"
+                        placeholder="نسبة الدهون"
+                        min="0"
+                        max="100"
+                      />
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-info">
+                        {athlete.fatWeightPounds > 0 ? athlete.fatWeightPounds.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-info">
+                        {athlete.fatWeightKg > 0 ? athlete.fatWeightKg.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-primary">
+                        {athlete.leanMassPounds > 0 ? athlete.leanMassPounds.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-primary">
+                        {athlete.leanMassKg > 0 ? athlete.leanMassKg.toFixed(2) : ''}
+                      </span>
+                    </td>
+                    <td className="text-center align-middle bg-light">
+                      <span className="fw-bold text-secondary">
+                        {athlete.standard}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+          <button type="button" className="scroll-btn right" aria-label="يمين" onClick={() => scrollByAmount(320)}>
+            <i className="fas fa-chevron-left"></i>
+          </button>
         </div>
 
         <style>
@@ -520,12 +535,16 @@ const BodyCompositionCalculator: React.FC<BodyCompositionCalculatorProps> = ({ c
               vertical-align: middle;
               padding: 10px 6px;
               border: 2px solid #dee2e6;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .body-composition-table td {
               vertical-align: middle;
               padding: 6px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .body-composition-table input {
@@ -538,6 +557,76 @@ const BodyCompositionCalculator: React.FC<BodyCompositionCalculatorProps> = ({ c
             .body-composition-table input:focus {
               border-color: #007bff;
               box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+            }
+
+            /* حاوية الكاروسيل */
+            .scroll-carousel { position: relative; }
+            .scroll-area {
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+              scroll-snap-type: x proximity;
+            }
+            .scroll-btn {
+              position: absolute;
+              top: 50%;
+              transform: translateY(-50%);
+              background: rgba(255,255,255,0.9);
+              border: 1px solid #ddd;
+              border-radius: 50%;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+              z-index: 2;
+            }
+            .scroll-btn.left { left: 4px; }
+            .scroll-btn.right { right: 4px; }
+
+            @media (max-width: 576px) {
+              .body-composition-table.coach-table {
+                min-width: 1100px; /* إجبار التمرير الأفقي بدل تكسير الأحرف */
+                font-size: 12px;
+              }
+              /* اجعل أغلب الأعمدة لا تلتف لتجنب نزول الحروف تحت بعضها */
+              .body-composition-table.coach-table th,
+              .body-composition-table.coach-table td {
+                padding: 0.45rem;
+                white-space: nowrap;
+              }
+              /* اسم الرياضي يسمح له بالالتفاف الطبيعي */
+              .body-composition-table.coach-table th:nth-child(1),
+              .body-composition-table.coach-table td:nth-child(1) {
+                min-width: 220px;
+                white-space: normal;
+              }
+              /* توزيع أعرض أدنى لباقي الأعمدة */
+              .body-composition-table.coach-table th:nth-child(2),
+              .body-composition-table.coach-table td:nth-child(2) { min-width: 120px; }
+              .body-composition-table.coach-table th:nth-child(3),
+              .body-composition-table.coach-table td:nth-child(3) { min-width: 140px; }
+              .body-composition-table.coach-table th:nth-child(4),
+              .body-composition-table.coach-table td:nth-child(4) { min-width: 160px; }
+              .body-composition-table.coach-table th:nth-child(5),
+              .body-composition-table.coach-table td:nth-child(5) { min-width: 180px; }
+              .body-composition-table.coach-table th:nth-child(6),
+              .body-composition-table.coach-table td:nth-child(6) { min-width: 180px; }
+              .body-composition-table.coach-table th:nth-child(7),
+              .body-composition-table.coach-table td:nth-child(7) { min-width: 180px; }
+              .body-composition-table.coach-table th:nth-child(8),
+              .body-composition-table.coach-table td:nth-child(8) { min-width: 180px; }
+              .body-composition-table.coach-table th:nth-child(9),
+              .body-composition-table.coach-table td:nth-child(9) { min-width: 180px; }
+              .body-composition-table.coach-table th:nth-child(10),
+              .body-composition-table.coach-table td:nth-child(10) { min-width: 160px; }
+
+              /* إظهار أزرار التمرير على الهاتف فقط */
+              .scroll-btn { display: flex; }
+            }
+
+            @media (min-width: 577px) {
+              .scroll-btn { display: none; }
             }
           `}
         </style>

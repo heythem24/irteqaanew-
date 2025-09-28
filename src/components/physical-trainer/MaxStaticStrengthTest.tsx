@@ -449,12 +449,16 @@ const MaxStaticStrengthTest: React.FC<MaxStaticStrengthTestProps> = ({ clubId })
               vertical-align: middle;
               padding: 12px 8px;
               border: 2px solid #1976d2;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .static-strength-test-table td {
               vertical-align: middle;
               padding: 8px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .static-strength-test-table input {

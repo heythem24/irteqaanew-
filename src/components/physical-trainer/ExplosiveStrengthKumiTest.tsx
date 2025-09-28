@@ -417,12 +417,16 @@ const ExplosiveStrengthKumiTest: React.FC<ExplosiveStrengthKumiTestProps> = ({ c
               vertical-align: middle;
               padding: 12px 8px;
               border: 2px solid #1976d2;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .explosive-strength-test-table td {
               vertical-align: middle;
               padding: 8px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .explosive-strength-test-table input {

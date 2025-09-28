@@ -379,7 +379,7 @@ const MaxDynamicStrengthTest: React.FC<MaxDynamicStrengthTestProps> = ({ clubId 
                       min="0"
                     />
                   </td>
-                  <td className="text-center">
+                  <td className="text-center" style={{ minWidth: '140px' }}>
                     <Form.Control
                       type="number"
                       step="0.1"
@@ -391,25 +391,23 @@ const MaxDynamicStrengthTest: React.FC<MaxDynamicStrengthTestProps> = ({ clubId 
                       max="20"
                     />
                   </td>
-                  <td className="text-center">
+                  <td className="text-center" style={{ minWidth: '140px' }}>
                     <Form.Control
                       type="number"
                       step="0.1"
                       value={athlete.secondAttempt || ''}
                       onChange={(e) => updateAthlete(athlete.id, 'secondAttempt', Number(e.target.value))}
-                      className="text-center"
                       placeholder="ثانية"
                       min="0"
                       max="20"
                     />
                   </td>
-                  <td className="text-center">
+                  <td className="text-center" style={{ minWidth: '140px' }}>
                     <Form.Control
                       type="number"
                       step="0.1"
                       value={athlete.thirdAttempt || ''}
                       onChange={(e) => updateAthlete(athlete.id, 'thirdAttempt', Number(e.target.value))}
-                      className="text-center"
                       placeholder="ثانية"
                       min="0"
                       max="20"
@@ -442,25 +440,29 @@ const MaxDynamicStrengthTest: React.FC<MaxDynamicStrengthTestProps> = ({ clubId 
               font-size: 13px;
             }
             
-            .strength-test-table th {
+            .max-dynamic-strength-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
               vertical-align: middle;
-              padding: 12px 8px;
+              padding: 10px 6px;
               border: 2px solid #1976d2;
+              white-space: normal;
+              word-break: break-word;
             }
             
-            .strength-test-table td {
+            .max-dynamic-strength-table td {
               vertical-align: middle;
-              padding: 8px;
+              padding: 6px;
               border: 1px solid #ddd;
+              white-space: normal;
+              word-break: break-word;
             }
             
             .strength-test-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 6px;
+              word-break: break-word;
               font-size: 12px;
             }
             

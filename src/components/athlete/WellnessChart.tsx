@@ -51,14 +51,21 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
 
   // ألوان الخطوط حسب القيم
   const getScoreColor = (score: number) => {
-    if (score >= 4) return '#28a745'; // أخضر
-    if (score >= 3) return '#ffc107'; // أصفر
-    return '#dc3545'; // أحمر
+    if (score >= 4) return '#1e7e34'; // أخضر داكن أوضح
+    if (score >= 3) return '#d39e00'; // أصفر داكن
+    return '#c82333'; // أحمر داكن
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 4) return 'ممتاز';
+    if (score >= 3) return 'جيد';
+    return 'ضعيف';
   };
 
   // حساب متوسط النقاط للون الخط
   const avgScore = sortedData.reduce((sum, item) => sum + item.wellnessScore, 0) / sortedData.length;
   const lineColor = getScoreColor(avgScore);
+  const avgLabel = getScoreLabel(avgScore);
 
   return (
     <div style={{ height, position: 'relative' }}>
@@ -100,23 +107,23 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
 
         {/* المنطقة المملوءة */}
         <polygon
-          points={areaPoints.split(' ').map((point, index) => {
+          points={areaPoints.split(' ').map((point) => {
             const [x, y] = point.split(',').map(Number);
             return `${x + 10},${y + 30}`;
           }).join(' ')}
           fill={lineColor}
-          fillOpacity="0.1"
+          fillOpacity="0.18"
         />
 
         {/* خط البيانات الرئيسي */}
         <polyline
-          points={points.split(' ').map((point, index) => {
+          points={points.split(' ').map((point) => {
             const [x, y] = point.split(',').map(Number);
             return `${x + 10},${y + 30}`;
           }).join(' ')}
           fill="none"
           stroke={lineColor}
-          strokeWidth="0.3"
+          strokeWidth="0.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -195,7 +202,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
       >
         <div className="text-center">
           <div style={{ color: lineColor, fontWeight: 'bold' }}>
-            متوسط: {avgScore.toFixed(1)}
+            {avgLabel}: {avgScore.toFixed(1)}
           </div>
           <div className="text-muted">
             {sortedData.length} يوم
@@ -219,7 +226,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
             style={{ 
               width: '12px', 
               height: '3px', 
-              backgroundColor: '#28a745',
+              backgroundColor: '#1e7e34',
               borderRadius: '1px',
               marginRight: '3px' 
             }}
@@ -231,8 +238,8 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
             style={{ 
               width: '12px', 
               height: '3px', 
-              backgroundColor: '#ffc107',
-              borderRadius: '1px',
+              backgroundColor: '#d39e00',
+              borderRadius: '1px', 
               marginRight: '3px' 
             }}
           />
@@ -243,8 +250,8 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
             style={{ 
               width: '12px', 
               height: '3px', 
-              backgroundColor: '#dc3545',
-              borderRadius: '1px',
+              backgroundColor: '#c82333',
+              borderRadius: '1px', 
               marginRight: '3px' 
             }}
           />

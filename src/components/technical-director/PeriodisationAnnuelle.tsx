@@ -328,7 +328,7 @@ const PeriodisationAnnuelle: React.FC<PeriodisationAnnuelleProps> = ({ clubId })
         <div className="d-flex justify-content-between align-items-center">
           <h4 className="mb-0">
             <i className="fas fa-calendar-alt me-2"></i>
-            Périodisation Annuelle
+           البرنامج السنوي
           </h4>
           
           <Dropdown>
@@ -387,7 +387,12 @@ const PeriodisationAnnuelle: React.FC<PeriodisationAnnuelleProps> = ({ clubId })
 
         {/* الجدول */}
         <div className="table-responsive">
-          <Table bordered className="mb-0 periodisation-table" style={{ fontSize: '0.9rem' }}>
+          <Table
+            bordered
+            className="mb-0 periodisation-table"
+            dir="ltr"
+            style={{ fontSize: '0.9rem' }}
+          >
             <thead>
               <tr>
                 {/* العمود الأول */}

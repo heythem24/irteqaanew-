@@ -1,15 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, Row, Col, Button, Table } from 'react-bootstrap';
+import { CATEGORIES, getCategoryByDOBToday } from '../../utils/categoryUtils';
 import type { Club } from '../../types';
 import { useTechnicalCard } from '../../hooks/useFirestore';
 import { UsersService as UserService } from '../../services/firestoreService';
 import './TechnicalCard.css';
 import './coach-responsive.css';
+const CARD_NUMBER_OPTIONS = Array.from({ length: 20 }, (_, index) => String(index + 1).padStart(2, '0'));
+const STATIC_AGE_CATEGORY_OPTIONS = Array.from(new Set(CATEGORIES.map(c => c.nameAr)));
+
+const createSubject = (cardNumber: string) => `تحليل الحصة ( مذكرة رقم ${cardNumber} )`;
+
+const extractCardNumber = (value?: string): string | undefined => {
+  if (!value) return undefined;
+  const match = value?.match(/رقم\s*(\d+)/);
+  return match ? match[1].padStart(2, '0') : undefined;
+};
 
 interface TechnicalCardProps {
   club: Club;
 }
 
+// لاحقًا يمكن استعمال مُنشئ حالة الصفحة الثانية إن لزم
 
 
 const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
@@ -20,7 +32,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
   const [headerInfo, setHeaderInfo] = useState({
     trainer: trainerName,
     specialty: 'جودو',
-    location: 'قاعة النادي بالمركز الثقافي البدني عين البيضاء',
+    location: '',
     equipment: 'تاتامي مطاطية / بساط 2x2 متر',
     objectives: 'أفكار خطة عدم الخروج من منطقة التدريب عن طريق تنفيذ هجمة مضادة مركبة "ushi mata -osto gari" بتقنية الشخصية tomoe nage',
     sessionNumber: 90,
@@ -29,6 +41,38 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
 
   // Reference to container to collect inputs without converting all to controlled
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const textareaHandlers = useRef<Map<HTMLTextAreaElement, () => void>>(new Map());
+
+  const resizeTextarea = (textarea: HTMLTextAreaElement) => {
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
+  const registerTextarea = (textarea: HTMLTextAreaElement) => {
+    const handler = () => resizeTextarea(textarea);
+    handler();
+    textarea.addEventListener('input', handler);
+    textareaHandlers.current.set(textarea, handler);
+  };
+
+  const refreshTextareas = () => {
+    if (!containerRef.current) return;
+    const textareas = containerRef.current.querySelectorAll<HTMLTextAreaElement>('textarea');
+    textareas.forEach((textarea) => {
+      if (textareaHandlers.current.has(textarea)) {
+        resizeTextarea(textarea);
+      } else {
+        registerTextarea(textarea);
+      }
+    });
+  };
+
+  const cleanupTextareas = () => {
+    textareaHandlers.current.forEach((handler, textarea) => {
+      textarea.removeEventListener('input', handler);
+    });
+    textareaHandlers.current.clear();
+  };
 
   // Extra editable sections' state
   const [trainerEvaluation, setTrainerEvaluation] = useState<string>('');
@@ -41,13 +85,17 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     analysisText: 'تم انجاز الحصة الخاصة بـ: التحضير البدني العام بنسبة ...... %\n\nوذلك بسبب:',
   });
 
+  // رقم البطاقة (قائمة منسدلة)
+  const [cardNumber, setCardNumber] = useState<string>(extractCardNumber('تحليل الحصة ( مذكرة رقم 01 )') || '01');
+
   // استخدام Firestore بدلاً من localStorage
   const { cardData, saveTechnicalCard } = useTechnicalCard(club.id);
+  const [ageCategoryOptions, setAgeCategoryOptions] = useState<string[]>(STATIC_AGE_CATEGORY_OPTIONS);
 
   // تحميل البيانات المحفوظة مع الحفاظ على اسم المدرب الحالي
   useEffect(() => {
     if (cardData && cardData.headerInfo) {
-      setHeaderInfo(prev => ({
+      setHeaderInfo(_prev => ({
         ...cardData.headerInfo,
         trainer: trainerName // الحفاظ على اسم المدرب الحالي
       }));
@@ -58,13 +106,16 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
       }
       if (cardData.secondPage) {
         setSecondPage((sp) => ({
-          clubName: cardData.secondPage.clubName || '',
-          coachName: cardData.secondPage.coachName || '',
+          clubName: club.nameAr || cardData.secondPage.clubName || '',
+          coachName: trainerName || cardData.secondPage.coachName || '',
           clubAddress: cardData.secondPage.clubAddress || '',
           ageCategory: cardData.secondPage.ageCategory || '',
           subject: cardData.secondPage.subject || sp.subject,
           analysisText: cardData.secondPage.analysisText || sp.analysisText,
         }));
+        // مزامنة رقم البطاقة من الموضوع المحفوظ
+        const n = extractCardNumber(cardData.secondPage.subject) || cardNumber || '01';
+        setCardNumber(n);
       }
 
       // Apply saved table values back into inputs by DOM order
@@ -80,8 +131,67 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           }
         });
       }
+
+      refreshTextareas();
     }
   }, [cardData, trainerName]);
+
+  // حساب فئات العمر المتوفرة فعليًا بالنادي لملء القائمة المنسدلة بشكل ديناميكي
+  useEffect(() => {
+    const loadClubAthletes = async () => {
+      try {
+        if (!club.id) return;
+        const athletes = await UserService.getAthletesByClub(club.id);
+        const names = new Set<string>();
+        athletes.forEach((a: any) => {
+          const cat = getCategoryByDOBToday(a.dateOfBirth ? new Date(a.dateOfBirth) : undefined);
+          if (cat?.nameAr) names.add(cat.nameAr);
+        });
+        const opts = Array.from(names);
+        if (opts.length > 0) setAgeCategoryOptions(opts);
+        else setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
+      } catch (e) {
+        setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
+      }
+    };
+    loadClubAthletes();
+  }, [club.id]);
+
+  // تأكد من تزامن رقم البطاقة عند تغيير موضوع الصفحة الثانية يدويًا
+  useEffect(() => {
+    const n = extractCardNumber(secondPage.subject);
+    if (n && n !== cardNumber) {
+      setCardNumber(n);
+    }
+  }, [secondPage.subject]);
+
+  // مزامنة اسم النادي واسم المدرب مع الصفحة الثانية عند تغيّرها
+  useEffect(() => {
+    setSecondPage(sp => ({
+      ...sp,
+      clubName: club.nameAr || sp.clubName,
+      coachName: headerInfo.trainer || sp.coachName,
+    }));
+  }, [club.nameAr, headerInfo.trainer]);
+
+  // مزامنة مكان التدريب مع مقر النادي في الصفحة الثانية
+  useEffect(() => {
+    setSecondPage(sp => ({
+      ...sp,
+      clubAddress: headerInfo.location,
+    }));
+  }, [headerInfo.location]);
+
+  useEffect(() => {
+    refreshTextareas();
+    return () => {
+      cleanupTextareas();
+    };
+  }, []);
+
+  useEffect(() => {
+    refreshTextareas();
+  }, [secondPage, headerInfo]);
 
   // حفظ البيانات
   const saveData = async () => {
@@ -114,64 +224,81 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     setHeaderInfo(prev => ({ ...prev, [field]: value }));
   };
 
-  // طباعة البطاقة الفنية - طباعة الجدول فقط بدون الهيدر والفوتر والقوائم العلوية
+  // طباعة البطاقة الفنية: صفحة 1 (العنوان + الجدول + تقييم المدرب) ثم فاصل صفحة وصفحة 2 (تحليل الحصة)
   const printTechnicalCard = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    const tableContent = `
+    // Read current values from the live DOM to mirror the UI exactly
+    const trainerEvalVal = (containerRef.current?.querySelector('.trainer-evaluation textarea') as HTMLTextAreaElement)?.value || '';
+    const subjectVal = (containerRef.current?.querySelector('#secondPageSubject') as HTMLInputElement)?.value || '';
+    const analysisVal = (containerRef.current?.querySelector('#secondPageAnalysis') as HTMLTextAreaElement)?.value || '';
+
+    // Prefer values from form controls when cloning table content for print
+    const getCellContentHtml = (cell: Element) => {
+      const controls = Array.from(cell.querySelectorAll('input, textarea')) as Array<HTMLInputElement | HTMLTextAreaElement>;
+      if (controls.length > 0) {
+        return controls
+          .map(ctrl => (ctrl.value ?? '').toString().replace(/\n/g, '<br/>'))
+          .join('<br/>');
+      }
+      const text = (cell.textContent || '').trim();
+      return text.replace(/\n/g, '<br/>');
+    };
+
+    const pageHtml = `
       <!DOCTYPE html>
       <html dir="rtl">
       <head>
         <meta charset="UTF-8">
-        <title>البطاقة الفنية - ${headerInfo.trainer}</title>
+        <title>البطاقة الفنية رقم ${cardNumber}</title>
         <style>
-          body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            direction: rtl;
-          }
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 0 auto;
-            font-size: 12px;
-          }
-          th, td {
-            border: 1px solid #000;
-            padding: 6px;
-            text-align: center;
-          }
-          th {
-            background-color: #e3f2fd;
-            font-weight: bold;
-            font-size: 11px;
-          }
-          .phase-title-cell {
-            background-color: #f8f9fa;
-            font-weight: bold;
-          }
-          .phase-title {
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            transform: rotate(180deg);
-            white-space: nowrap;
-          }
-          h2 { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            color: #1976d2; 
-            font-size: 16px;
-          }
+          body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
+          h1, h2, h3 { margin: 0 0 12px; }
+          .title { text-align: center; color: #1976d2; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; font-size: 12px; }
+          th, td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: top; }
+          th { background-color: #e3f2fd; font-weight: bold; font-size: 11px; }
+          .phase-title { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); white-space: nowrap; }
+          .trainer-eval { margin-top: 18px; border: 1px solid #000; padding: 10px; }
+          .page-break { page-break-after: always; }
+          .box { background:#fff; border:1px solid #ddd; padding:12px; border-radius:8px; }
+          .section { margin-bottom: 16px; }
+          .label { font-weight: bold; margin-bottom: 6px; }
           @media print {
-            body { margin: 0; }
+            body { margin: 10mm; }
             table { font-size: 10px; }
             th, td { padding: 4px; }
           }
         </style>
       </head>
       <body>
-        <h2>البطاقة الفنية - ${headerInfo.trainer}</h2>
+        <!-- Page 1: Title + Header Info + Table + Trainer Evaluation -->
+        <h2 class="title">البطاقة الفنية رقم ${cardNumber}</h2>
+        <table class="header-grid" style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:16px; font-size:12px;">
+          <tr>
+            <th style="border:1px solid #000; background:#f1f1f1; width:140px; text-align:center; padding:6px;">المــــدرب</th>
+            <td style="border:1px solid #000; padding:6px;">${(headerInfo.trainer || '').toString().replace(/\n/g, '<br/>')}</td>
+            <th style="border:1px solid #000; background:#f1f1f1; width:140px; text-align:center; padding:6px;">الاختصاص</th>
+            <td style="border:1px solid #000; padding:6px;">${(headerInfo.specialty || '').toString().replace(/\n/g, '<br/>')}</td>
+          </tr>
+          <tr>
+            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">المــــكان</th>
+            <td style="border:1px solid #000; padding:6px;">${(headerInfo.location || '').toString().replace(/\n/g, '<br/>')}</td>
+            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">الوســائل</th>
+            <td style="border:1px solid #000; padding:6px;">${(headerInfo.equipment || '').toString().replace(/\n/g, '<br/>')}</td>
+          </tr>
+          <tr>
+            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">المدة (دقيقة)</th>
+            <td style="border:1px solid #000; padding:6px;">${Number.isFinite(headerInfo.sessionNumber as any) ? headerInfo.sessionNumber : ''}</td>
+            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">عدد المتمرنين</th>
+            <td style="border:1px solid #000; padding:6px;">${Number.isFinite(headerInfo.age as any) ? headerInfo.age : ''}</td>
+          </tr>
+          <tr>
+            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">الأهــــداف</th>
+            <td colspan="3" style="border:1px solid #000; padding:6px;">${(headerInfo.objectives || '').toString().replace(/\n/g, '<br/>')}</td>
+          </tr>
+        </table>
         <table>
           <thead>
             <tr>
@@ -203,20 +330,36 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                   ${cells.map(cell => {
                     const colspan = cell.getAttribute('colspan') || '1';
                     const rowspan = cell.getAttribute('rowspan') || '1';
-                    const text = cell.textContent?.trim() || '';
-                    const className = cell.className || '';
-                    return `<td colspan="${colspan}" rowspan="${rowspan}" class="${className}">${text}</td>`;
+                    const className = (cell as HTMLElement).className || '';
+                    const contentHtml = getCellContentHtml(cell);
+                    return `<td colspan="${colspan}" rowspan="${rowspan}" class="${className}">${contentHtml}</td>`;
                   }).join('')}
                 </tr>
               `;
             }).join('')}
           </tbody>
         </table>
+        <div class="trainer-eval">
+          <div class="label">تقييم المدرب:</div>
+          <div class="box">${trainerEvalVal.replace(/\n/g, '<br/>')}</div>
+        </div>
+        <div class="page-break"></div>
+
+        <!-- Page 2: Session Analysis -->
+        <h2 class="title">تحليل الحصة</h2>
+        <div class="section">
+          <div class="label">الموضوع</div>
+          <div class="box">${subjectVal.replace(/\n/g, '<br/>')}</div>
+        </div>
+        <div class="section">
+          <div class="label">تحليل الحصة</div>
+          <div class="box">${analysisVal.replace(/\n/g, '<br/>')}</div>
+        </div>
       </body>
       </html>
     `;
 
-    printWindow.document.write(tableContent);
+    printWindow.document.write(pageHtml);
     printWindow.document.close();
     printWindow.focus();
 
@@ -232,9 +375,25 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     <Card className="shadow-sm">
       <Card.Header className="bg-primary text-white d-flex align-items-center justify-content-between">
         <div className="text-end" dir="rtl">
-          <h5 className="mb-0" dir="rtl">
+          <h5 className="mb-0 d-flex align-items-center gap-2" dir="rtl">
             <i className="fas fa-clipboard-list me-2"></i>
-            البطاقة الفنية
+            <span>البطاقة الفنية</span>
+            <span className="ms-2">رقم</span>
+            <Form.Select
+              size="sm"
+              value={cardNumber}
+              onChange={(e) => {
+                const value = e.target.value;
+                setCardNumber(value);
+                setSecondPage((sp) => ({ ...sp, subject: createSubject(value) }));
+              }}
+              style={{ width: '80px', display: 'inline-block' }}
+              className="ms-1"
+            >
+              {CARD_NUMBER_OPTIONS.map((opt) => (
+                <option key={opt} value={opt}>{opt}</option>
+              ))}
+            </Form.Select>
           </h5>
         </div>
         <div className="text-start">
@@ -607,7 +766,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 </td>
                 <td className="duration-cell">
                   <Form.Control
-                    type="text"
+                    as="textarea"
+                    rows={2}
                     defaultValue="العمل بشدة متوسطة&#10;+ 30"
                     className="duration-input"
                     dir="rtl"
@@ -682,7 +842,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 </td>
                 <td className="duration-cell">
                   <Form.Control
-                    type="text"
+                    as="textarea"
+                    rows={2}
                     defaultValue="العمل بشدة متوسطة&#10;+ 30"
                     className="duration-input"
                     dir="rtl"
@@ -756,7 +917,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 </td>
                 <td className="duration-cell">
                   <Form.Control
-                    type="text"
+                    as="textarea"
+                    rows={2}
                     defaultValue="+ 12"
                     className="duration-input"
                     dir="rtl"
@@ -837,7 +999,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 </td>
                 <td className="duration-cell">
                   <Form.Control
-                    type="text"
+                    as="textarea"
+                    rows={2}
                     defaultValue="النهاية&#10;+ 1"
                     className="duration-input"
                     dir="rtl"
@@ -882,7 +1045,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
             border: '2px solid #2196f3',
             borderRadius: '15px',
             padding: '15px',
-            marginBottom: '20px',
+            marginBottom: '60px',
             textAlign: 'center',
             direction: 'rtl'
           }}>
@@ -892,8 +1055,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 <Form.Control
                   type="text"
                   size="sm"
-                  value={secondPage.clubName}
-                  onChange={(e) => setSecondPage(sp => ({ ...sp, clubName: e.target.value }))}
+                  value={club.nameAr || secondPage.clubName}
+                  readOnly
                   style={{ maxWidth: '260px', display: 'inline-block' }}
                 />
               </Col>
@@ -902,8 +1065,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 <Form.Control
                   type="text"
                   size="sm"
-                  value={secondPage.coachName}
-                  onChange={(e) => setSecondPage(sp => ({ ...sp, coachName: e.target.value }))}
+                  value={headerInfo.trainer || secondPage.coachName}
+                  readOnly
                   style={{ maxWidth: '260px', display: 'inline-block' }}
                 />
               </Col>
@@ -915,20 +1078,23 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                   type="text"
                   size="sm"
                   value={secondPage.clubAddress}
-                  onChange={(e) => setSecondPage(sp => ({ ...sp, clubAddress: e.target.value }))}
+                  readOnly
                   style={{ maxWidth: '260px', display: 'inline-block' }}
                 />
               </Col>
               <Col md={6} className="text-right d-flex align-items-center gap-2" style={{ justifyContent: 'flex-end' }}>
                 <strong className="ms-2">الفئة العمرية:</strong>
-                <Form.Control
-                  type="text"
+                <Form.Select
                   size="sm"
                   value={secondPage.ageCategory}
                   onChange={(e) => setSecondPage(sp => ({ ...sp, ageCategory: e.target.value }))}
-                  style={{ maxWidth: '200px', display: 'inline-block' }}
-                />
-                <strong className="ms-2">سنة</strong>
+                  style={{ maxWidth: '220px', display: 'inline-block', position: 'relative', zIndex: 1000 }}
+                >
+                  <option value="">اختر الفئة</option>
+                  {STATIC_AGE_CATEGORY_OPTIONS.map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </Form.Select>
               </Col>
             </Row>
           </div>
@@ -938,7 +1104,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
               background: 'linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%)',
               border: '2px solid #03a9f4',
               borderRadius: '15px',
-              padding: '10px',
+              padding: '15px',
+              direction: 'rtl',
               display: 'inline-block',
               fontWeight: 'bold'
             }}>
@@ -946,7 +1113,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
             </div>
           </div>
 
-          <div style={{
+          <div className="second-page-analysis-block" style={{
             background: 'linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%)',
             border: '2px solid #4caf50',
             borderRadius: '15px',
