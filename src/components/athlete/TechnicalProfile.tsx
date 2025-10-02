@@ -20,6 +20,19 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
   const [belt, setBelt] = useState<string>('');
   const [clubName, setClubName] = useState<string>('');
   const [coachName, setCoachName] = useState<string>('');
+  // Achievements and rankings (arrays, backward compatible)
+  type AchievementsArrays = {
+    wilayaYears?: number[];
+    regionalYears?: number[];
+    nationalYears?: number[];
+    arabYears?: number[];
+    continentalYears?: number[];
+    worldYears?: number[];
+    olympicYears?: number[];
+  };
+  type RankingEntry = { level: 'محلي' | 'عربي' | 'قاري' | 'دولي'; rank: number };
+  const [achievements, setAchievements] = useState<AchievementsArrays>({});
+  const [rankings, setRankings] = useState<RankingEntry[]>([]);
 
   // Compute display name from Arabic if available
   const displayName = (athlete.name && athlete.name.trim().length > 0)
@@ -29,23 +42,37 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
   // Fetch Firestore-backed user details by athlete.id
   useEffect(() => {
     let mounted = true;
-    const fetchUser = async () => {
-      try {
-        if (!athlete?.id) return;
-        const user = await UsersService.getUserById(athlete.id);
-        if (!mounted || !user) return;
-        setFatherName(user.fatherName || '');
-        setMotherName(user.motherName || '');
-        setBirthPlace(user.birthPlace || athlete.placeOfBirth || '');
-        setBloodType(user.bloodType || '');
-        setDob(user.dateOfBirth ? new Date(user.dateOfBirth) : (athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined));
-        setGender((user.gender as 'male' | 'female') || athlete.gender || 'male');
-        setBelt((user as any).beltAr || user.belt || (athlete as any).beltAr || (athlete as any).belt || '');
-
-        // Derive sport age from possible fields on the user document
-        // sport age not needed here anymore; we show chronological age in the sports info table
-      } catch (e) {
-        // On error, fall back to whatever is in athlete prop
+    const applyUser = (user: any | null) => {
+      if (!mounted || !user) return;
+      setFatherName(user.fatherName || '');
+      setMotherName(user.motherName || '');
+      setBirthPlace(user.birthPlace || athlete.placeOfBirth || '');
+      setBloodType(user.bloodType || '');
+      setDob(user.dateOfBirth ? new Date(user.dateOfBirth) : (athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined));
+      setGender((user.gender as 'male' | 'female') || athlete.gender || 'male');
+      setBelt((user as any).beltAr || user.belt || (athlete as any).beltAr || (athlete as any).belt || '');
+      const ach = (user as any).achievements || {};
+      const toArr = (val?: any): number[] | undefined => {
+        if (Array.isArray(val)) return val.filter((n: any) => typeof n === 'number');
+        if (typeof val === 'number') return [val];
+        return undefined;
+      };
+      setAchievements({
+        wilayaYears: toArr(ach.wilayaYears ?? ach.wilayaYear),
+        regionalYears: toArr(ach.regionalYears ?? ach.regionalYear),
+        nationalYears: toArr(ach.nationalYears ?? ach.nationalYear),
+        arabYears: toArr(ach.arabYears ?? ach.arabYear),
+        continentalYears: toArr(ach.continentalYears ?? ach.continentalYear),
+        worldYears: toArr(ach.worldYears ?? ach.worldYear),
+        olympicYears: toArr(ach.olympicYears ?? ach.olympicYear),
+      });
+      setRankings(((user as any).rankings || []) as any);
+    };
+    if (!athlete?.id) return () => { mounted = false; };
+    const unsub = UsersService.onUser(athlete.id, (u)=> {
+      if (u) applyUser(u as any);
+      else {
+        // Fallback to athlete prop when no user doc
         setFatherName((athlete as any).fatherName || '');
         setMotherName((athlete as any).motherName || '');
         setBirthPlace(athlete.placeOfBirth || '');
@@ -53,10 +80,11 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
         setDob(athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined);
         setGender(athlete.gender || 'male');
         setBelt((athlete as any).beltAr || (athlete as any).belt || '');
+        setAchievements({});
+        setRankings([]);
       }
-    };
-    fetchUser();
-    return () => { mounted = false; };
+    });
+    return () => { mounted = false; unsub(); };
   }, [athlete]);
 
   // Fetch club and coach information based on athlete.clubId
@@ -538,14 +566,14 @@ const TechnicalProfile: React.FC<TechnicalProfileProps> = ({ athlete }) => {
               </thead>
               <tbody>
                 <tr>
-                  <td style={{height: '50px'}}></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
+                  <td style={{height: '50px'}}>{achievements.wilayaYears?.length ? achievements.wilayaYears.join(', ') : ''}</td>
+                  <td>{achievements.regionalYears?.length ? achievements.regionalYears.join(', ') : ''}</td>
+                  <td>{achievements.nationalYears?.length ? achievements.nationalYears.join(', ') : ''}</td>
+                  <td>{achievements.arabYears?.length ? achievements.arabYears.join(', ') : ''}</td>
+                  <td>{achievements.continentalYears?.length ? achievements.continentalYears.join(', ') : ''}</td>
+                  <td>{achievements.worldYears?.length ? achievements.worldYears.join(', ') : ''}</td>
+                  <td>{achievements.olympicYears?.length ? achievements.olympicYears.join(', ') : ''}</td>
+                  <td>{rankings && rankings.length ? rankings.map(r => `${r.level}: #${r.rank}`).join(' | ') : ''}</td>
                 </tr>
               </tbody>
             </Table>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Card, Table, Form, Row, Col, Badge, Alert, Spinner, Button } from 'react-bootstrap';
+import { Card, Table, Form, Row, Col, Badge, Alert, Spinner, Button, Modal } from 'react-bootstrap';
 import type { Club, User } from '../../types';
 import { UsersService as UserService } from '../../services/firestoreService';
 import { useCoachData } from '../../hooks/useCoachData';
@@ -31,6 +31,50 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
   const [bloodTypeEdits, setBloodTypeEdits] = useState<Record<string, string>>({});
   const [phoneEdits, setPhoneEdits] = useState<Record<string, string>>({});
   const [ageEdits, setAgeEdits] = useState<Record<string, string>>({});
+  // International ranking and achievements edits
+  const [intlRankingEdits, setIntlRankingEdits] = useState<Record<string, string>>({});
+  // Achievements as arrays per category (backward-compatible)
+  type AchievementsArrays = {
+    wilayaYears?: number[];
+    regionalYears?: number[];
+    nationalYears?: number[];
+    arabYears?: number[];
+    continentalYears?: number[];
+    worldYears?: number[];
+    olympicYears?: number[];
+  };
+  const [achievementsEdits, setAchievementsEdits] = useState<Record<string, AchievementsArrays>>({});
+  // International rankings as list entries
+  type RankingEntry = { level: 'محلي' | 'عربي' | 'قاري' | 'دولي'; rank: number };
+  const [rankingEdits, setRankingEdits] = useState<Record<string, RankingEntry[]>>({});
+  const [achModalAthleteId, setAchModalAthleteId] = useState<string | null>(null);
+  const [achTemp, setAchTemp] = useState<{
+    wilayaYear?: string;
+    regionalYear?: string;
+    nationalYear?: string;
+    arabYear?: string;
+    continentalYear?: string;
+    worldYear?: string;
+    olympicYear?: string;
+  }>({});
+  // Inline achievements selection + year (array-based)
+
+  // Options
+  const achievementOptions: { key: keyof AchievementsArrays; label: string }[] = [
+    { key: 'wilayaYears', label: 'بطل ولائي (سنة)' },
+    { key: 'regionalYears', label: 'بطل جهوي (سنة)' },
+    { key: 'nationalYears', label: 'بطل وطني (سنة)' },
+    { key: 'arabYears', label: 'بطل عربي (سنة)' },
+    { key: 'continentalYears', label: 'بطل قاري (سنة)' },
+    { key: 'worldYears', label: 'بطل عالمي (سنة)' },
+    { key: 'olympicYears', label: 'بطل أولمبي (سنة)' },
+  ];
+  const rankingLevelOptions: RankingEntry['level'][] = ['محلي', 'عربي', 'قاري', 'دولي'];
+  // Inline selections for add forms
+  const [achArraySelection, setAchArraySelection] = useState<Record<string, keyof AchievementsArrays>>({});
+  const [achArrayYear, setAchArrayYear] = useState<Record<string, string>>({});
+  const [rankLevelSel, setRankLevelSel] = useState<Record<string, RankingEntry['level']>>({});
+  const [rankNumber, setRankNumber] = useState<Record<string, string>>({});
 
   // Get current user to extract coach ID
   const currentUser = UserService.getCurrentUser();
@@ -80,6 +124,28 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
           bloods[a.id] = a.bloodType || '';
           phones[a.id] = a.phone || '';
           ages[a.id] = a.dateOfBirth ? String(calculateAge(a.dateOfBirth)) : '';
+          // Prefill ranking and achievements from user fields if present (backward compatible)
+          const userAny = a as any;
+          intlRankingEdits[a.id] = userAny.internationalRanking || '';
+          const ach = (userAny.achievements || {}) as any;
+          // Convert single values to arrays
+          const toArr = (val?: any): number[] | undefined => {
+            if (Array.isArray(val)) return val.filter((n)=> typeof n === 'number');
+            if (typeof val === 'number') return [val];
+            return undefined;
+          };
+          (achievementsEdits as any)[a.id] = {
+            wilayaYears: toArr(ach.wilayaYears ?? ach.wilayaYear),
+            regionalYears: toArr(ach.regionalYears ?? ach.regionalYear),
+            nationalYears: toArr(ach.nationalYears ?? ach.nationalYear),
+            arabYears: toArr(ach.arabYears ?? ach.arabYear),
+            continentalYears: toArr(ach.continentalYears ?? ach.continentalYear),
+            worldYears: toArr(ach.worldYears ?? ach.worldYear),
+            olympicYears: toArr(ach.olympicYears ?? ach.olympicYear),
+          } as AchievementsArrays;
+          // Rankings list
+          const ranks = (userAny.rankings || []) as RankingEntry[];
+          (rankingEdits as any)[a.id] = Array.isArray(ranks) ? ranks.filter(r => r && r.level && typeof r.rank === 'number') : [];
         });
         setFatherEdits(fathers);
         setMotherEdits(mothers);
@@ -91,6 +157,9 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
         setBloodTypeEdits(bloods);
         setPhoneEdits(phones);
         setAgeEdits(ages);
+        setIntlRankingEdits(prev => ({ ...prev, ...intlRankingEdits }));
+        setAchievementsEdits(prev => ({ ...prev, ...(achievementsEdits as any) }));
+        setRankingEdits(prev => ({ ...prev, ...(rankingEdits as any) }));
       } catch (err) {
         console.error("Failed to fetch club athletes:", err);
         // Optionally set an error state here
@@ -452,6 +521,86 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
             <div>جاري تحميل قائمة الرياضيين...</div>
           </div>
         </Card.Body>
+      {/* Achievements Modal */}
+      <Modal show={!!achModalAthleteId} onHide={() => setAchModalAthleteId(null)} dir="rtl" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>تحرير الإنجازات الرياضية</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Row className="g-2">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل ولائي (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.wilayaYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, wilayaYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل جهوي (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.regionalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, regionalYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل وطني (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.nationalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, nationalYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل عربي (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.arabYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, arabYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل قاري (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.continentalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, continentalYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل عالمي (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.worldYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, worldYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label>بطل أولمبي (سنة)</Form.Label>
+                <Form.Control type="number" value={achTemp.olympicYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, olympicYear:e.target.value}))} />
+              </Form.Group>
+            </Col>
+          </Row>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setAchModalAthleteId(null)}>إلغاء</Button>
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!achModalAthleteId) return;
+              const payload = {
+                achievements: {
+                  wilayaYear: achTemp.wilayaYear ? Number(achTemp.wilayaYear) : undefined,
+                  regionalYear: achTemp.regionalYear ? Number(achTemp.regionalYear) : undefined,
+                  nationalYear: achTemp.nationalYear ? Number(achTemp.nationalYear) : undefined,
+                  arabYear: achTemp.arabYear ? Number(achTemp.arabYear) : undefined,
+                  continentalYear: achTemp.continentalYear ? Number(achTemp.continentalYear) : undefined,
+                  worldYear: achTemp.worldYear ? Number(achTemp.worldYear) : undefined,
+                  olympicYear: achTemp.olympicYear ? Number(achTemp.olympicYear) : undefined,
+                }
+              } as any;
+              await saveField(achModalAthleteId, payload);
+              setAchievementsEdits(prev => ({
+                ...prev,
+                [achModalAthleteId]: payload.achievements
+              }));
+              setAchModalAthleteId(null);
+            }}
+          >
+            حفظ
+          </Button>
+        </Modal.Footer>
+      </Modal>
       </Card>
     );
   }
@@ -538,6 +687,48 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
               </Form.Group>
             </Col>
           </Row>
+          <style>
+            {`
+              /* Improve readability: prevent glyph overlap and allow wrapping */
+              .athlete-roster-table th,
+              .athlete-roster-table td {
+                line-height: 1.4;
+                white-space: normal;
+                word-break: break-word;
+              }
+              /* Achievements column */
+              .athlete-roster-table th:nth-child(14),
+              .athlete-roster-table td:nth-child(14) {
+                min-width: 320px;
+              }
+              /* International ranking column */
+              .athlete-roster-table th:nth-child(15),
+              .athlete-roster-table td:nth-child(15) {
+                min-width: 180px;
+              }
+              .athlete-roster-table .form-control {
+                width: 100%;
+              }
+              @media (max-width: 768px) {
+                .athlete-roster-table {
+                  font-size: 12px;
+                }
+                .athlete-roster-table th,
+                .athlete-roster-table td {
+                  padding: 6px 4px;
+                  line-height: 1.45;
+                }
+                .athlete-roster-table th:nth-child(14),
+                .athlete-roster-table td:nth-child(14) {
+                  min-width: 260px;
+                }
+                .athlete-roster-table th:nth-child(15),
+                .athlete-roster-table td:nth-child(15) {
+                  min-width: 160px;
+                }
+              }
+            `}
+          </style>
           <div className="table-responsive">
             <Table
               striped
@@ -563,6 +754,8 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
                   <th className="text-center" dir="rtl">الطول (سم)</th>
                   <th className="text-center" dir="rtl">فصيلة الدم</th>
                   <th className="text-center" dir="rtl">رقم الهاتف</th>
+                  <th className="text-center" dir="rtl">الإنجازات الرياضية</th>
+                  <th className="text-center" dir="rtl">التصنيف الدولي</th>
                 </tr>
               </thead>
               <tbody>
@@ -784,17 +977,165 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
                         );
                       })()}
                     </td>
+                    {/* Achievements: multiple entries (dropdown + year + إضافة) */}
+                    <td className="text-end" dir="rtl">
+                      {(() => {
+                        const current = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                        const selKey = (achArraySelection[athlete.id] as keyof AchievementsArrays) || 'wilayaYears';
+                        const summary: string[] = [];
+                        const pushYears = (label: string, arr?: number[]) => { if (arr && arr.length) summary.push(`${label}:${arr.join(',')}`); };
+                        pushYears('ولائي', current.wilayaYears);
+                        pushYears('جهوي', current.regionalYears);
+                        pushYears('وطني', current.nationalYears);
+                        pushYears('عربي', current.arabYears);
+                        pushYears('قاري', current.continentalYears);
+                        pushYears('عالمي', current.worldYears);
+                        pushYears('أولمبي', current.olympicYears);
+                        return (
+                          <div className="d-flex flex-column gap-2">
+                            <div className="small text-muted" style={{whiteSpace:'normal', wordBreak:'break-word'}}>
+                              {summary.length ? summary.join(' | ') : '—'}
+                            </div>
+                            <div className="d-flex gap-2 align-items-center justify-content-end">
+                              <Form.Select
+                                size="sm"
+                                className="text-end"
+                                value={selKey}
+                                onChange={(e)=> setAchArraySelection(prev => ({ ...prev, [athlete.id]: e.target.value as keyof AchievementsArrays }))}
+                                disabled={!!saving[athlete.id]}
+                                style={{maxWidth:'220px'}}
+                              >
+                                {achievementOptions.map(opt => (
+                                  <option key={opt.key as string} value={opt.key as string}>{opt.label}</option>
+                                ))}
+                              </Form.Select>
+                              <Form.Control
+                                size="sm"
+                                type="number"
+                                placeholder="السنة"
+                                className="text-end"
+                                style={{maxWidth:'130px'}}
+                                value={achArrayYear[athlete.id] ?? ''}
+                                onChange={(e)=> setAchArrayYear(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                                disabled={!!saving[athlete.id]}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                disabled={!!saving[athlete.id]}
+                                onClick={async ()=>{
+                                  const yearStr = (achArrayYear[athlete.id] ?? '').trim();
+                                  const num = Number(yearStr);
+                                  if (!yearStr || isNaN(num)) return;
+                                  const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                                  const nextArr = [...(existing[selKey] || []), num];
+                                  const next: AchievementsArrays = { ...existing, [selKey]: nextArr } as any;
+                                  await saveField(athlete.id, { achievements: next } as any);
+                                  setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                  setAchArrayYear(prev => ({ ...prev, [athlete.id]: '' }));
+                                }}
+                              >
+                                إضافة
+                              </Button>
+                            </div>
+                            {/* existing entries with remove */}
+                            <div className="d-flex flex-wrap gap-2 justify-content-end">
+                              {achievementOptions.map(opt => {
+                                const arr = (current as any)[opt.key] as number[] | undefined;
+                                if (!arr || arr.length === 0) return null;
+                                return arr.map((y, idx) => (
+                                  <Badge bg="light" text="dark" key={opt.key + '-' + idx} className="p-2 border">
+                                    <span className="me-2">{opt.label.split(' (')[0]}: {y}</span>
+                                    <Button size="sm" variant="outline-danger" onClick={async ()=>{
+                                      const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                                      const filtered = (arr || []).filter((_, i)=> i !== idx);
+                                      const next: AchievementsArrays = { ...existing, [opt.key]: filtered } as any;
+                                      await saveField(athlete.id, { achievements: next } as any);
+                                      setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                    }}>حذف</Button>
+                                  </Badge>
+                                ));
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    {/* International Ranking: multiple entries (level + rank + إضافة) */}
+                    <td className="text-end" dir="rtl">
+                      {(() => {
+                        const list = rankingEdits[athlete.id] || [];
+                        const levelSel = rankLevelSel[athlete.id] || 'محلي';
+                        const rn = rankNumber[athlete.id] || '';
+                        return (
+                          <div className="d-flex flex-column gap-2">
+                            <div className="d-flex gap-2 align-items-center justify-content-end">
+                              <Form.Select
+                                size="sm"
+                                className="text-end"
+                                value={levelSel}
+                                onChange={(e)=> setRankLevelSel(prev => ({ ...prev, [athlete.id]: e.target.value as RankingEntry['level'] }))}
+                                disabled={!!saving[athlete.id]}
+                                style={{maxWidth:'150px'}}
+                              >
+                                {rankingLevelOptions.map(opt => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </Form.Select>
+                              <Form.Control
+                                size="sm"
+                                type="number"
+                                placeholder="الترتيب"
+                                className="text-end"
+                                style={{maxWidth:'120px'}}
+                                value={rn}
+                                onChange={(e)=> setRankNumber(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                                disabled={!!saving[athlete.id]}
+                              />
+                              <Button
+                                size="sm"
+                                variant="outline-primary"
+                                disabled={!!saving[athlete.id]}
+                                onClick={async ()=>{
+                                  const num = Number(rankNumber[athlete.id] || '');
+                                  if (isNaN(num) || num <= 0) return;
+                                  const existing = rankingEdits[athlete.id] || [];
+                                  const next = [...existing, { level: levelSel, rank: num } as RankingEntry];
+                                  await saveField(athlete.id, { rankings: next } as any);
+                                  setRankingEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                  setRankNumber(prev => ({ ...prev, [athlete.id]: '' }));
+                                }}
+                              >
+                                إضافة
+                              </Button>
+                            </div>
+                            <div className="d-flex flex-wrap gap-2 justify-content-end">
+                              {list.map((r, idx) => (
+                                <Badge bg="light" text="dark" key={idx} className="p-2 border">
+                                  <span className="me-2">{r.level}: #{r.rank}</span>
+                                  <Button size="sm" variant="outline-danger" onClick={async ()=>{
+                                    const existing = rankingEdits[athlete.id] || [];
+                                    const next = existing.filter((_, i)=> i !== idx);
+                                    await saveField(athlete.id, { rankings: next } as any);
+                                    setRankingEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                  }}>حذف</Button>
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                   </tr>
-                );
+              );
               })}
-            </tbody>
-          </Table>
+              </tbody>
+            </Table>
         </div>
 
         {filteredAthletes.length === 0 && (
           <div className="text-center text-muted py-4">
             <i className="fas fa-search fa-3x mb-3"></i>
-            <h5>لا توجد نتائج</h5>
             <p>لم يتم العثور على رياضيين يطابقون معايير البحث</p>
           </div>
         )}

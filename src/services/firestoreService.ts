@@ -462,7 +462,7 @@ function mapClubData(id: string, data: any): Club {
 }
 
 function mapUserData(id: string, data: any): User {
-  return {
+  const base: any = {
     id,
     username: data.username,
     password: data.password, // Note: Storing plain text passwords is not secure
@@ -491,7 +491,12 @@ function mapUserData(id: string, data: any): User {
     motherName: data.motherName,
     birthPlace: data.birthPlace,
     bloodType: data.bloodType
-  } as User;
+  };
+  // Pass-through for new fields (achievements arrays, rankings list, legacy internationalRanking)
+  if (data.achievements !== undefined) base.achievements = data.achievements;
+  if (data.rankings !== undefined) base.rankings = data.rankings;
+  if (data.internationalRanking !== undefined) base.internationalRanking = data.internationalRanking;
+  return base as User;
 }
 
 // ===== Leagues (rabitât) Service backed by Firestore =====
@@ -939,6 +944,19 @@ export class UsersService {
     return ds.exists() ? mapUserData(ds.id, ds.data()) : null;
   }
 
+  // Realtime subscription to a user document
+  static onUser(id: string, cb: (user: User | null) => void): Unsubscribe {
+    const ref = doc(db, 'users', id);
+    const unsub = onSnapshot(ref, (snap) => {
+      if (snap.exists()) {
+        cb(mapUserData(snap.id, snap.data()));
+      } else {
+        cb(null);
+      }
+    });
+    return unsub;
+  }
+
   static async getAthletesByClub(clubId: string): Promise<User[]> {
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('clubId', '==', clubId), where('role', '==', 'athlete'));
@@ -948,10 +966,21 @@ export class UsersService {
 
   static async updateUser(id: string, data: Partial<User>): Promise<void> {
     const ref = doc(db, 'users', id);
-    const payload = {
-      ...data,
-      updatedAt: serverTimestamp()
+    // Deep remove undefined to satisfy Firestore update rules
+    const prune = (val: any): any => {
+      if (Array.isArray(val)) return val.map(prune).filter(v => v !== undefined);
+      if (val && typeof val === 'object') {
+        const out: any = {};
+        Object.keys(val).forEach(k => {
+          const v = prune(val[k]);
+          if (v !== undefined) out[k] = v;
+        });
+        return out;
+      }
+      return val === undefined ? undefined : val;
     };
+    const payloadRaw = { ...data, updatedAt: serverTimestamp() } as any;
+    const payload = prune(payloadRaw);
     await updateDoc(ref, payload);
   }
 
