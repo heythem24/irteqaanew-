@@ -23,7 +23,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
     );
   }
 
-  // ترتيب البيانات حسب التاريخ
+  // ترتيب البيانات حسب التاريخ (من الأقدم للأحدث للعرض RTL)
   const sortedData = [...data].sort((a, b) => 
     new Date(a.date).getTime() - new Date(b.date).getTime()
   );
@@ -32,10 +32,11 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
   const maxValue = 5;
   const minValue = 1;
   const chartWidth = 100; // النسبة المئووية للعرض
-  const chartHeight = height - 60; // ترك مساحة للتسميات
+  const chartHeight = height - 90; // ترك مساحة أكبر للتسميات والمؤشرات
 
+  // تعديل حساب المواضع للعرض RTL (من اليمين لليسار)
   const getPointPosition = (index: number, value: number) => {
-    const x = (index / Math.max(sortedData.length - 1, 1)) * chartWidth;
+    const x = ((sortedData.length - 1 - index) / Math.max(sortedData.length - 1, 1)) * chartWidth;
     const y = chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight;
     return { x, y };
   };
@@ -46,8 +47,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
     return `${x},${y}`;
   }).join(' ');
 
-  // إنشاء مسار للتعبئة
-  const areaPoints = `0,${chartHeight} ${points} ${chartWidth},${chartHeight}`;
+  // تم حذف مسار التعبئة لأننا نستخدم الخط فقط
 
   // ألوان الخطوط حسب القيم
   const getScoreColor = (score: number) => {
@@ -77,58 +77,39 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
         preserveAspectRatio="none"
         style={{ position: 'absolute', top: 0, left: 0 }}
       >
-        {/* خطوط المرجع الأفقية */}
+        {/* خطوط المرجع الأفقية فقط */}
         {[1, 2, 3, 4, 5].map((value) => {
-          const y = chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight + 30;
+          const y = chartHeight - ((value - minValue) / (maxValue - minValue)) * chartHeight + 50;
           return (
-            <g key={value}>
-              <line
-                x1="10"
-                y1={y}
-                x2="95"
-                y2={y}
-                stroke="#e9ecef"
-                strokeWidth="0.1"
-                strokeDasharray="0.5,0.5"
-              />
-              <text
-                x="5"
-                y={y + 1}
-                fontSize="3"
-                fill="#6c757d"
-                textAnchor="middle"
-                dominantBaseline="middle"
-              >
-                {value}
-              </text>
-            </g>
+            <line
+              key={value}
+              x1="15"
+              y1={y}
+              x2="95"
+              y2={y}
+              stroke="#e9ecef"
+              strokeWidth="0.15"
+              strokeDasharray="0.8,0.8"
+            />
           );
         })}
 
-        {/* المنطقة المملوءة */}
-        <polygon
-          points={areaPoints.split(' ').map((point) => {
-            const [x, y] = point.split(',').map(Number);
-            return `${x + 10},${y + 30}`;
-          }).join(' ')}
-          fill={lineColor}
-          fillOpacity="0.18"
-        />
+        {/* تم إزالة المنطقة المملوءة للاكتفاء بالخط فقط */}
 
-        {/* خط البيانات الرئيسي */}
+        {/* خط البيانات الرئيسي - خط فقط بدون تعبئة */}
         <polyline
           points={points.split(' ').map((point) => {
             const [x, y] = point.split(',').map(Number);
-            return `${x + 10},${y + 30}`;
+            return `${x + 10},${y + 50}`;
           }).join(' ')}
           fill="none"
           stroke={lineColor}
-          strokeWidth="0.5"
+          strokeWidth="1.2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* النقاط */}
+        {/* النقاط - محسنة للخط الجديد */}
         {sortedData.map((item, index) => {
           const { x, y } = getPointPosition(index, item.wellnessScore);
           const pointColor = getScoreColor(item.wellnessScore);
@@ -137,18 +118,18 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
             <g key={index}>
               <circle
                 cx={x + 10}
-                cy={y + 30}
-                r="0.8"
+                cy={y + 50}
+                r="1.2"
                 fill={pointColor}
                 stroke="white"
-                strokeWidth="0.2"
+                strokeWidth="0.4"
               />
               
               {/* تسمية النقطة */}
               <text
                 x={x + 10}
-                y={y + 25}
-                fontSize="2.5"
+                y={y + 44}
+                fontSize="8"
                 fill={pointColor}
                 textAnchor="middle"
                 fontWeight="bold"
@@ -160,7 +141,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
         })}
       </svg>
 
-      {/* تسميات التواريخ */}
+      {/* تسميات التواريخ - RTL من اليمين لليسار */}
       <div 
         style={{ 
           position: 'absolute', 
@@ -169,6 +150,7 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
           right: '5%', 
           display: 'flex', 
           justifyContent: 'space-between',
+          flexDirection: 'row-reverse', // عكس الاتجاه للـ RTL
           fontSize: '12px',
           color: '#6c757d'
         }}
@@ -210,15 +192,42 @@ const WellnessChart: React.FC<Props> = ({ data, height = 300 }) => {
         </div>
       </div>
 
-      {/* مؤشرات الألوان */}
+      {/* أرقام المحور الرأسي - HTML عادي واضح */}
+      <div style={{ position: 'absolute', left: '5px', top: '50px', height: `${chartHeight}px` }}>
+        {[1, 2, 3, 4, 5].map((value) => {
+          const yPercent = ((value - minValue) / (maxValue - minValue)) * 100;
+          const yPosition = chartHeight - (yPercent / 100) * chartHeight;
+          return (
+            <div
+              key={value}
+              style={{
+                position: 'absolute',
+                top: `${yPosition - 8}px`,
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#495057',
+                lineHeight: '16px'
+              }}
+            >
+              {value}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* مؤشرات الألوان - نقلت إلى الأعلى */}
       <div 
         style={{ 
           position: 'absolute', 
-          bottom: '25px', 
+          top: '10px', 
           left: '10px',
           display: 'flex',
           gap: '8px',
-          fontSize: '10px'
+          fontSize: '10px',
+          backgroundColor: 'rgba(255,255,255,0.9)',
+          padding: '6px 8px',
+          borderRadius: '4px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
         }}
       >
         <div className="d-flex align-items-center">

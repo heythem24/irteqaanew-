@@ -36,7 +36,9 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     equipment: 'تاتامي مطاطية / بساط 2x2 متر',
     objectives: 'أفكار خطة عدم الخروج من منطقة التدريب عن طريق تنفيذ هجمة مضادة مركبة "ushi mata -osto gari" بتقنية الشخصية tomoe nage',
     sessionNumber: 90,
-    age: 20
+    age: 20,
+    ageCategory: '',
+    gender: 'ذكور'
   });
 
   // Reference to container to collect inputs without converting all to controlled
@@ -80,7 +82,6 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     clubName: '',
     coachName: '',
     clubAddress: '',
-    ageCategory: '',
     subject: 'تحليل الحصة ( مذكرة رقم 01 )',
     analysisText: 'تم انجاز الحصة الخاصة بـ: التحضير البدني العام بنسبة ...... %\n\nوذلك بسبب:',
   });
@@ -109,7 +110,6 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           clubName: club.nameAr || cardData.secondPage.clubName || '',
           coachName: trainerName || cardData.secondPage.coachName || '',
           clubAddress: cardData.secondPage.clubAddress || '',
-          ageCategory: cardData.secondPage.ageCategory || '',
           subject: cardData.secondPage.subject || sp.subject,
           analysisText: cardData.secondPage.analysisText || sp.analysisText,
         }));
@@ -136,26 +136,10 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
     }
   }, [cardData, trainerName]);
 
-  // حساب فئات العمر المتوفرة فعليًا بالنادي لملء القائمة المنسدلة بشكل ديناميكي
+  // استخدام جميع الفئات العمرية المتاحة
   useEffect(() => {
-    const loadClubAthletes = async () => {
-      try {
-        if (!club.id) return;
-        const athletes = await UserService.getAthletesByClub(club.id);
-        const names = new Set<string>();
-        athletes.forEach((a: any) => {
-          const cat = getCategoryByDOBToday(a.dateOfBirth ? new Date(a.dateOfBirth) : undefined);
-          if (cat?.nameAr) names.add(cat.nameAr);
-        });
-        const opts = Array.from(names);
-        if (opts.length > 0) setAgeCategoryOptions(opts);
-        else setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
-      } catch (e) {
-        setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
-      }
-    };
-    loadClubAthletes();
-  }, [club.id]);
+    setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
+  }, []);
 
   // تأكد من تزامن رقم البطاقة عند تغيير موضوع الصفحة الثانية يدويًا
   useEffect(() => {
@@ -253,53 +237,218 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
         <meta charset="UTF-8">
         <title>البطاقة الفنية رقم ${cardNumber}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; direction: rtl; }
-          h1, h2, h3 { margin: 0 0 12px; }
-          .title { text-align: center; color: #1976d2; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; font-size: 12px; }
-          th, td { border: 1px solid #000; padding: 6px; text-align: center; vertical-align: top; }
-          th { background-color: #e3f2fd; font-weight: bold; font-size: 11px; }
-          .phase-title { writing-mode: vertical-rl; text-orientation: mixed; transform: rotate(180deg); white-space: nowrap; }
-          .trainer-eval { margin-top: 18px; border: 1px solid #000; padding: 10px; }
+          * { box-sizing: border-box; }
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 8mm; 
+            direction: rtl; 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column;
+            padding: 0;
+          }
+          h1, h2, h3 { margin: 0 0 8px; }
+          .title { text-align: center; color: #1976d2; margin-bottom: 10px; font-size: 18px; }
+          .club-info { 
+            text-align: center; 
+            margin-bottom: 15px; 
+            border: 2px solid #000; 
+            padding: 12px; 
+            background: #f8f9fa;
+            font-size: 14px;
+            line-height: 1.5;
+          }
+          .main-content { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 0;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 14px;
+            margin-bottom: 10px;
+          }
+          th, td { 
+            border: 1px solid #000; 
+            padding: 8px; 
+            text-align: center; 
+            vertical-align: middle;
+            line-height: 1.5;
+            font-weight: bold;
+          }
+          th { 
+            background-color: #e3f2fd; 
+            font-weight: bold; 
+            font-size: 13px;
+            padding: 10px 8px;
+          }
+          .phase-title { 
+            writing-mode: vertical-rl; 
+            text-orientation: mixed; 
+            transform: rotate(180deg); 
+            white-space: nowrap;
+            font-size: 8px;
+          }
+          .trainer-eval { 
+            margin-top: auto; 
+            border: 2px solid #000; 
+            padding: 8px; 
+            flex-shrink: 0;
+            overflow: visible;
+          }
           .page-break { page-break-after: always; }
-          .box { background:#fff; border:1px solid #ddd; padding:12px; border-radius:8px; }
-          .section { margin-bottom: 16px; }
-          .label { font-weight: bold; margin-bottom: 6px; }
+          .box { 
+            background:#fff; 
+            border:1px solid #ddd; 
+            padding:12px; 
+            border-radius:4px;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: visible;
+            word-wrap: break-word;
+          }
+          .section { margin-bottom: 12px; }
+          .label { font-weight: bold; margin-bottom: 6px; font-size: 16px; }
+          .technical-table { 
+            flex: 1; 
+            display: flex;
+            flex-direction: column;
+          }
+          .technical-table table {
+            flex: 1;
+            height: 100%;
+          }
+          .technical-table tbody {
+            height: 100%;
+          }
+          .technical-table tbody tr {
+            height: auto;
+          }
+          .technical-table tbody td {
+            height: auto;
+            min-height: 35px;
+            padding: 5px;
+          }
+          .header-grid {
+            flex-shrink: 0;
+            margin-bottom: 8px !important;
+          }
           @media print {
-            body { margin: 10mm; }
-            table { font-size: 10px; }
-            th, td { padding: 4px; }
+            body { 
+              margin: 8mm !important; 
+              height: 100vh !important;
+              font-size: 10px;
+            }
+            .title { font-size: 20px !important; margin-bottom: 15px !important; }
+            .club-info { 
+              font-size: 12px !important; 
+              padding: 10px !important; 
+              margin-bottom: 15px !important;
+              line-height: 1.6 !important;
+            }
+            table { font-size: 14px !important; margin-bottom: 12px !important; }
+            th, td { 
+              padding: 4px !important; 
+              font-size: 11px !important; 
+              font-weight: bold !important;
+              line-height: 1.1 !important;
+              min-height: 32px !important;
+            }
+            th {
+              font-size: 13px !important;
+              font-weight: bold !important;
+              padding: 8px 6px !important;
+            }
+            .trainer-eval { 
+              padding: 8px !important; 
+              border: 2px solid #000 !important;
+              overflow: visible !important;
+            }
+            .box { 
+              padding: 8px !important; 
+              font-size: 11px !important;
+              font-weight: bold !important;
+              line-height: 1.3 !important;
+              overflow: visible !important;
+              word-wrap: break-word !important;
+            }
+            .label { font-size: 14px !important; margin-bottom: 8px !important; }
+          }
+
+          @media print and (orientation: landscape) {
+            body { 
+              margin: 6mm !important; 
+            }
+            .title { font-size: 18px !important; margin-bottom: 10px !important; }
+            .club-info { 
+              font-size: 10px !important; 
+              padding: 8px !important; 
+              margin-bottom: 10px !important;
+            }
+            table { font-size: 12px !important; margin-bottom: 8px !important; }
+            th, td { 
+              padding: 3px !important; 
+              font-size: 10px !important; 
+              line-height: 1.0 !important;
+              min-height: 25px !important;
+            }
+            th {
+              font-size: 11px !important;
+              padding: 5px 3px !important;
+            }
+            .trainer-eval { 
+              padding: 6px !important; 
+            }
+            .box { 
+              padding: 6px !important; 
+              font-size: 10px !important;
+              line-height: 1.2 !important;
+            }
+            .label { font-size: 12px !important; margin-bottom: 4px !important; }
           }
         </style>
       </head>
       <body>
         <!-- Page 1: Title + Header Info + Table + Trainer Evaluation -->
+        
         <h2 class="title">البطاقة الفنية رقم ${cardNumber}</h2>
-        <table class="header-grid" style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:16px; font-size:12px;">
-          <tr>
-            <th style="border:1px solid #000; background:#f1f1f1; width:140px; text-align:center; padding:6px;">المــــدرب</th>
-            <td style="border:1px solid #000; padding:6px;">${(headerInfo.trainer || '').toString().replace(/\n/g, '<br/>')}</td>
-            <th style="border:1px solid #000; background:#f1f1f1; width:140px; text-align:center; padding:6px;">الاختصاص</th>
-            <td style="border:1px solid #000; padding:6px;">${(headerInfo.specialty || '').toString().replace(/\n/g, '<br/>')}</td>
-          </tr>
-          <tr>
-            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">المــــكان</th>
-            <td style="border:1px solid #000; padding:6px;">${(headerInfo.location || '').toString().replace(/\n/g, '<br/>')}</td>
-            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">الوســائل</th>
-            <td style="border:1px solid #000; padding:6px;">${(headerInfo.equipment || '').toString().replace(/\n/g, '<br/>')}</td>
-          </tr>
-          <tr>
-            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">المدة (دقيقة)</th>
-            <td style="border:1px solid #000; padding:6px;">${Number.isFinite(headerInfo.sessionNumber as any) ? headerInfo.sessionNumber : ''}</td>
-            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">عدد المتمرنين</th>
-            <td style="border:1px solid #000; padding:6px;">${Number.isFinite(headerInfo.age as any) ? headerInfo.age : ''}</td>
-          </tr>
-          <tr>
-            <th style="border:1px solid #000; background:#f1f1f1; text-align:center; padding:6px;">الأهــــداف</th>
-            <td colspan="3" style="border:1px solid #000; padding:6px;">${(headerInfo.objectives || '').toString().replace(/\n/g, '<br/>')}</td>
-          </tr>
-        </table>
-        <table>
+        
+        <div class="main-content">
+          <table class="header-grid">
+            <tr>
+              <th style="background:#f1f1f1; width:120px;">المــــدرب</th>
+              <td>${(headerInfo.trainer || '').toString().replace(/\n/g, '<br/>')}</td>
+              <th style="background:#f1f1f1; width:120px;">الاختصاص</th>
+              <td>${(headerInfo.specialty || '').toString().replace(/\n/g, '<br/>')}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f1f1;">المــــكان</th>
+              <td>${(headerInfo.location || '').toString().replace(/\n/g, '<br/>')}</td>
+              <th style="background:#f1f1f1;">الوســائل</th>
+              <td>${(headerInfo.equipment || '').toString().replace(/\n/g, '<br/>')}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f1f1;">المدة (دقيقة)</th>
+              <td>${Number.isFinite(headerInfo.sessionNumber as any) ? headerInfo.sessionNumber : ''}</td>
+              <th style="background:#f1f1f1;">عدد المتمرنين</th>
+              <td>${Number.isFinite(headerInfo.age as any) ? headerInfo.age : ''}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f1f1;">الفئة العمرية</th>
+              <td>${headerInfo.ageCategory || ''}</td>
+              <th style="background:#f1f1f1;">الصنف</th>
+              <td>${headerInfo.gender || ''}</td>
+            </tr>
+            <tr>
+              <th style="background:#f1f1f1;">الأهــــداف</th>
+              <td colspan="3">${(headerInfo.objectives || '').toString().replace(/\n/g, '<br/>')}</td>
+            </tr>
+          </table>
+          
+          <div class="technical-table">
+            <table style="height: 100%;"
           <thead>
             <tr>
               <th colSpan="2">المراحــل</th>
@@ -324,28 +473,45 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           </thead>
           <tbody>
             ${Array.from(containerRef.current?.querySelectorAll('tbody tr') || []).map(row => {
-              const cells = Array.from(row.querySelectorAll('td, th'));
-              return `
+      const cells = Array.from(row.querySelectorAll('td, th'));
+      return `
                 <tr>
                   ${cells.map(cell => {
-                    const colspan = cell.getAttribute('colspan') || '1';
-                    const rowspan = cell.getAttribute('rowspan') || '1';
-                    const className = (cell as HTMLElement).className || '';
-                    const contentHtml = getCellContentHtml(cell);
-                    return `<td colspan="${colspan}" rowspan="${rowspan}" class="${className}">${contentHtml}</td>`;
-                  }).join('')}
+        const colspan = cell.getAttribute('colspan') || '1';
+        const rowspan = cell.getAttribute('rowspan') || '1';
+        const className = (cell as HTMLElement).className || '';
+        const contentHtml = getCellContentHtml(cell);
+        return `<td colspan="${colspan}" rowspan="${rowspan}" class="${className}">${contentHtml}</td>`;
+      }).join('')}
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
-        </table>
-        <div class="trainer-eval">
-          <div class="label">تقييم المدرب:</div>
-          <div class="box">${trainerEvalVal.replace(/\n/g, '<br/>')}</div>
+            </table>
+          </div>
+          
+          <div class="trainer-eval">
+            <div class="label">تقييم المدرب:</div>
+            <div class="box">${trainerEvalVal.replace(/\n/g, '<br/>')}</div>
+          </div>
         </div>
         <div class="page-break"></div>
 
         <!-- Page 2: Session Analysis -->
+        <div class="club-info" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #2196f3; border-radius: 15px; padding: 15px; margin-bottom: 20px; text-align: center;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <div style="text-align: right;">
+              <strong>اسم النادي: </strong>${club.nameAr || secondPage.clubName || ''}
+            </div>
+            <div style="text-align: right;">
+              <strong>اسم ولقب المربي الرياضي: </strong>${headerInfo.trainer || secondPage.coachName || ''}
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <strong>مقر النادي: </strong>${secondPage.clubAddress || headerInfo.location || ''}
+          </div>
+        </div>
+        
         <h2 class="title">تحليل الحصة</h2>
         <div class="section">
           <div class="label">الموضوع</div>
@@ -408,7 +574,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           </Button>
         </div>
       </Card.Header>
-      
+
       <Card.Body className="p-2" ref={containerRef}>
         {/* معلومات الرأس */}
         <Row className="mb-3">
@@ -485,11 +651,41 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                   style={{ width: '80px' }}
                 />
               </div>
+              <div className="mb-2">
+                <strong>الفئة العمرية:</strong>
+                <Form.Select
+                  size="sm"
+                  value={headerInfo.ageCategory}
+                  onChange={(e) => updateHeaderInfo('ageCategory', e.target.value)}
+                  className="d-inline-block ms-2"
+                  style={{ width: '150px' }}
+                >
+                  <option value="">اختر الفئة العمرية</option>
+                  {ageCategoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </Form.Select>
+              </div>
+              <div className="mb-2">
+                <strong>الصنف:</strong>
+                <Form.Select
+                  size="sm"
+                  value={headerInfo.gender}
+                  onChange={(e) => updateHeaderInfo('gender', e.target.value)}
+                  className="d-inline-block ms-2"
+                  style={{ width: '100px' }}
+                >
+                  <option value="ذكور">ذكور</option>
+                  <option value="إناث">إناث</option>
+                </Form.Select>
+              </div>
               <div>
                 <strong>الأهــــداف:</strong>
                 <Form.Control
                   as="textarea"
-                  rows={4}
+                  rows={3}
                   size="sm"
                   value={headerInfo.objectives}
                   onChange={(e) => updateHeaderInfo('objectives', e.target.value)}
@@ -1082,20 +1278,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                   style={{ maxWidth: '260px', display: 'inline-block' }}
                 />
               </Col>
-              <Col md={6} className="text-right d-flex align-items-center gap-2" style={{ justifyContent: 'flex-end' }}>
-                <strong className="ms-2">الفئة العمرية:</strong>
-                <Form.Select
-                  size="sm"
-                  value={secondPage.ageCategory}
-                  onChange={(e) => setSecondPage(sp => ({ ...sp, ageCategory: e.target.value }))}
-                  style={{ maxWidth: '220px', display: 'inline-block', position: 'relative', zIndex: 1000 }}
-                >
-                  <option value="">اختر الفئة</option>
-                  {STATIC_AGE_CATEGORY_OPTIONS.map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
-                </Form.Select>
-              </Col>
+
             </Row>
           </div>
 

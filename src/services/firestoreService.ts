@@ -27,7 +27,7 @@ function tsToDate(value: unknown): Date {
     if (value instanceof Date) return value;
     if (value && typeof value === 'object' && (value as Timestamp).toDate) return (value as Timestamp).toDate();
     if (typeof value === 'number') return new Date(value);
-  } catch {}
+  } catch { }
   return new Date();
 }
 
@@ -274,7 +274,7 @@ export class PairingsService {
         // التحقق من أن الفائز ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
         const sourceGroupKey = (updated as any).groupKey;
         const targetGroupKey = (tgt as any).groupKey;
-        
+
         // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
         if (sourceGroupKey === targetGroupKey) {
           if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
@@ -293,7 +293,7 @@ export class PairingsService {
         // التحقق من أن الخاسر ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
         const sourceGroupKey = (updated as any).groupKey;
         const targetGroupKey = (lb as any).groupKey;
-        
+
         // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
         if (sourceGroupKey === targetGroupKey) {
           if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
@@ -350,7 +350,7 @@ export class PairingsService {
         // التحقق من أن الفائز ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
         const sourceGroupKey = (updated as any).groupKey;
         const targetGroupKey = (tgt as any).groupKey;
-        
+
         // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
         if (sourceGroupKey === targetGroupKey) {
           if (updated.nextSlot === 1) tgt.athlete1Id = winnerId; else tgt.athlete2Id = winnerId;
@@ -369,7 +369,7 @@ export class PairingsService {
         // التحقق من أن الخاسر ينتمي إلى نفس المجموعة (الفئة/الجنس/الوزن) قبل التقدم
         const sourceGroupKey = (updated as any).groupKey;
         const targetGroupKey = (lb as any).groupKey;
-        
+
         // فقط السماح بالتقدم إذا كانت المجموعات متطابقة
         if (sourceGroupKey === targetGroupKey) {
           if (updated.loserNextSlot === 1) lb.athlete1Id = loserId; else lb.athlete2Id = loserId;
@@ -560,38 +560,38 @@ export class ClubsService {
 
   static async getClubById(id: string): Promise<Club | null> {
     console.log('===Firestore Debug: getClubById called with ID===', id);
-    
+
     try {
       // First try direct ID lookup
       const ref = doc(db, 'clubs', id);
       const ds = await getDoc(ref);
-      
+
       if (ds.exists()) {
         const club = mapClubData(ds.id, ds.data());
         console.log('===Firestore Debug: Club found by direct ID lookup===', club);
         return club;
       }
-      
+
       console.warn('===Firestore Debug: Club not found by direct ID lookup===');
-      
+
       // If not found by direct ID, try to find by comparing with all clubs
       // This helps with potential ID mismatches or data inconsistencies
       const allClubs = await this.getAllClubs();
       console.log('===Firestore Debug: Retrieved all clubs for fallback search===', allClubs.length);
-      
+
       // Try to find a club where the ID matches in any form
       const matchingClub = allClubs.find(club => {
         return club.id === id ||
-               String(club.id) === String(id) ||
-               club.leagueId === id ||  // In case the clubId was stored as leagueId by mistake
-               String(club.leagueId) === String(id);
+          String(club.id) === String(id) ||
+          club.leagueId === id ||  // In case the clubId was stored as leagueId by mistake
+          String(club.leagueId) === String(id);
       });
-      
+
       if (matchingClub) {
         console.log('===Firestore Debug: Club found by fallback search===', matchingClub);
         return matchingClub;
       }
-      
+
       console.warn('===Firestore Debug: Club not found by any search method===', id);
       return null;
     } catch (error) {
@@ -614,7 +614,7 @@ export class ClubsService {
   static async getClubsByLeague(leagueId: string): Promise<Club[]> {
     console.log('===Firestore Debug: getClubsByLeague called with ID==>', leagueId);
     console.log('===Firestore Debug: leagueId type===', typeof leagueId);
-    
+
     try {
       const q = query(collection(db, 'clubs'), where('leagueId', '==', leagueId));
       const snap = await getDocs(q);
@@ -624,13 +624,13 @@ export class ClubsService {
       return clubs;
     } catch (error) {
       console.error('===Firestore Debug: Error in getClubsByLeague===', error);
-      
+
       // Fallback: Get all clubs and filter on client side
       try {
         console.log('===Firestore Debug: Trying fallback getAllClubs + client filter===');
         const allClubs = await this.getAllClubs();
         console.log('===Firestore Debug: Total clubs for filtering===', allClubs.length);
-        
+
         // Log a sample club to understand the data structure
         if (allClubs.length > 0) {
           console.log('===Firestore Debug: Sample club for comparison===', {
@@ -640,7 +640,7 @@ export class ClubsService {
             leagueIdType: typeof allClubs[0].leagueId
           });
         }
-        
+
         const filteredClubs = allClubs.filter(club => {
           const match = club.leagueId === leagueId;
           if (match) {
@@ -654,7 +654,7 @@ export class ClubsService {
           }
           return match;
         });
-        
+
         console.log('===Firestore Debug: Fallback found clubs===', filteredClubs.length);
         return filteredClubs;
       } catch (fallbackError) {
@@ -667,12 +667,12 @@ export class ClubsService {
   // Flexible fetch to support legacy data where leagueId might equal wilayaId (number or string)
   static async getClubsByLeagueFlexible(leagueId: string, wilayaId?: number): Promise<Club[]> {
     console.log('===Firestore Debug: getClubsByLeagueFlexible args===', { leagueId, wilayaId });
-    
+
     // First try with proper leagueId (string)
     const primary = await this.getClubsByLeague(leagueId);
     console.log('===Firestore Debug: Primary result count===', primary.length);
     if (primary.length > 0) return primary;
-    
+
     if (wilayaId === undefined) {
       console.warn('===Firestore Debug: wilayaId is undefined. Skipping legacy fallback and returning primary (empty).===');
       return primary;
@@ -681,11 +681,11 @@ export class ClubsService {
     console.log('===Firestore Debug: Primary league query empty. Trying legacy wilayaId matching...===');
     const results: Record<string, Club> = {};
     primary.forEach(c => { results[c.id] = c; });
-    
+
     // Try to generate the expected league ID pattern based on wilayaId
     const expectedLeagueIdPattern = `league-judo-${wilayaId.toString().padStart(2, '0')}`;
     console.log('===Firestore Debug: Expected league ID pattern===', expectedLeagueIdPattern);
-    
+
     // Try with the expected pattern
     try {
       const patternClubs = await this.getClubsByLeague(expectedLeagueIdPattern);
@@ -725,7 +725,7 @@ export class ClubsService {
       console.log('===Firestore Debug: Trying direct leagueId comparison===');
       const allClubs = await this.getAllClubs();
       console.log('===Firestore Debug: Total clubs available===', allClubs.length);
-      
+
       // Log sample clubs to understand the data structure
       if (allClubs.length > 0) {
         console.log('===Firestore Debug: Sample club data===', {
@@ -737,20 +737,20 @@ export class ClubsService {
           }
         });
       }
-      
+
       // Log all unique leagueId values to understand the data
       const uniqueLeagueIds = [...new Set(allClubs.map(club => club.leagueId))];
       console.log('===Firestore Debug: Unique leagueId values in clubs===', uniqueLeagueIds);
-      
+
       // As a last resort, try to find clubs by checking if they have any leagueId at all
       // This will help us understand if clubs are missing leagueId entirely
       const clubsWithoutLeagueId = allClubs.filter(club => !club.leagueId || club.leagueId === '');
       console.log('===Firestore Debug: Clubs without leagueId===', clubsWithoutLeagueId.length);
-      
+
       // Check if there's a pattern in the league IDs that might help us understand the mismatch
       console.log('===Firestore Debug: Target leagueId===', leagueId);
       console.log('===Firestore Debug: Target wilayaId===', wilayaId);
-      
+
       // Try to find clubs with leagueId that contains the wilayaId
       const clubsWithWilayaInLeagueId = allClubs.filter(club => {
         if (!club.leagueId) return false;
@@ -766,11 +766,11 @@ export class ClubsService {
           }))
         );
       }
-      
+
       // Try different matching strategies
       const potentialMatches = allClubs.filter(club => {
         if (!club.leagueId) return false;
-        
+
         // Strategy 1: Exact match with leagueId
         if (String(club.leagueId) === String(leagueId)) {
           console.log('===Firestore Debug: Strategy 1 match (exact leagueId)===', {
@@ -781,7 +781,7 @@ export class ClubsService {
           });
           return true;
         }
-        
+
         // Strategy 2: Match with wilayaId (for legacy data)
         if (wilayaId !== undefined && (
           String(club.leagueId) === String(wilayaId) ||
@@ -795,7 +795,7 @@ export class ClubsService {
           });
           return true;
         }
-        
+
         // Strategy 3: Check if leagueId contains the target leagueId (for potential data format issues)
         if (String(club.leagueId).includes(leagueId) || leagueId.includes(String(club.leagueId))) {
           console.log('===Firestore Debug: Strategy 3 match (contains)===', {
@@ -806,7 +806,7 @@ export class ClubsService {
           });
           return true;
         }
-        
+
         // Strategy 4: Check if the leagueId follows the pattern 'league-judo-XX' where XX is the wilayaId
         if (wilayaId !== undefined) {
           const expectedPattern = `league-judo-${wilayaId.toString().padStart(2, '0')}`;
@@ -821,10 +821,10 @@ export class ClubsService {
             return true;
           }
         }
-        
+
         return false;
       });
-      
+
       console.log('===Firestore Debug: Potential matches count===', potentialMatches.length);
       if (potentialMatches.length > 0) {
         console.log('===Firestore Debug: Match details===',
@@ -834,7 +834,7 @@ export class ClubsService {
             leagueId: club.leagueId
           }))
         );
-        
+
         // Add these potential matches to our results
         potentialMatches.forEach(club => { results[club.id] = club; });
       }
@@ -893,7 +893,7 @@ export class UsersService {
           resolvedLeagueId = club.leagueId;
         }
       }
-    } catch {}
+    } catch { }
 
     // Build filters only for defined values to avoid Firestore undefined error
     const filters = [
@@ -929,11 +929,11 @@ export class UsersService {
     const usersRef = collection(db, 'users');
     const q = query(usersRef, where('username', '==', username));
     const querySnapshot = await getDocs(q);
-    
+
     if (querySnapshot.empty) {
       return null;
     }
-    
+
     const userDoc = querySnapshot.docs[0];
     return mapUserData(userDoc.id, userDoc.data());
   }
@@ -992,16 +992,16 @@ export class UsersService {
   static async getClubsByLeague(): Promise<Record<string, Club[]>> {
     const clubs = await ClubsService.getAllClubs();
     const leagues = await LeaguesService.getAllLeagues();
-    
+
     const clubsByLeague: Record<string, Club[]> = {};
-    
+
     leagues.forEach(league => {
-      clubsByLeague[league.id] = clubs.filter(club => 
-        String(club.leagueId) === String(league.id) || 
+      clubsByLeague[league.id] = clubs.filter(club =>
+        String(club.leagueId) === String(league.id) ||
         String(club.leagueId) === String(league.wilayaId)
       );
     });
-    
+
     return clubsByLeague;
   }
 
@@ -1014,29 +1014,29 @@ export class UsersService {
     // السماح بأسماء مستخدمين متكررة عبر أندية/رابطات مختلفة
     const usersRef = collection(db, 'users');
     const filters = [where('username', '==', username), where('password', '==', password)];
-    
+
     // إذا تم تحديد النادي، نبحث داخل النادي المحدد فقط
     if (clubId) {
       filters.push(where('clubId', '==', clubId));
     }
-    
+
     // إذا تم تحديد الدور، نبحث بالدور المحدد فقط
     if (role) {
       filters.push(where('role', '==', role));
     }
-    
+
     const q = query(usersRef, ...filters);
     const snap = await getDocs(q);
-    
+
     if (snap.empty) {
       // إذا لم نجد نتائج مع فلترة النادي، نبحث بدون فلترة النادي لكن مع فلترة الرابطة إن وجدت
       const fallbackFilters = [where('username', '==', username), where('password', '==', password)];
       if (role) fallbackFilters.push(where('role', '==', role));
-      
+
       const fallbackQ = query(usersRef, ...fallbackFilters);
       const fallbackSnap = await getDocs(fallbackQ);
       if (fallbackSnap.empty) return null;
-      
+
       const candidates = fallbackSnap.docs.map(d => mapUserData(d.id, d.data()));
       const user = candidates
         .sort((a, b) => {
@@ -1044,7 +1044,7 @@ export class UsersService {
           const tb = (b.createdAt as any)?.getTime?.() || 0;
           return tb - ta; // أحدث أولاً
         })[0];
-      
+
       if (!user.isActive) {
         throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
       }
@@ -1089,14 +1089,14 @@ export class UsersService {
     }
   }
 
-   static isAuthenticated(): boolean {
+  static isAuthenticated(): boolean {
     return this.getCurrentUser() !== null;
   }
 
   static async getCurrentUserWithDetails(): Promise<User | null> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) return null;
-    
+
     // Fetch fresh user data from Firestore
     const freshUserData = await this.getUserById(currentUser.id);
     return freshUserData;
@@ -1128,5 +1128,300 @@ export class AthletesService {
     } as any;
     const ref = await addDoc(collection(db, 'users'), payload);
     return ref.id;
+  }
+}
+// ===== Training Data Service =====
+export class TrainingDataFirestoreService {
+  // حفظ توزيع الأحمال التدريبية
+  static async saveTrainingLoad(clubId: string, data: any): Promise<void> {
+    try {
+      const payload = {
+        ...data,
+        clubId,
+        updatedAt: serverTimestamp()
+      };
+
+      // البحث عن وثيقة موجودة لهذا النادي
+      const q = query(collection(db, 'training_loads'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        // تحديث الوثيقة الموجودة
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        // إنشاء وثيقة جديدة
+        payload.createdAt = serverTimestamp();
+        await addDoc(collection(db, 'training_loads'), payload);
+      }
+    } catch (error) {
+      console.error('Error saving training load:', error);
+      throw error;
+    }
+  }
+
+  // تحميل توزيع الأحمال التدريبية
+  static async getTrainingLoad(clubId: string): Promise<any> {
+    try {
+      const q = query(collection(db, 'training_loads'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+
+        // تحويل Timestamps إلى تواريخ
+        if (data.createdAt) data.createdAt = tsToDate(data.createdAt);
+        if (data.updatedAt) data.updatedAt = tsToDate(data.updatedAt);
+
+        return { id: doc.id, ...data };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading training load:', error);
+      throw error;
+    }
+  }
+
+  // حفظ الجدول الأسبوعي
+  static async saveWeeklySchedule(clubId: string, data: any): Promise<void> {
+    try {
+      const payload = {
+        scheduleData: data,
+        clubId,
+        updatedAt: serverTimestamp()
+      };
+
+      const q = query(collection(db, 'weekly_schedules'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        const newPayload = { ...payload, createdAt: serverTimestamp() };
+        await addDoc(collection(db, 'weekly_schedules'), newPayload);
+      }
+    } catch (error) {
+      console.error('Error saving weekly schedule:', error);
+      throw error;
+    }
+  }
+
+  // تحميل الجدول الأسبوعي
+  static async getWeeklySchedule(clubId: string): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'weekly_schedules'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+        return data.scheduleData || [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error loading weekly schedule:', error);
+      throw error;
+    }
+  }
+
+  // حفظ بيانات الحضور
+  static async saveAttendance(clubId: string, data: any): Promise<void> {
+    try {
+      const payload = {
+        attendanceData: data,
+        clubId,
+        updatedAt: serverTimestamp()
+      };
+
+      const q = query(collection(db, 'attendance_records'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        const newPayload = { ...payload, createdAt: serverTimestamp() };
+        await addDoc(collection(db, 'attendance_records'), newPayload);
+      }
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      throw error;
+    }
+  }
+
+  // تحميل بيانات الحضور
+  static async getAttendance(clubId: string): Promise<any[]> {
+    try {
+      const q = query(collection(db, 'attendance_records'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+        return data.attendanceData || [];
+      }
+
+      return [];
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+      throw error;
+    }
+  }
+
+  // حفظ الخطة السنوية
+  static async saveAnnualPlan(clubId: string, year: number, data: any): Promise<void> {
+    try {
+      const payload = {
+        planData: data,
+        clubId,
+        year,
+        updatedAt: serverTimestamp()
+      };
+
+      const q = query(
+        collection(db, 'annual_plans'),
+        where('clubId', '==', clubId),
+        where('year', '==', year)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        const newPayload = { ...payload, createdAt: serverTimestamp() };
+        await addDoc(collection(db, 'annual_plans'), newPayload);
+      }
+    } catch (error) {
+      console.error('Error saving annual plan:', error);
+      throw error;
+    }
+  }
+
+  // تحميل الخطة السنوية
+  static async getAnnualPlan(clubId: string, year: number): Promise<any> {
+    try {
+      const q = query(
+        collection(db, 'annual_plans'),
+        where('clubId', '==', clubId),
+        where('year', '==', year)
+      );
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+
+        if (data.createdAt) data.createdAt = tsToDate(data.createdAt);
+        if (data.updatedAt) data.updatedAt = tsToDate(data.updatedAt);
+
+        return data.planData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading annual plan:', error);
+      throw error;
+    }
+  }
+
+  // حفظ تقييم الجلسة
+  static async saveSessionEvaluation(clubId: string, data: any): Promise<void> {
+    try {
+      const payload = {
+        evaluationData: data,
+        clubId,
+        updatedAt: serverTimestamp()
+      };
+
+      const q = query(collection(db, 'session_evaluations'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        const newPayload = { ...payload, createdAt: serverTimestamp() };
+        await addDoc(collection(db, 'session_evaluations'), newPayload);
+      }
+    } catch (error) {
+      console.error('Error saving session evaluation:', error);
+      throw error;
+    }
+  }
+
+  // تحميل تقييم الجلسة
+  static async getSessionEvaluation(clubId: string): Promise<any> {
+    try {
+      const q = query(collection(db, 'session_evaluations'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+
+        if (data.createdAt) data.createdAt = tsToDate(data.createdAt);
+        if (data.updatedAt) data.updatedAt = tsToDate(data.updatedAt);
+
+        return data.evaluationData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading session evaluation:', error);
+      throw error;
+    }
+  }
+
+  // حفظ البطاقة الفنية
+  static async saveTechnicalCard(clubId: string, data: any): Promise<void> {
+    try {
+      const payload = {
+        cardData: data,
+        clubId,
+        updatedAt: serverTimestamp()
+      };
+
+      const q = query(collection(db, 'technical_cards'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const docRef = querySnapshot.docs[0].ref;
+        await updateDoc(docRef, payload);
+      } else {
+        const newPayload = { ...payload, createdAt: serverTimestamp() };
+        await addDoc(collection(db, 'technical_cards'), newPayload);
+      }
+    } catch (error) {
+      console.error('Error saving technical card:', error);
+      throw error;
+    }
+  }
+
+  // تحميل البطاقة الفنية
+  static async getTechnicalCard(clubId: string): Promise<any> {
+    try {
+      const q = query(collection(db, 'technical_cards'), where('clubId', '==', clubId));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        const data = doc.data();
+
+        if (data.createdAt) data.createdAt = tsToDate(data.createdAt);
+        if (data.updatedAt) data.updatedAt = tsToDate(data.updatedAt);
+
+        return data.cardData;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error loading technical card:', error);
+      throw error;
+    }
   }
 }

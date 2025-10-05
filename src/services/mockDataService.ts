@@ -65,79 +65,10 @@ class MockDelay {
   }
 }
 
-export class TrainingDataService {
-  static async getTrainingDataByAthlete(_athleteId: string): Promise<any[]> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getTrainingDataByAthlete is a mock and returns no data.");
-    return [];
-  }
+import { TrainingDataFirestoreService } from './firestoreService';
 
-  static async getAttendance(_clubId: string): Promise<any[]> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getAttendance is a mock and returns no data.");
-    return [];
-  }
-
-  static async saveAttendance(_clubId: string, _data: any[]): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveAttendance is a mock and does nothing.");
-  }
-
-  static async getWeeklySchedule(_clubId: string): Promise<any[]> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getWeeklySchedule is a mock and returns no data.");
-    return [];
-  }
-
-  static async saveWeeklySchedule(_clubId: string, _scheduleData: any[]): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveWeeklySchedule is a mock and does nothing.");
-  }
-
-  static async getTechnicalCard(_clubId: string): Promise<any> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getTechnicalCard is a mock and returns no data.");
-    return null;
-  }
-
-  static async saveTechnicalCard(_clubId: string, _data: any): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveTechnicalCard is a mock and does nothing.");
-  }
-
-  static async getSessionEvaluation(_clubId: string): Promise<any> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getSessionEvaluation is a mock and returns no data.");
-    return null;
-  }
-
-  static async saveSessionEvaluation(_clubId: string, _data: any): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveSessionEvaluation is a mock and does nothing.");
-  }
-
-  static async getAnnualPlan(_clubId: string, _year: number): Promise<any> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getAnnualPlan is a mock and returns no data.");
-    return null;
-  }
-
-  static async saveAnnualPlan(_clubId: string, _year: number, _data: any): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveAnnualPlan is a mock and does nothing.");
-  }
-
-  static async getTrainingLoad(_clubId: string): Promise<any> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.getTrainingLoad is a mock and returns no data.");
-    return null;
-  }
-
-  static async saveTrainingLoad(_clubId: string, _data: any): Promise<void> {
-    await MockDelay.delay();
-    console.warn("TrainingDataService.saveTrainingLoad is a mock and does nothing.");
-  }
-}
+// Training Data Service now uses real Firestore implementation
+export const TrainingDataService = TrainingDataFirestoreService;
 
 import { PhysicalTestsFirebaseService } from './physicalTestsFirebaseService';
 

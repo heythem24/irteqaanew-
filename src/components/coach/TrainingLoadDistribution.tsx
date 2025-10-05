@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Row, Col, Form, Table } from 'react-bootstrap';
 import type { Club, TrainingData } from '../../types';
 import { useTrainingLoad } from '../../hooks/useTrainingData';
+import { UsersService as UserService } from '../../services/firestoreService';
+import { CATEGORIES } from '../../utils/categoryUtils';
 import './TrainingLoadDistribution.css';
 import './coach-responsive.css';
 
@@ -10,12 +12,183 @@ interface Props {
 }
 
 const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
+  // الحصول على المستخدم الحالي لاسم المدرب
+  const currentUser = UserService.getCurrentUser();
+  const trainerName = currentUser ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'المدرب' : 'المدرب';
+
   // معلومات النموذج
   const [formData, setFormData] = useState({
-    trainer: '',
+    trainer: trainerName,
     category: '',
-    location: ''
+    location: '',
+    selectedMonth: 10, // أكتوبر
+    selectedYear: 2025
   });
+
+  // قائمة الأشهر من سبتمبر إلى جوان
+  const months = [
+    { value: 9, name: 'سبتمبر' },
+    { value: 10, name: 'أكتوبر' },
+    { value: 11, name: 'نوفمبر' },
+    { value: 12, name: 'ديسمبر' },
+    { value: 1, name: 'جانفي' },
+    { value: 2, name: 'فيفري' },
+    { value: 3, name: 'مارس' },
+    { value: 4, name: 'أفريل' },
+    { value: 5, name: 'ماي' },
+    { value: 6, name: 'جوان' }
+  ];
+
+  // توليد قائمة السنوات من 2010 إلى 2050
+  const years = Array.from({ length: 41 }, (_, i) => 2010 + i);
+
+  // أيام الأسبوع الثابتة للتدريب (3 أيام في كل أسبوع) - مرتبة حسب التسلسل الزمني
+  const trainingDays = ['الثلاثاء', 'الجمعة', 'السبت'];
+
+  // أسماء أيام الأسبوع
+  const dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+  // دالة لإيجاد تاريخ يوم معين في أسبوع معين من الشهر (بناءً على التقويم الحقيقي)
+  const findDateForDayInWeek = (month: number, year: number, weekNumber: number, targetDayName: string) => {
+    try {
+      // للأشهر من سبتمبر إلى ديسمبر: نفس السنة
+      // للأشهر من جانفي إلى جوان: السنة التالية
+      const actualYear = month <= 6 ? year + 1 : year;
+
+      // فهرس اليوم المطلوب (0 = أحد، 1 = اثنين، إلخ)
+      const targetDayIndex = dayNames.indexOf(targetDayName);
+
+      if (targetDayIndex === -1) {
+        return '';
+      }
+
+      // الحصول على أول يوم في الشهر
+      const firstDayOfMonth = new Date(actualYear, month - 1, 1);
+      const firstDayOfWeek = firstDayOfMonth.getDay(); // يوم الأسبوع لأول يوم في الشهر
+
+      // حساب بداية الأسبوع الأول (الأحد)
+      const firstSundayDate = new Date(actualYear, month - 1, 1);
+      if (firstDayOfWeek !== 0) { // إذا لم يكن أول يوم هو الأحد
+        firstSundayDate.setDate(firstSundayDate.getDate() - firstDayOfWeek);
+      }
+
+      // حساب تاريخ اليوم المطلوب في الأسبوع المحدد
+      const targetDate = new Date(firstSundayDate.getTime());
+      targetDate.setDate(targetDate.getDate() + (weekNumber * 7) + targetDayIndex);
+
+      // التحقق من أن التاريخ في نفس الشهر المطلوب
+      const resultMonth = targetDate.getMonth() + 1;
+      const resultYear = targetDate.getFullYear();
+
+      // إذا كان التاريخ خارج الشهر أو السنة المطلوبة، إرجاع فارغ
+      if (resultMonth !== month || resultYear !== actualYear) {
+        return '';
+      }
+
+      // إرجاع التاريخ بصيغة "اليوم/الشهر"
+      const day = targetDate.getDate().toString().padStart(2, '0');
+      const monthNum = resultMonth.toString().padStart(2, '0');
+      const result = `${day}/${monthNum}`;
+
+      return result;
+    } catch (error) {
+      return '';
+    }
+  };
+
+  // دالة لحساب عدد الأسابيع في الشهر بناءً على التقويم الحقيقي
+  const getWeeksInMonth = (month: number, year: number) => {
+    const actualYear = month <= 6 ? year + 1 : year;
+    const firstDayOfMonth = new Date(actualYear, month - 1, 1);
+    const firstDayOfWeek = firstDayOfMonth.getDay(); // يوم الأسبوع لأول يوم في الشهر
+
+    // حساب بداية الأسبوع الأول (الأحد)
+    const firstSundayDate = new Date(actualYear, month - 1, 1);
+    if (firstDayOfWeek !== 0) { // إذا لم يكن أول يوم هو الأحد
+      firstSundayDate.setDate(firstSundayDate.getDate() - firstDayOfWeek);
+    }
+
+    // حساب عدد الأسابيع بناءً على أيام التدريب الموجودة فعلياً في الشهر
+    let maxWeek = 0;
+    let weekNumber = 0;
+
+    // فحص كل أسبوع حتى 6 أسابيع كحد أقصى
+    while (weekNumber < 6) {
+      let hasTrainingDayInWeek = false;
+
+      // فحص كل يوم تدريب في هذا الأسبوع
+      for (const dayName of trainingDays) {
+        const targetDayIndex = dayNames.indexOf(dayName);
+        if (targetDayIndex === -1) continue;
+
+        // حساب تاريخ هذا اليوم في الأسبوع الحالي
+        const targetDate = new Date(firstSundayDate.getTime());
+        targetDate.setDate(targetDate.getDate() + (weekNumber * 7) + targetDayIndex);
+
+        // التحقق من أن التاريخ في نفس الشهر والسنة المطلوبة
+        const resultMonth = targetDate.getMonth() + 1;
+        const resultYear = targetDate.getFullYear();
+
+        if (resultMonth === month && resultYear === actualYear) {
+          hasTrainingDayInWeek = true;
+          break;
+        }
+      }
+
+      if (hasTrainingDayInWeek) {
+        maxWeek = weekNumber;
+      } else if (weekNumber > 0) {
+        // إذا لم نجد أي يوم تدريب في هذا الأسبوع ووجدنا أسابيع سابقة، نتوقف
+        break;
+      }
+
+      weekNumber++;
+    }
+
+    return maxWeek + 1; // إرجاع عدد الأسابيع (مفهرس من 0)
+  };
+
+  // دالة لحساب تواريخ التدريب للشهر المحدد
+  const getTrainingDates = (month: number, year: number) => {
+    const dates = [];
+    const daysOfWeek = [];
+    const weeksCount = getWeeksInMonth(month, year);
+
+    // لكل أسبوع في الشهر (ديناميكي)
+    for (let week = 0; week < weeksCount; week++) {
+      // لكل يوم تدريب في الأسبوع
+      for (let dayIndex = 0; dayIndex < 3; dayIndex++) {
+        const dayName = trainingDays[dayIndex];
+        const date = findDateForDayInWeek(month, year, week, dayName);
+
+        dates.push(date);
+        daysOfWeek.push(dayName);
+      }
+    }
+
+    return { dates, daysOfWeek, weeksCount };
+  };
+
+  // حساب التواريخ وأيام الأسبوع للشهر المحدد
+  const { dates, daysOfWeek, weeksCount } = getTrainingDates(formData.selectedMonth, formData.selectedYear);
+
+  // فئات العمر
+  const STATIC_AGE_CATEGORY_OPTIONS = Array.from(new Set(CATEGORIES.map(c => c.nameAr)));
+  const [ageCategoryOptions, setAgeCategoryOptions] = useState<string[]>(STATIC_AGE_CATEGORY_OPTIONS);
+
+  // استخدام جميع الفئات العمرية المتاحة
+  useEffect(() => {
+    setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
+  }, []);
+
+  // تحديث اسم المدرب عند تغيير المستخدم
+  useEffect(() => {
+    setFormData(prev => ({ ...prev, trainer: trainerName }));
+  }, [trainerName]);
+
+
+
+
 
   // حدود القيم لكل مستوى
   const limits = {
@@ -47,11 +220,15 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
           { percentages: [null, 90, 90], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), calculateHeartRateForInit(90, 'maximum')] },
           { percentages: [null, 90, 90], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), calculateHeartRateForInit(90, 'maximum')] },
           { percentages: [null, 90, null], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), null] },
+          { percentages: [null, null, null], heartRates: [null, null, null] },
+          { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] }
         ]
       },
       high: {
         weeks: [
+          { percentages: [null, null, null], heartRates: [null, null, null] },
+          { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] },
@@ -63,6 +240,8 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
           { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, 70], heartRates: [null, null, calculateHeartRateForInit(70, 'medium')] },
+          { percentages: [null, null, null], heartRates: [null, null, null] },
+          { percentages: [null, null, null], heartRates: [null, null, null] },
           { percentages: [null, null, null], heartRates: [null, null, null] }
         ]
       }
@@ -298,13 +477,35 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
   // تحميل البيانات المحفوظة
   useEffect(() => {
     if (loadData) {
-      setFormData(loadData);
+      // تحميل معلومات النموذج
+      setFormData({
+        trainer: loadData.trainer || trainerName,
+        category: loadData.category || '',
+        location: loadData.location || '',
+        selectedMonth: loadData.selectedMonth || 10,
+        selectedYear: loadData.selectedYear || 2025
+      });
+
+      // تحميل بيانات درجات الحمل إذا كانت موجودة
+      if (loadData.trainingData) {
+        setTrainingData(loadData.trainingData);
+      }
     }
-  }, [loadData]);
+  }, [loadData, trainerName]);
 
   const saveData = async () => {
     try {
-      await saveTrainingLoad(formData);
+      // إنشاء كائن يحتوي على جميع البيانات المطلوبة للحفظ
+      const dataToSave = {
+        ...formData,
+        trainingData: trainingData, // إضافة بيانات درجات الحمل
+        weeksCount: weeksCount, // إضافة عدد الأسابيع
+        dates: dates, // إضافة التواريخ
+        daysOfWeek: daysOfWeek, // إضافة أيام الأسبوع
+        savedAt: new Date().toISOString() // إضافة تاريخ الحفظ
+      };
+
+      await saveTrainingLoad(dataToSave);
       alert('تم حفظ توزيع درجة حمل التدريب بنجاح');
     } catch (err) {
       alert('حدث خطأ في حفظ توزيع درجة حمل التدريب');
@@ -315,10 +516,15 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
-  // طباعة توزيع درجة حمل التدريب - طباعة الجدول فقط بدون الهيدر والفوتر والقوائم العلوية
+  // طباعة توزيع درجة حمل التدريب
   const printTrainingLoad = () => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
+
+    // حساب التواريخ للطباعة
+    const { dates: printDates, daysOfWeek: printDaysOfWeek, weeksCount: printWeeksCount } = getTrainingDates(formData.selectedMonth, formData.selectedYear);
+
+
 
     const tableContent = `
       <!DOCTYPE html>
@@ -336,104 +542,238 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
             width: 100%;
             border-collapse: collapse;
             margin: 0 auto;
-            font-size: 12px; /* تكبير حجم النص */
-            height: 200%; /* تكبير الجدول ليملأ نصف الصفحة على الأقل */
-            min-height: 60vh; /* الحد الأدنى للارتفاع */
+            font-size: 16px;
+            border: 2px solid #000;
+            page-break-inside: avoid;
           }
           th, td {
             border: 1px solid #000;
-            padding: 8px 4px; /* تكبير المساحة الداخلية للخلايا */
+            padding: 12px 8px; /* تكبير المساحة الداخلية للخلايا */
             text-align: center;
             line-height: 1.6; /* تحسين المسافة بين الأسطر */
+            font-weight: bold;
+            font-size: 16px;
           }
           th {
             background-color: #e3f2fd;
             font-weight: bold;
-            font-size: 10px; /* تكبير حجم خط العناوين */
+            font-size: 18px; /* تكبير حجم خط العناوين */
+            padding: 15px 10px;
           }
           h2 { 
             text-align: center; 
             margin-bottom: 20px; 
             color: #1976d2; 
-            font-size: 16px; /* تكبير حجم العنوان الرئيسي */
+            font-size: 22px; /* تكبير حجم العنوان الرئيسي */
+            font-weight: bold;
           }
           .load-label {
             background-color: #667eea;
             color: white;
             font-weight: bold;
             text-align: center;
-            font-size: 10px; /* تكبير حجم نص درجة الحمل */
+            font-size: 16px; /* تكبير حجم نص درجة الحمل */
+            padding: 15px 10px;
           }
           .input-cell {
             background-color: #f8f9fa;
-            font-size: 10px; /* تكبير حجم النص في خلايا الإدخال */
+            font-size: 16px; /* تكبير حجم النص في خلايا الإدخال */
+            font-weight: bold;
           }
           .heart-rate-display {
             background-color: #fef3c7;
             font-weight: bold;
-            font-size: 10px; /* تكبير حجم النص في خلايا نبضات القلب */
+            font-size: 16px; /* تكبير حجم النص في خلايا نبضات القلب */
           }
           @media print {
-            body { margin: 0; }
-            table { font-size: 6px; }
-            th, td { padding: 1px; }
+            @page {
+              margin: 8mm;
+              size: landscape;
+            }
+            
+            body { 
+              margin: 0 !important; 
+              padding: 0 !important;
+              font-family: Arial, sans-serif;
+              direction: rtl;
+            }
+            
+            h2 {
+              font-size: 20px !important;
+              font-weight: bold !important;
+              text-align: center !important;
+              margin: 5px 0 10px 0 !important;
+            }
+            
+            /* معلومات الرأس */
+            .header-info {
+              margin-bottom: 10px !important;
+              padding: 8px !important;
+              font-size: 12px !important;
+            }
+            
+            table { 
+              width: 100% !important;
+              border-collapse: collapse !important;
+              border: 2px solid #000 !important;
+              font-size: 14px !important;
+              margin: 0 !important;
+              height: auto !important;
+            }
+            
+            th, td { 
+              padding: 10px 8px !important; 
+              font-weight: bold !important;
+              font-size: 15px !important;
+              border: 1px solid #000 !important;
+              text-align: center !important;
+              vertical-align: middle !important;
+              line-height: 1.3 !important;
+            }
+            
+            th {
+              font-size: 16px !important;
+              font-weight: bold !important;
+              padding: 12px 10px !important;
+              background-color: #e3f2fd !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .load-label {
+              font-size: 12px !important;
+              padding: 10px 6px !important;
+              background-color: #667eea !important;
+              color: white !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .input-cell {
+              font-size: 13px !important;
+              font-weight: bold !important;
+            }
+            
+            .heart-rate-display {
+              font-size: 11px !important;
+              font-weight: bold !important;
+              background-color: #fef3c7 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
           }
+          
+          /* تحسينات خاصة للوضع الأفقي */
+          @media print and (orientation: landscape) {
+            @page {
+              margin: 8mm !important;
+            }
+            
+            h2 {
+              font-size: 18px !important;
+              margin: 3px 0 8px 0 !important;
+            }
+            
+            .header-info {
+              margin-bottom: 8px !important;
+              padding: 6px !important;
+              font-size: 12px !important;
+            }
+            
+            table { 
+              font-size: 15px !important;
+              width: 100% !important;
+              height: auto !important;
+            }
+            
+            th, td { 
+              padding: 12px 10px !important; 
+              font-size: 14px !important;
+              font-weight: bold !important;
+              line-height: 1.3 !important;
+            }
+            
+            th {
+              font-size: 15px !important;
+              padding: 14px 12px !important;
+              font-weight: bold !important;
+            }
+            
+            .load-label {
+              font-size: 13px !important;
+              padding: 14px 10px !important;
+              font-weight: bold !important;
+            }
+            
+            .input-cell {
+              font-size: 14px !important;
+              font-weight: bold !important;
+              padding: 10px 8px !important;
+            }
+            
+            .heart-rate-display {
+              font-size: 12px !important;
+              font-weight: bold !important;
+              padding: 8px 6px !important;
+            }
+            
+            /* تحسين الصفوف بدون إفراط */
+            tbody tr {
+              height: auto !important;
+            }
+            
+            thead tr {
+              height: auto !important;
+            }
+          }
+          
+
         </style>
       </head>
       <body>
         <h2>توزيع درجة حمل التدريب - ${formData.trainer || 'المدرب'}</h2>
-        <div style="margin-bottom: 10px; font-size: 10px;">
-          <strong>الفئة:</strong> ${formData.category || ''} | 
-          <strong>المكان:</strong> ${formData.location || ''}
+        
+        <!-- معلومات الرأس -->
+        <div class="header-info" style="margin-bottom: 15px; padding: 10px; border: 2px solid #667eea; border-radius: 8px; background-color: #f8f9fa;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: bold;">
+            <div><strong>المدرب:</strong> ${formData.trainer || ''}</div>
+            <div><strong>الفئة العمرية:</strong> ${formData.category || ''}</div>
+            <div><strong>المكان:</strong> ${formData.location || ''}</div>
+            <div style="color: #1976d2;"><strong>الشهر:</strong> ${months.find(m => m.value === formData.selectedMonth)?.name || ''} ${formData.selectedYear}</div>
+          </div>
         </div>
         <table>
           <thead>
             <tr>
               <th rowspan="2" style="width: 80px;">درجة الحمل</th>
-              <th colspan="3">الأسبوع الأول</th>
-              <th colspan="3">الأسبوع الثاني</th>
-              <th colspan="3">الأسبوع الثالث</th>
-              <th colspan="3">الأسبوع الرابع</th>
+              ${Array.from({ length: printWeeksCount }, (_, index) =>
+      `<th colspan="3">الأسبوع ${['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'][index]}</th>`
+    ).join('')}
             </tr>
             <tr>
-              <th>1</th><th>2</th><th>3</th>
-              <th>4</th><th>5</th><th>6</th>
-              <th>7</th><th>8</th><th>9</th>
-              <th>10</th><th>11</th><th>12</th>
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => `<th>${index + 1}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
             <!-- زمن الوحدة التدريبية -->
             <tr>
               <td>زمن الوحدة التدريبية</td>
-              <td>3</td><td>2</td><td>1</td>
-              <td>6</td><td>5</td><td>4</td>
-              <td>9</td><td>8</td><td>7</td>
-              <td>12</td><td>11</td><td>10</td>
+              ${Array.from({ length: printWeeksCount * 3 }, () => '<td>90</td>').join('')}
             </tr>
             <!-- رقم الوحدة -->
             <tr>
               <td>رقم الوحدة</td>
-              <td>09/03</td><td>09/06</td><td>09/07</td>
-              <td>09/10</td><td>09/13</td><td>09/14</td>
-              <td>09/17</td><td>09/20</td><td>09/21</td>
-              <td>09/24</td><td>09/27</td><td>09/28</td>
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => `<td>${index + 1}</td>`).join('')}
             </tr>
             <!-- التاريخ -->
             <tr>
               <td>التاريخ</td>
-              <td>الاثنين</td><td>الخميس</td><td>السبت</td>
-              <td>الأحد</td><td>الاثنين</td><td>الخميس</td>
-              <td>السبت</td><td>الأحد</td><td>الاثنين</td>
-              <td>الخميس</td><td>السبت</td><td>الأحد</td>
+              ${printDates.map(date => `<td style="font-weight: bold; color: #1976d2; font-size: 30px; text-align: center; padding: 8px 4px;">${date || '-'}</td>`).join('')}
             </tr>
             <!-- أيام الأسبوع -->
             <tr>
               <td>أيام الأسبوع</td>
-              <td></td><td></td><td></td>
-              <td></td><td></td><td></td>
-              <td></td><td></td><td></td>
-              <td></td><td></td><td></td>
+              ${printDaysOfWeek.map(day => `<td>${day}</td>`).join('')}
             </tr>
 
             <!-- الأقصى -->
@@ -445,20 +785,20 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
                   <small>ن/د 198:185</small>
                 </div>
               </td>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const percentage = trainingData.maximum.weeks[weekIndex].percentages[dayInWeek];
-                return `<td class="input-cell">${percentage || ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const percentage = trainingData.maximum.weeks[weekIndex]?.percentages[dayInWeek];
+      return `<td class="input-cell">${percentage || ''}</td>`;
+    }).join('')}
             </tr>
             <tr>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const heartRate = trainingData.maximum.weeks[weekIndex].heartRates[dayInWeek];
-                return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const heartRate = trainingData.maximum.weeks[weekIndex]?.heartRates[dayInWeek];
+      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+    }).join('')}
             </tr>
 
             <!-- العالي -->
@@ -470,20 +810,20 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
                   <small>ن/د 184:171</small>
                 </div>
               </td>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const percentage = trainingData.high.weeks[weekIndex].percentages[dayInWeek];
-                return `<td class="input-cell">${percentage || ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const percentage = trainingData.high.weeks[weekIndex]?.percentages[dayInWeek];
+      return `<td class="input-cell">${percentage || ''}</td>`;
+    }).join('')}
             </tr>
             <tr>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const heartRate = trainingData.high.weeks[weekIndex].heartRates[dayInWeek];
-                return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const heartRate = trainingData.high.weeks[weekIndex]?.heartRates[dayInWeek];
+      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+    }).join('')}
             </tr>
 
             <!-- المتوسط -->
@@ -495,20 +835,38 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
                   <small>ن/د 170:156</small>
                 </div>
               </td>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const percentage = trainingData.medium.weeks[weekIndex].percentages[dayInWeek];
-                return `<td class="input-cell">${percentage || ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const percentage = trainingData.medium.weeks[weekIndex]?.percentages[dayInWeek];
+      return `<td class="input-cell">${percentage || ''}</td>`;
+    }).join('')}
             </tr>
             <tr>
-              ${Array.from({length: 12}, (_, index) => {
-                const weekIndex = Math.floor(index / 3);
-                const dayInWeek = index % 3;
-                const heartRate = trainingData.medium.weeks[weekIndex].heartRates[dayInWeek];
-                return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-              }).join('')}
+              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+      const weekIndex = Math.floor(index / 3);
+      const dayInWeek = index % 3;
+      const heartRate = trainingData.medium.weeks[weekIndex]?.heartRates[dayInWeek];
+      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+    }).join('')}
+            </tr>
+
+            <!-- زمن التدريب الأسبوعي -->
+            <tr>
+              <td class="row-label">زمن التدريب الأسبوعي</td>
+              ${Array.from({ length: printWeeksCount }, (_, weekIndex) => {
+      const weeklyTime = calculateWeeklyTrainingTime(weekIndex);
+      return `<td colspan="3" class="weekly-time">${weeklyTime.time}<br/>${weeklyTime.level}</td>`;
+    }).join('')}
+            </tr>
+
+            <!-- متوسط درجة الحمل الأسبوعية -->
+            <tr>
+              <td class="row-label">متوسط درجة الحمل الأسبوعية</td>
+              ${Array.from({ length: printWeeksCount }, (_, weekIndex) => {
+      const average = calculateWeeklyAverage(weekIndex);
+      return `<td colspan="3" class="weekly-average">% ${average}</td>`;
+    }).join('')}
             </tr>
           </tbody>
         </table>
@@ -527,696 +885,365 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
   };
 
   return (
-      <Card className="shadow-sm">
-        <Card.Header className="bg-success text-white d-flex align-items-center justify-content-between">
-          <div className="text-end" dir="rtl">
-            <h4 className="mb-0" dir="rtl">
-              <i className="fas fa-chart-line me-2"></i>
-              توزيع درجة حمل التدريب بالنسبة لزمن الوحدات خلال أسابيع البرنامج المقترح
-            </h4>
-          </div>
-          <div className="text-start">
-            <Button variant="outline-light" size="sm" onClick={printTrainingLoad}>
-              <i className="fas fa-print me-2"></i>
-              طباعة الجدول
+    <Card className="shadow-sm">
+      <Card.Header className="bg-success text-white d-flex align-items-center justify-content-between">
+        <div className="text-end" dir="rtl">
+          <h4 className="mb-0" dir="rtl">
+            <i className="fas fa-chart-line me-2"></i>
+            توزيع درجة حمل التدريب - {months.find(m => m.value === formData.selectedMonth)?.name} {formData.selectedYear}
+          </h4>
+
+        </div>
+        <div className="text-start">
+          <Button variant="outline-light" size="sm" onClick={printTrainingLoad}>
+            <i className="fas fa-print me-2"></i>
+            طباعة الجدول
+          </Button>
+        </div>
+      </Card.Header>
+      <Card.Body className="p-4">
+        {/* معلومات الرأس */}
+        <Row className="mb-4" dir="rtl">
+          <Col md={3} className="text-end">
+            <strong>المدرب:</strong>
+            <Form.Control
+              type="text"
+              value={formData.trainer}
+              onChange={(e) => updateField('trainer', e.target.value)}
+              placeholder="اسم المدرب"
+              className="mt-1"
+              dir="rtl"
+            />
+          </Col>
+          <Col md={3} className="text-center">
+            <strong>الفئة العمرية:</strong>
+            <Form.Select
+              value={formData.category}
+              onChange={(e) => updateField('category', e.target.value)}
+              className="mt-1"
+              dir="rtl"
+            >
+              <option value="">اختر الفئة العمرية</option>
+              {ageCategoryOptions.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </Form.Select>
+          </Col>
+          <Col md={3} className="text-start">
+            <strong>المكان:</strong>
+            <Form.Control
+              type="text"
+              value={formData.location}
+              placeholder="مكان التدريب"
+              className="mt-1"
+              dir="rtl"
+              onChange={(e) => updateField('location', e.target.value)}
+            />
+          </Col>
+          <Col md={3} className="text-start">
+            <Row>
+              <Col md={6}>
+                <strong>الشهر:</strong>
+                <Form.Select
+                  value={formData.selectedMonth}
+                  onChange={(e) => updateField('selectedMonth', parseInt(e.target.value))}
+                  className="mt-1"
+                  dir="rtl"
+                >
+                  {months.map(month => (
+                    <option key={month.value} value={month.value}>{month.name}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col md={6}>
+                <strong>السنة:</strong>
+                <Form.Select
+                  value={formData.selectedYear}
+                  onChange={(e) => updateField('selectedYear', parseInt(e.target.value))}
+                  className="mt-1"
+                  dir="rtl"
+                >
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+
+        {/* زر الحفظ */}
+        <Row className="mb-3">
+          <Col className="text-end">
+            <Button
+              variant="success"
+              onClick={saveData}
+              size="sm"
+              dir="rtl"
+            >
+              <i className="fas fa-save me-2"></i>
+              حفظ التوزيع
             </Button>
-          </div>
-        </Card.Header>
-        <Card.Body className="p-4">
-          {/* معلومات الرأس */}
-          <Row className="mb-4" dir="rtl">
-            <Col md={4} className="text-end">
-              <strong>المدرب:</strong>
-              <Form.Control
-                type="text"
-                value={formData.trainer}
-                onChange={(e) => updateField('trainer', e.target.value)}
-                placeholder="اسم المدرب"
-                className="mt-1"
-                dir="rtl"
-              />
-            </Col>
-            <Col md={4} className="text-center">
-              <strong>الفئة:</strong>
-              <Form.Control
-                type="text"
-                value={formData.category}
-                placeholder="الفئة العمرية"
-                className="mt-1"
-                dir="rtl"
-                onChange={(e) => updateField('category', e.target.value)}
-              />
-            </Col>
-            <Col md={4} className="text-start">
-              <strong>المكان:</strong>
-              <Form.Control
-                type="text"
-                value={formData.location}
-                placeholder="مكان التدريب"
-                className="mt-1"
-                dir="rtl"
-                onChange={(e) => updateField('location', e.target.value)}
-              />
-            </Col>
-          </Row>
+          </Col>
+        </Row>
 
-          {/* زر الحفظ */}
-          <Row className="mb-3">
-            <Col className="text-end">
-              <Button
-                variant="success"
-                onClick={saveData}
-                size="sm"
-                dir="rtl"
-              >
-                <i className="fas fa-save me-2"></i>
-                حفظ التوزيع
-              </Button>
-            </Col>
-          </Row>
-
-          {/* الجدول الرئيسي */}
-          <div className="table-responsive">
-            <Table bordered className="training-load-table coach-table" dir="rtl">
-              <thead>
-                <tr>
-                  <th rowSpan={2} className="main-header">
-                    <div className="header-content">
-                      <div className="weeks-label">الأسابيع</div>
-                      <div className="data-label">البيانات</div>
-                    </div>
+        {/* الجدول الرئيسي */}
+        <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '600px' }}>
+          <Table bordered className="training-load-table coach-table" dir="rtl" style={{ minWidth: '1200px' }}>
+            <thead>
+              <tr>
+                <th rowSpan={2} className="main-header">
+                  <div className="header-content">
+                    <div className="weeks-label">الأسابيع</div>
+                    <div className="data-label">البيانات</div>
+                  </div>
+                </th>
+                {Array.from({ length: weeksCount }, (_, index) => (
+                  <th key={index} colSpan={3} className="week-header">
+                    الأسبوع {['الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس'][index]}
                   </th>
-                  <th colSpan={3} className="week-header">الأسبوع الأول</th>
-                  <th colSpan={3} className="week-header">الأسبوع الثاني</th>
-                  <th colSpan={3} className="week-header">الأسبوع الثالث</th>
-                  <th colSpan={3} className="week-header">الأسبوع الرابع</th>
-                </tr>
-                <tr>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                  <th className="day-header">90</th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* صف زمن الوحدة التدريبية */}
-                <tr>
-                  <td className="row-label">زمن الوحدة التدريبية</td>
-                  <td>3</td><td>2</td><td>1</td>
-                  <td>6</td><td>5</td><td>4</td>
-                  <td>9</td><td>8</td><td>7</td>
-                  <td>12</td><td>11</td><td>10</td>
-                </tr>
-                {/* صف رقم الوحدة */}
-                <tr>
-                  <td className="row-label">رقم الوحدة</td>
-                  <td>09/03</td><td>09/06</td><td>09/07</td>
-                  <td>09/10</td><td>09/13</td><td>09/14</td>
-                  <td>09/17</td><td>09/20</td><td>09/21</td>
-                  <td>09/24</td><td>09/27</td><td>09/28</td>
-                </tr>
-                {/* صف التاريخ */}
-                <tr>
-                  <td className="row-label">التاريخ</td>
-                  <td className="vertical-text">الاثنين</td>
-                  <td className="vertical-text">الخميس</td>
-                  <td className="vertical-text">السبت</td>
-                  <td className="vertical-text">الأحد</td>
-                  <td className="vertical-text">الاثنين</td>
-                  <td className="vertical-text">الخميس</td>
-                  <td className="vertical-text">السبت</td>
-                  <td className="vertical-text">الأحد</td>
-                  <td className="vertical-text">الاثنين</td>
-                  <td className="vertical-text">الخميس</td>
-                  <td className="vertical-text">السبت</td>
-                  <td className="vertical-text">الأحد</td>
-                </tr>
-                {/* صف أيام الأسبوع */}
-                <tr>
-                  <td className="row-label">أيام الأسبوع</td>
-                  <td></td><td></td><td></td>
-                  <td></td><td></td><td></td>
-                  <td></td><td></td><td></td>
-                  <td></td><td></td><td></td>
-                </tr>
+                ))}
+              </tr>
+              <tr>
+                {Array.from({ length: weeksCount * 3 }, (_, index) => (
+                  <th key={index} className="day-header">{index + 1}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {/* صف زمن الوحدة التدريبية */}
+              <tr>
+                <td className="row-label">زمن الوحدة التدريبية</td>
+                {Array.from({ length: weeksCount * 3 }, () => (
+                  <td key={Math.random()}>90</td>
+                ))}
+              </tr>
+              {/* صف رقم الوحدة */}
+              <tr>
+                <td className="row-label">رقم الوحدة</td>
+                {Array.from({ length: weeksCount * 3 }, (_, index) => (
+                  <td key={index}>{index + 1}</td>
+                ))}
+              </tr>
+              {/* صف التاريخ */}
+              <tr>
+                <td className="row-label">التاريخ</td>
+                {dates.map((date, index) => (
+                  <td
+                    key={index}
+                    style={{
+                      fontWeight: 'bold',
+                      color: '#1976d2',
+                      fontSize: '16px',
+                      textAlign: 'center',
+                      padding: '8px 4px',
+                      writingMode: 'horizontal-tb',
+                      textOrientation: 'mixed',
+                      minHeight: '30px',
+                      lineHeight: '1.5'
+                    }}
+                    className="date-cell"
+                  >
+                    {date || '-'}
+                  </td>
+                ))}
+              </tr>
+              {/* صف أيام الأسبوع */}
+              <tr>
+                <td className="row-label">أيام الأسبوع</td>
+                {daysOfWeek.map((day, index) => (
+                  <td key={index} className="vertical-text">{day}</td>
+                ))}
+              </tr>
 
-                {/* درجة الحمل */}
-                <tr>
-                  <td rowSpan={6} className="load-label">
-                    <div className="load-header">
-                      <div className="load-main-text">درجة الحمل</div>
-                      <div className="load-divider"></div>
-                      <div className="load-sub-labels">
-                        <div className="load-sub-item">
-                          <span>أقصى</span>
-                          <small>% 95 : 86</small>
-                          <small>ن/د 198 : 185</small>
-                        </div>
-                        <div className="load-sub-item">
-                          <span>عالي</span>
-                          <small>% 85 : 76</small>
-                          <small>ن/د 184 : 171</small>
-                        </div>
-                        <div className="load-sub-item">
-                          <span>متوسط</span>
-                          <small>% 75 : 65</small>
-                          <small>ن/د 170 : 156</small>
-                        </div>
+              {/* درجة الحمل */}
+              <tr>
+                <td rowSpan={6} className="load-label">
+                  <div className="load-header">
+                    <div className="load-main-text">درجة الحمل</div>
+                    <div className="load-divider"></div>
+                    <div className="load-sub-labels">
+                      <div className="load-sub-item">
+                        <span>أقصى</span>
+                        <small>% 95 : 86</small>
+                        <small>ن/د 198 : 185</small>
+                      </div>
+                      <div className="load-sub-item">
+                        <span>عالي</span>
+                        <small>% 85 : 76</small>
+                        <small>ن/د 184 : 171</small>
+                      </div>
+                      <div className="load-sub-item">
+                        <span>متوسط</span>
+                        <small>% 75 : 65</small>
+                        <small>ن/د 170 : 156</small>
                       </div>
                     </div>
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 0, 0)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[0].percentages[0], 'maximum', 0, 0)}
-                      onChange={(e) => updatePercentage('maximum', 0, 0, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 0, 0)}
-                      onBlur={() => handleBlur('maximum', 0, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 0, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 0, 1)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[0].percentages[1], 'maximum', 0, 1)}
-                      onChange={(e) => updatePercentage('maximum', 0, 1, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 0, 1)}
-                      onBlur={() => handleBlur('maximum', 0, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 0, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 0, 2)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[0].percentages[2], 'maximum', 0, 2)}
-                      onChange={(e) => updatePercentage('maximum', 0, 2, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 0, 2)}
-                      onBlur={() => handleBlur('maximum', 0, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 0, 2)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 1, 0)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[1].percentages[0], 'maximum', 1, 0)}
-                      onChange={(e) => updatePercentage('maximum', 1, 0, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 1, 0)}
-                      onBlur={() => handleBlur('maximum', 1, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 1, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 1, 1)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[1].percentages[1], 'maximum', 1, 1)}
-                      onChange={(e) => updatePercentage('maximum', 1, 1, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 1, 1)}
-                      onBlur={() => handleBlur('maximum', 1, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 1, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('maximum', 1, 2)}
-                      value={formatValueForDisplay(trainingData.maximum.weeks[1].percentages[2], 'maximum', 1, 2)}
-                      onChange={(e) => updatePercentage('maximum', 1, 2, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 1, 2)}
-                      onBlur={() => handleBlur('maximum', 1, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 1, 2)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[2].percentages[0], 'maximum', 2, 0)}
-                      onChange={(e) => updatePercentage('maximum', 2, 0, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 2, 0)}
-                      onBlur={() => handleBlur('maximum', 2, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 2, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[2].percentages[1], 'maximum', 2, 1)}
-                      onChange={(e) => updatePercentage('maximum', 2, 1, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 2, 1)}
-                      onBlur={() => handleBlur('maximum', 2, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 2, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[2].percentages[2], 'maximum', 2, 2)}
-                      onChange={(e) => updatePercentage('maximum', 2, 2, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 2, 2)}
-                      onBlur={() => handleBlur('maximum', 2, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 2, 2)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[3].percentages[0], 'maximum', 3, 0)}
-                      onChange={(e) => updatePercentage('maximum', 3, 0, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 3, 0)}
-                      onBlur={() => handleBlur('maximum', 3, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 3, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[3].percentages[1], 'maximum', 3, 1)}
-                      onChange={(e) => updatePercentage('maximum', 3, 1, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 3, 1)}
-                      onBlur={() => handleBlur('maximum', 3, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 3, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className="load-input"
-                      value={formatValueForDisplay(trainingData.maximum.weeks[3].percentages[2], 'maximum', 3, 2)}
-                      onChange={(e) => updatePercentage('maximum', 3, 2, e.target.value)}
-                      onFocus={() => handleFocus('maximum', 3, 2)}
-                      onBlur={() => handleBlur('maximum', 3, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('maximum', 3, 2)}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[0].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[0].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[0].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[1].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[1].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[1].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[2].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[2].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[2].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[3].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[3].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.maximum.weeks[3].heartRates[2])}</td>
-                </tr>
+                  </div>
+                </td>
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
 
-                <tr>
-                  {/* الأسبوع الأول - عالي */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 0, 0)}
-                      value={formatValueForDisplay(trainingData.high.weeks[0].percentages[0], 'high', 0, 0)}
-                      onChange={(e) => updatePercentage('high', 0, 0, e.target.value)}
-                      onFocus={() => handleFocus('high', 0, 0)}
-                      onBlur={() => handleBlur('high', 0, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 0, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 0, 1)}
-                      value={formatValueForDisplay(trainingData.high.weeks[0].percentages[1], 'high', 0, 1)}
-                      onChange={(e) => updatePercentage('high', 0, 1, e.target.value)}
-                      onFocus={() => handleFocus('high', 0, 1)}
-                      onBlur={() => handleBlur('high', 0, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 0, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 0, 2)}
-                      value={formatValueForDisplay(trainingData.high.weeks[0].percentages[2], 'high', 0, 2)}
-                      onChange={(e) => updatePercentage('high', 0, 2, e.target.value)}
-                      onFocus={() => handleFocus('high', 0, 2)}
-                      onBlur={() => handleBlur('high', 0, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 0, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الثاني - عالي */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 1, 0)}
-                      value={formatValueForDisplay(trainingData.high.weeks[1].percentages[0], 'high', 1, 0)}
-                      onChange={(e) => updatePercentage('high', 1, 0, e.target.value)}
-                      onFocus={() => handleFocus('high', 1, 0)}
-                      onBlur={() => handleBlur('high', 1, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 1, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 1, 1)}
-                      value={formatValueForDisplay(trainingData.high.weeks[1].percentages[1], 'high', 1, 1)}
-                      onChange={(e) => updatePercentage('high', 1, 1, e.target.value)}
-                      onFocus={() => handleFocus('high', 1, 1)}
-                      onBlur={() => handleBlur('high', 1, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 1, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 1, 2)}
-                      value={formatValueForDisplay(trainingData.high.weeks[1].percentages[2], 'high', 1, 2)}
-                      onChange={(e) => updatePercentage('high', 1, 2, e.target.value)}
-                      onFocus={() => handleFocus('high', 1, 2)}
-                      onBlur={() => handleBlur('high', 1, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 1, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الثالث - عالي */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 2, 0)}
-                      value={formatValueForDisplay(trainingData.high.weeks[2].percentages[0], 'high', 2, 0)}
-                      onChange={(e) => updatePercentage('high', 2, 0, e.target.value)}
-                      onFocus={() => handleFocus('high', 2, 0)}
-                      onBlur={() => handleBlur('high', 2, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 2, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 2, 1)}
-                      value={formatValueForDisplay(trainingData.high.weeks[2].percentages[1], 'high', 2, 1)}
-                      onChange={(e) => updatePercentage('high', 2, 1, e.target.value)}
-                      onFocus={() => handleFocus('high', 2, 1)}
-                      onBlur={() => handleBlur('high', 2, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 2, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 2, 2)}
-                      value={formatValueForDisplay(trainingData.high.weeks[2].percentages[2], 'high', 2, 2)}
-                      onChange={(e) => updatePercentage('high', 2, 2, e.target.value)}
-                      onFocus={() => handleFocus('high', 2, 2)}
-                      onBlur={() => handleBlur('high', 2, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 2, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الرابع - عالي */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 3, 0)}
-                      value={formatValueForDisplay(trainingData.high.weeks[3].percentages[0], 'high', 3, 0)}
-                      onChange={(e) => updatePercentage('high', 3, 0, e.target.value)}
-                      onFocus={() => handleFocus('high', 3, 0)}
-                      onBlur={() => handleBlur('high', 3, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 3, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 3, 1)}
-                      value={formatValueForDisplay(trainingData.high.weeks[3].percentages[1], 'high', 3, 1)}
-                      onChange={(e) => updatePercentage('high', 3, 1, e.target.value)}
-                      onFocus={() => handleFocus('high', 3, 1)}
-                      onBlur={() => handleBlur('high', 3, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 3, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('high', 3, 2)}
-                      value={formatValueForDisplay(trainingData.high.weeks[3].percentages[2], 'high', 3, 2)}
-                      onChange={(e) => updatePercentage('high', 3, 2, e.target.value)}
-                      onFocus={() => handleFocus('high', 3, 2)}
-                      onBlur={() => handleBlur('high', 3, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('high', 3, 2)}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[0].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[0].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[0].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[1].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[1].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[1].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[2].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[2].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[2].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[3].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[3].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.high.weeks[3].heartRates[2])}</td>
-                </tr>
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.maximum.weeks[weekIndex]) {
+                    return <td key={index} className="input-cell">-</td>;
+                  }
 
-                <tr>
-                  {/* الأسبوع الأول - متوسط */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 0, 0)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[0].percentages[0], 'medium', 0, 0)}
-                      onChange={(e) => updatePercentage('medium', 0, 0, e.target.value)}
-                      onFocus={() => handleFocus('medium', 0, 0)}
-                      onBlur={() => handleBlur('medium', 0, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 0, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 0, 1)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[0].percentages[1], 'medium', 0, 1)}
-                      onChange={(e) => updatePercentage('medium', 0, 1, e.target.value)}
-                      onFocus={() => handleFocus('medium', 0, 1)}
-                      onBlur={() => handleBlur('medium', 0, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 0, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 0, 2)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[0].percentages[2], 'medium', 0, 2)}
-                      onChange={(e) => updatePercentage('medium', 0, 2, e.target.value)}
-                      onFocus={() => handleFocus('medium', 0, 2)}
-                      onBlur={() => handleBlur('medium', 0, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 0, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الثاني - متوسط */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 1, 0)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[1].percentages[0], 'medium', 1, 0)}
-                      onChange={(e) => updatePercentage('medium', 1, 0, e.target.value)}
-                      onFocus={() => handleFocus('medium', 1, 0)}
-                      onBlur={() => handleBlur('medium', 1, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 1, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 1, 1)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[1].percentages[1], 'medium', 1, 1)}
-                      onChange={(e) => updatePercentage('medium', 1, 1, e.target.value)}
-                      onFocus={() => handleFocus('medium', 1, 1)}
-                      onBlur={() => handleBlur('medium', 1, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 1, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 1, 2)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[1].percentages[2], 'medium', 1, 2)}
-                      onChange={(e) => updatePercentage('medium', 1, 2, e.target.value)}
-                      onFocus={() => handleFocus('medium', 1, 2)}
-                      onBlur={() => handleBlur('medium', 1, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 1, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الثالث - متوسط */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 2, 0)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[2].percentages[0], 'medium', 2, 0)}
-                      onChange={(e) => updatePercentage('medium', 2, 0, e.target.value)}
-                      onFocus={() => handleFocus('medium', 2, 0)}
-                      onBlur={() => handleBlur('medium', 2, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 2, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 2, 1)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[2].percentages[1], 'medium', 2, 1)}
-                      onChange={(e) => updatePercentage('medium', 2, 1, e.target.value)}
-                      onFocus={() => handleFocus('medium', 2, 1)}
-                      onBlur={() => handleBlur('medium', 2, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 2, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 2, 2)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[2].percentages[2], 'medium', 2, 2)}
-                      onChange={(e) => updatePercentage('medium', 2, 2, e.target.value)}
-                      onFocus={() => handleFocus('medium', 2, 2)}
-                      onBlur={() => handleBlur('medium', 2, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 2, 2)}
-                    />
-                  </td>
-                  {/* الأسبوع الرابع - متوسط */}
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 3, 0)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[3].percentages[0], 'medium', 3, 0)}
-                      onChange={(e) => updatePercentage('medium', 3, 0, e.target.value)}
-                      onFocus={() => handleFocus('medium', 3, 0)}
-                      onBlur={() => handleBlur('medium', 3, 0)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 3, 0)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 3, 1)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[3].percentages[1], 'medium', 3, 1)}
-                      onChange={(e) => updatePercentage('medium', 3, 1, e.target.value)}
-                      onFocus={() => handleFocus('medium', 3, 1)}
-                      onBlur={() => handleBlur('medium', 3, 1)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 3, 1)}
-                    />
-                  </td>
-                  <td className="input-cell">
-                    <input
-                      type="text"
-                      className={getFieldClassName('medium', 3, 2)}
-                      value={formatValueForDisplay(trainingData.medium.weeks[3].percentages[2], 'medium', 3, 2)}
-                      onChange={(e) => updatePercentage('medium', 3, 2, e.target.value)}
-                      onFocus={() => handleFocus('medium', 3, 2)}
-                      onBlur={() => handleBlur('medium', 3, 2)}
-                      placeholder="%"
-                      disabled={isFieldDisabled('medium', 3, 2)}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[0].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[0].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[0].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[1].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[1].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[1].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[2].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[2].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[2].heartRates[2])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[3].heartRates[0])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[3].heartRates[1])}</td>
-                  <td className="heart-rate-display">{formatHeartRate(trainingData.medium.weeks[3].heartRates[2])}</td>
-                </tr>
+                  return (
+                    <td key={index} className="input-cell">
+                      <input
+                        type="text"
+                        className={getFieldClassName('maximum', weekIndex, dayIndex)}
+                        value={formatValueForDisplay(trainingData.maximum.weeks[weekIndex].percentages[dayIndex], 'maximum', weekIndex, dayIndex)}
+                        onChange={(e) => updatePercentage('maximum', weekIndex, dayIndex, e.target.value)}
+                        onFocus={() => handleFocus('maximum', weekIndex, dayIndex)}
+                        onBlur={() => handleBlur('maximum', weekIndex, dayIndex)}
+                        placeholder="%"
+                        disabled={isFieldDisabled('maximum', weekIndex, dayIndex)}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                {/* صف نبضات القلب للمستوى الأقصى - ديناميكي */}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
 
-                {/* زمن التدريب الأسبوعي */}
-                <tr>
-                  <td className="row-label">زمن التدريب الأسبوعي</td>
-                  <td colSpan={3} className="weekly-time">
-                    {calculateWeeklyTrainingTime(0).time}<br/>
-                    {calculateWeeklyTrainingTime(0).level}
-                  </td>
-                  <td colSpan={3} className="weekly-time">
-                    {calculateWeeklyTrainingTime(1).time}<br/>
-                    {calculateWeeklyTrainingTime(1).level}
-                  </td>
-                  <td colSpan={3} className="weekly-time">
-                    {calculateWeeklyTrainingTime(2).time}<br/>
-                    {calculateWeeklyTrainingTime(2).level}
-                  </td>
-                  <td colSpan={3} className="weekly-time">
-                    {calculateWeeklyTrainingTime(3).time}<br/>
-                    {calculateWeeklyTrainingTime(3).level}
-                  </td>
-                </tr>
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.maximum.weeks[weekIndex]) {
+                    return <td key={index} className="heart-rate-display">-</td>;
+                  }
 
-                {/* متوسط درجة الحمل الأسبوعية */}
-                <tr>
-                  <td className="row-label">متوسط درجة الحمل الأسبوعية</td>
-                  <td colSpan={3} className="weekly-average">% {calculateWeeklyAverage(0)}</td>
-                  <td colSpan={3} className="weekly-average">% {calculateWeeklyAverage(1)}</td>
-                  <td colSpan={3} className="weekly-average">% {calculateWeeklyAverage(2)}</td>
-                  <td colSpan={3} className="weekly-average">% {calculateWeeklyAverage(3)}</td>
-                </tr>
-              </tbody>
-            </Table>
-          </div>
-        </Card.Body>
-      </Card>
+                  return (
+                    <td key={index} className="heart-rate-display">
+                      {formatHeartRate(trainingData.maximum.weeks[weekIndex].heartRates[dayIndex])}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              <tr>
+                {/* صف المستوى العالي - ديناميكي */}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
+
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.high.weeks[weekIndex]) {
+                    return <td key={index} className="input-cell">-</td>;
+                  }
+
+                  return (
+                    <td key={index} className="input-cell">
+                      <input
+                        type="text"
+                        className={getFieldClassName('high', weekIndex, dayIndex)}
+                        value={formatValueForDisplay(trainingData.high.weeks[weekIndex].percentages[dayIndex], 'high', weekIndex, dayIndex)}
+                        onChange={(e) => updatePercentage('high', weekIndex, dayIndex, e.target.value)}
+                        onFocus={() => handleFocus('high', weekIndex, dayIndex)}
+                        onBlur={() => handleBlur('high', weekIndex, dayIndex)}
+                        placeholder="%"
+                        disabled={isFieldDisabled('high', weekIndex, dayIndex)}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                {/* صف نبضات القلب للمستوى العالي - ديناميكي */}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
+
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.high.weeks[weekIndex]) {
+                    return <td key={index} className="heart-rate-display">-</td>;
+                  }
+
+                  return (
+                    <td key={index} className="heart-rate-display">
+                      {formatHeartRate(trainingData.high.weeks[weekIndex].heartRates[dayIndex])}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              <tr>
+                {/* صف المستوى المتوسط - ديناميكي */}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
+
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.medium.weeks[weekIndex]) {
+                    return <td key={index} className="input-cell">-</td>;
+                  }
+
+                  return (
+                    <td key={index} className="input-cell">
+                      <input
+                        type="text"
+                        className={getFieldClassName('medium', weekIndex, dayIndex)}
+                        value={formatValueForDisplay(trainingData.medium.weeks[weekIndex].percentages[dayIndex], 'medium', weekIndex, dayIndex)}
+                        onChange={(e) => updatePercentage('medium', weekIndex, dayIndex, e.target.value)}
+                        onFocus={() => handleFocus('medium', weekIndex, dayIndex)}
+                        onBlur={() => handleBlur('medium', weekIndex, dayIndex)}
+                        placeholder="%"
+                        disabled={isFieldDisabled('medium', weekIndex, dayIndex)}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                {/* صف نبضات القلب للمستوى المتوسط - ديناميكي */}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const weekIndex = Math.floor(index / 3);
+                  const dayIndex = index % 3;
+
+                  // التأكد من وجود البيانات للأسبوع
+                  if (!trainingData.medium.weeks[weekIndex]) {
+                    return <td key={index} className="heart-rate-display">-</td>;
+                  }
+
+                  return (
+                    <td key={index} className="heart-rate-display">
+                      {formatHeartRate(trainingData.medium.weeks[weekIndex].heartRates[dayIndex])}
+                    </td>
+                  );
+                })}
+              </tr>
+
+              {/* زمن التدريب الأسبوعي */}
+              <tr>
+                <td className="row-label">زمن التدريب الأسبوعي</td>
+                {Array.from({ length: weeksCount }, (_, weekIndex) => (
+                  <td key={weekIndex} colSpan={3} className="weekly-time">
+                    {calculateWeeklyTrainingTime(weekIndex).time}<br />
+                    {calculateWeeklyTrainingTime(weekIndex).level}
+                  </td>
+                ))}
+              </tr>
+
+              {/* متوسط درجة الحمل الأسبوعية */}
+              <tr>
+                <td className="row-label">متوسط درجة الحمل الأسبوعية</td>
+                {Array.from({ length: weeksCount }, (_, weekIndex) => (
+                  <td key={weekIndex} colSpan={3} className="weekly-average">
+                    % {calculateWeeklyAverage(weekIndex)}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </Table>
+        </div>
+      </Card.Body>
+    </Card>
   );
 };
 

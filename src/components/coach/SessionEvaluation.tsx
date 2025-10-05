@@ -19,7 +19,7 @@ interface MonthData {
 // الأشهر العشرة للسنة الدراسية
 const months = [
   'سبتمبر',
-  'أكتوبر', 
+  'أكتوبر',
   'نوفمبر',
   'ديسمبر',
   'جانفي',
@@ -31,7 +31,7 @@ const months = [
 ];
 
 const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
-  const [sessionData, setSessionData] = useState<MonthData[]>(() => 
+  const [sessionData, setSessionData] = useState<MonthData[]>(() =>
     months.map(month => ({
       month,
       plannedSessions: 10,
@@ -70,13 +70,13 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
   // تحديث الحصص المبرمجة
   const updatePlannedSessions = (monthIndex: number, value: number) => {
     const newValue = Math.max(10, Math.min(24, value));
-    setSessionData(prev => prev.map((item, index) => 
-      index === monthIndex 
-        ? { 
-            ...item, 
-            plannedSessions: newValue,
-            percentage: calculatePercentage(item.executedSessions, newValue)
-          }
+    setSessionData(prev => prev.map((item, index) =>
+      index === monthIndex
+        ? {
+          ...item,
+          plannedSessions: newValue,
+          percentage: calculatePercentage(item.executedSessions, newValue)
+        }
         : item
     ));
   };
@@ -84,13 +84,13 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
   // تحديث الحصص المنفذة
   const updateExecutedSessions = (monthIndex: number, value: number) => {
     const newValue = Math.max(10, Math.min(24, value));
-    setSessionData(prev => prev.map((item, index) => 
-      index === monthIndex 
-        ? { 
-            ...item, 
-            executedSessions: newValue,
-            percentage: calculatePercentage(newValue, item.plannedSessions)
-          }
+    setSessionData(prev => prev.map((item, index) =>
+      index === monthIndex
+        ? {
+          ...item,
+          executedSessions: newValue,
+          percentage: calculatePercentage(newValue, item.plannedSessions)
+        }
         : item
     ));
   };
@@ -100,7 +100,7 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
     const totalPlanned = sessionData.reduce((sum, item) => sum + item.plannedSessions, 0);
     const totalExecuted = sessionData.reduce((sum, item) => sum + item.executedSessions, 0);
     const totalPercentage = calculatePercentage(totalExecuted, totalPlanned);
-    
+
     return { totalPlanned, totalExecuted, totalPercentage };
   };
 
@@ -127,32 +127,85 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
             width: 100%;
             border-collapse: collapse;
             margin: 0 auto;
-            font-size: 12px;
+            font-size: 16px;
+            border: 2px solid #000;
           }
           th, td {
             border: 1px solid #000;
-            padding: 6px;
+            padding: 12px 8px;
             text-align: center;
+            font-weight: bold;
+            line-height: 1.4;
           }
           th {
             background-color: #e3f2fd;
             font-weight: bold;
-            font-size: 11px;
+            font-size: 18px;
+            padding: 15px 10px;
           }
           h2 { 
             text-align: center; 
             margin-bottom: 20px; 
             color: #1976d2; 
-            font-size: 16px;
+            font-size: 22px;
+            font-weight: bold;
           }
           .total-row {
             background-color: #fff3cd;
             font-weight: bold;
+            font-size: 18px;
           }
           @media print {
-            body { margin: 0; }
-            table { font-size: 10px; }
-            th, td { padding: 4px; }
+            @page {
+              margin: 8mm;
+              size: landscape;
+            }
+            
+            body { 
+              margin: 0 !important; 
+              padding: 0 !important;
+              font-family: Arial, sans-serif;
+              direction: rtl;
+            }
+            
+            h2 {
+              font-size: 20px !important;
+              font-weight: bold !important;
+              text-align: center !important;
+              margin: 5px 0 15px 0 !important;
+            }
+            
+            table { 
+              font-size: 16px !important;
+              width: 100% !important;
+              border: 2px solid #000 !important;
+              border-collapse: collapse !important;
+            }
+            
+            th, td { 
+              padding: 12px 10px !important;
+              font-weight: bold !important;
+              font-size: 16px !important;
+              border: 1px solid #000 !important;
+              text-align: center !important;
+              line-height: 1.4 !important;
+            }
+            
+            th {
+              font-size: 18px !important;
+              padding: 15px 12px !important;
+              background-color: #e3f2fd !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .total-row {
+              font-size: 18px !important;
+              font-weight: bold !important;
+              background-color: #fff3cd !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
           }
         </style>
       </head>
@@ -210,8 +263,8 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
         {/* زر الحفظ */}
         <Row className="mb-4">
           <Col md={6}>
-            <Button 
-              variant="success" 
+            <Button
+              variant="success"
               onClick={saveData}
               dir="rtl"
             >
@@ -220,8 +273,8 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
             </Button>
           </Col>
           <Col md={6} className="text-end">
-            <Button 
-              variant="info" 
+            <Button
+              variant="info"
               onClick={printSessionEvaluation}
               dir="rtl"
             >
@@ -270,17 +323,27 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
                   </td>
                   <td className="fw-bold text-center align-middle">
                     <span
-                      className={`badge percentage-badge ${
-                        monthData.percentage >= 90 ? 'bg-success' :
+                      className={`badge percentage-badge ${monthData.percentage >= 90 ? 'bg-success' :
                         monthData.percentage >= 70 ? 'bg-warning' : 'bg-danger'
-                      }`}
+                        }`}
+                      style={{
+                        fontSize: '1.6rem',
+                        padding: '1rem 1.5rem',
+                        fontWeight: '900',
+                        borderRadius: '30px',
+                        minWidth: '90px',
+                        minHeight: '60px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
                     >
-                      {monthData.percentage}%
+                      <strong style={{ fontWeight: '900', fontSize: '1.8rem' }}>{monthData.percentage}%</strong>
                     </span>
                   </td>
                 </tr>
               ))}
-              
+
               {/* صف المجموع */}
               <tr className="total-row">
                 <td className="fw-bold text-center" dir="rtl">
@@ -294,13 +357,22 @@ const SessionEvaluation: React.FC<SessionEvaluationProps> = ({ club }) => {
                 </td>
                 <td className="fw-bold text-center">
                   <span
-                    className={`badge percentage-badge ${
-                      totals.totalPercentage >= 90 ? 'bg-success' :
+                    className={`badge percentage-badge ${totals.totalPercentage >= 90 ? 'bg-success' :
                       totals.totalPercentage >= 70 ? 'bg-warning' : 'bg-danger'
-                    }`}
-                    style={{ fontSize: '1.1rem', padding: '0.5rem 1rem' }}
+                      }`}
+                    style={{
+                      fontSize: '1.6rem',
+                      padding: '1.2rem 1.8rem',
+                      fontWeight: '900',
+                      borderRadius: '35px',
+                      minWidth: '110px',
+                      minHeight: '70px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
                   >
-                    <strong>{totals.totalPercentage}%</strong>
+                    <strong style={{ fontWeight: '900', fontSize: '2.2rem' }}>{totals.totalPercentage}%</strong>
                   </span>
                 </td>
               </tr>

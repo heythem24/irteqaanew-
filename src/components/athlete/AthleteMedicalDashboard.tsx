@@ -28,6 +28,56 @@ interface Props {
   athleteName: string;
 }
 
+// دالة ترجمة أجزاء الجسم إلى العربية
+const getBodyPartInArabic = (bodyPart: string): string => {
+  const translations: Record<string, string> = {
+    'head': 'رأس',
+    'neck': 'رقبة',
+    'shoulder': 'كتف',
+    'elbow': 'مرفق',
+    'wrist': 'معصم',
+    'hand': 'يد',
+    'chest': 'صدر',
+    'back': 'ظهر',
+    'abdomen': 'بطن',
+    'hip': 'ورك',
+    'thigh': 'فخذ',
+    'knee': 'ركبة',
+    'calf': 'عضلة الساق',
+    'ankle': 'كاحل',
+    'foot': 'قدم'
+  };
+  return translations[bodyPart.toLowerCase()] || bodyPart;
+};
+
+// دالة ترجمة أنواع المواعيد إلى العربية
+const getAppointmentTypeInArabic = (appointmentType: string): string => {
+  const translations: Record<string, string> = {
+    'checkup': 'فحص دوري',
+    'specialist': 'استشاري متخصص',
+    'imaging': 'تصوير طبي',
+    'therapy': 'علاج طبيعي',
+    'followup': 'متابعة'
+  };
+  return translations[appointmentType.toLowerCase()] || appointmentType;
+};
+
+// دالة ترجمة أنواع العلاج إلى العربية
+const getTreatmentTypeInArabic = (treatmentType: string): string => {
+  const translations: Record<string, string> = {
+    'rehabilitation': 'إعادة تأهيل',
+    'physiotherapy': 'علاج طبيعي',
+    'medication': 'علاج دوائي',
+    'surgery': 'جراحة',
+    'rest': 'راحة',
+    'ice_therapy': 'علاج بالثلج',
+    'heat_therapy': 'علاج بالحرارة',
+    'massage': 'تدليك علاجي',
+    'exercise_therapy': 'علاج بالتمارين'
+  };
+  return translations[treatmentType.toLowerCase()] || treatmentType;
+};
+
 const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) => {
   // Check if user is logged in and has athlete role
   const currentUser = UserService.getCurrentUser();
@@ -46,7 +96,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
   const [staffNotifications, setStaffNotifications] = useState<any[]>([]);
   // tick to force periodic refresh of computed fields like remaining days
   const [nowTick, setNowTick] = useState<number>(Date.now());
-  
+
   const [activeTab, setActiveTab] = useState('overview');
   const [showWellnessForm, setShowWellnessForm] = useState(false);
   const [showInjuryForm, setShowInjuryForm] = useState(false);
@@ -57,53 +107,53 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
       // تحديد تاريخ اليوم
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // الحصول على بيانات اليوم
       const todaysWellness = await MedicalService.getDailyWellness(athleteId, today, today);
       setTodayWellness(todaysWellness[0] || null);
-      
+
       // الحصول على بيانات آخر 30 يوم
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const recentData = await MedicalService.getDailyWellness(athleteId, thirtyDaysAgo);
       setRecentWellness(recentData);
-      
+
       // الحصول على الإصابات النشطة (Firestore)
       const allInjuries = await MedicalService.getInjuryRecords(athleteId);
       const active = allInjuries.filter((injury: InjuryRecord) =>
         injury.status === InjuryStatus.ACTIVE || injury.status === InjuryStatus.RECOVERING
       );
       setActiveInjuries(active);
-      
+
       // الحصول على التنبيهات
       const recentAlerts = MedicalService.getAlerts(athleteId).slice(0, 5);
       setAlerts(recentAlerts);
-      
+
       // إنشاء تقرير الصحة
       const report = await MedicalService.generateWellnessReport(athleteId, 30);
       setWellnessReport(report);
-      
+
       // الحصول على الملف الطبي
       const profile = await MedicalService.getMedicalProfile(athleteId);
       setMedicalProfile(profile);
-      
+
       // الحصول على المواعيد الطبية (Firestore)
       const appts = await MedicalService.getAppointments(athleteId);
       setAppointments(appts);
-      
+
       // الحصول على العلاجات (Firestore)
       const treatmentsData = await MedicalService.getTreatments(athleteId);
       setTreatments(treatmentsData);
-      
+
       // الحصول على إشعارات الطاقم الطبي
       setStaffNotifications(MedicalService.getAthleteNotifications(athleteId));
-      
+
       // Create staff notification for new injury if reported
       if (active.length > 0) {
         const latestInjury = active[0];
         const now = new Date();
         const injuryDate = new Date(latestInjury.reportDate);
         const hoursSinceInjury = (now.getTime() - injuryDate.getTime()) / (1000 * 60 * 60);
-        
+
         // Only create notification if injury was reported in the last 24 hours
         if (hoursSinceInjury < 24) {
           MedicalService.createStaffNotification({
@@ -260,7 +310,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                   <span>
                     {getTrendIcon(wellnessReport.wellnessTrend)} {
                       wellnessReport.wellnessTrend === 'improving' ? 'محسن' :
-                      wellnessReport.wellnessTrend === 'declining' ? 'متراجع' : 'مستقر'
+                        wellnessReport.wellnessTrend === 'declining' ? 'متراجع' : 'مستقر'
                     }
                   </span>
                 )}
@@ -345,8 +395,8 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                 alert.severity === AlertSeverity.HIGH || alert.severity === AlertSeverity.CRITICAL
                                   ? 'danger'
                                   : alert.severity === AlertSeverity.MEDIUM
-                                  ? 'warning'
-                                  : 'info'
+                                    ? 'warning'
+                                    : 'info'
                               }
                               className="py-2"
                             >
@@ -411,7 +461,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                   <Card.Body>
                                     <div className="d-flex justify-content-between align-items-start">
                                       <div>
-                                        <h6>{injury.injuryLocation}</h6>
+                                        <h6>{getBodyPartInArabic(injury.injuryLocation)}</h6>
                                         <p className="mb-1">
                                           <small>مستوى الألم: {injury.painLevel}/10</small>
                                         </p>
@@ -517,15 +567,15 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                           </div>
                         ) : (
                           <>
-                            <Table striped bordered hover>
+                            <Table striped bordered hover style={{ tableLayout: 'auto', wordWrap: 'break-word' }}>
                               <thead>
                                 <tr>
-                                  <th>التاريخ</th>
-                                  <th>الوقت</th>
-                                  <th>النوع</th>
-                                  <th>الموقع</th>
-                                  <th>الطبيب</th>
-                                  <th>الحالة</th>
+                                  <th style={{ minWidth: '100px' }}>التاريخ</th>
+                                  <th style={{ minWidth: '80px' }}>الوقت</th>
+                                  <th style={{ minWidth: '120px' }}>النوع</th>
+                                  <th style={{ minWidth: '150px', whiteSpace: 'normal' }}>الموقع</th>
+                                  <th style={{ minWidth: '120px' }}>الطبيب</th>
+                                  <th style={{ minWidth: '80px' }}>الحالة</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -533,20 +583,20 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                   <tr key={appointment.id}>
                                     <td>{formatDate(appointment.date)}</td>
                                     <td>{appointment.time}</td>
-                                    <td>{appointment.appointmentType}</td>
-                                    <td>{appointment.location}</td>
+                                    <td>{getAppointmentTypeInArabic(appointment.appointmentType)}</td>
+                                    <td style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>{appointment.location}</td>
                                     <td>{appointment.doctorName}</td>
                                     <td>
                                       <Badge
                                         bg={
                                           appointment.status === 'scheduled' ? 'primary' :
-                                          appointment.status === 'completed' ? 'success' :
-                                          appointment.status === 'cancelled' ? 'danger' : 'secondary'
+                                            appointment.status === 'completed' ? 'success' :
+                                              appointment.status === 'cancelled' ? 'danger' : 'secondary'
                                         }
                                       >
                                         {appointment.status === 'scheduled' ? 'مجدول' :
-                                         appointment.status === 'completed' ? 'مكتمل' :
-                                         appointment.status === 'cancelled' ? 'ملغي' : appointment.status}
+                                          appointment.status === 'completed' ? 'مكتمل' :
+                                            appointment.status === 'cancelled' ? 'ملغي' : appointment.status}
                                       </Badge>
                                     </td>
                                   </tr>
@@ -578,23 +628,23 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                           </div>
                         ) : (
                           <>
-                            <Table striped bordered hover>
+                            <Table striped bordered hover style={{ tableLayout: 'auto', wordWrap: 'break-word' }}>
                               <thead>
                                 <tr>
-                                  <th>نوع العلاج</th>
-                                  <th>تاريخ البدء</th>
-                                  <th>التكرار</th>
-                                  <th>الحالة</th>
-                                  <th>الأيام المتبقية</th>
-                                  <th>ملاحظات</th>
+                                  <th style={{ minWidth: '120px' }}>نوع العلاج</th>
+                                  <th style={{ minWidth: '100px' }}>تاريخ البدء</th>
+                                  <th style={{ minWidth: '150px', whiteSpace: 'normal' }}>التكرار</th>
+                                  <th style={{ minWidth: '100px' }}>الحالة</th>
+                                  <th style={{ minWidth: '120px' }}>الأيام المتبقية</th>
+                                  <th style={{ minWidth: '200px', whiteSpace: 'normal' }}>ملاحظات</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {treatments.map((treatment) => (
                                   <tr key={treatment.id}>
-                                    <td>{treatment.treatmentType}</td>
+                                    <td>{getTreatmentTypeInArabic(treatment.treatmentType)}</td>
                                     <td>{formatDate(treatment.startDate)}</td>
-                                    <td>{treatment.frequency}</td>
+                                    <td style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>{treatment.frequency}</td>
                                     <td>
                                       {(() => {
                                         // ديناميكية الحالة حسب الزمن
@@ -626,7 +676,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                       })()}
                                     </td>
                                     <td>{calculateDaysRemaining(treatment)}</td>
-                                    <td>{treatment.notes || '-'}</td>
+                                    <td style={{ whiteSpace: 'normal', wordWrap: 'break-word', maxWidth: '200px' }}>{treatment.notes || '-'}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -670,7 +720,7 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                     <h2>
                                       {getTrendIcon(wellnessReport.wellnessTrend)} {
                                         wellnessReport.wellnessTrend === 'improving' ? 'محسن' :
-                                        wellnessReport.wellnessTrend === 'declining' ? 'متراجع' : 'مستقر'
+                                          wellnessReport.wellnessTrend === 'declining' ? 'متراجع' : 'مستقر'
                                       }
                                     </h2>
                                   </Card.Body>
@@ -726,8 +776,8 @@ const AthleteMedicalDashboard: React.FC<Props> = ({ athleteId, athleteName }) =>
                                 notification.severity === 'HIGH' || notification.severity === 'CRITICAL'
                                   ? 'danger'
                                   : notification.severity === 'MEDIUM'
-                                  ? 'warning'
-                                  : 'info'
+                                    ? 'warning'
+                                    : 'info'
                               }
                               className="py-2"
                             >

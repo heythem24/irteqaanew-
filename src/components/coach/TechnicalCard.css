@@ -463,28 +463,40 @@
 
 /* Print rules */
 @media print {
-  /* Make first part (up to trainer evaluation) end with a page break */
-  .trainer-evaluation {
-    page-break-after: always;
+  * {
+    box-sizing: border-box !important;
   }
 
-  /* Hide non-analysis content after the page break */
-  .second-page-header,
-  .analysis-subject-box,
-  .table-responsive,
-  .technical-card-table,
+  body {
+    margin: 5mm !important;
+    height: 100vh !important;
+    font-size: 8px !important;
+  }
+
   .card-header,
-  .trainer-evaluation + *:not(.second-page-analysis-block) {
+  .btn,
+  .card-body .row:first-child {
     display: none !important;
   }
 
-  /* Improve readability of table and inputs on print */
+  .technical-card-table {
+    font-size: 14px !important;
+    page-break-inside: avoid;
+    height: 100% !important;
+  }
+
   .technical-card-table th,
   .technical-card-table td {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-    padding: 6px !important;
+    padding: 4px !important;
     border: 1px solid #000 !important;
+    font-size: 11px !important;
+    font-weight: bold !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    min-height: 32px !important;
   }
 
   .form-control,
@@ -493,17 +505,156 @@
     border: none !important;
     box-shadow: none !important;
     color: #000 !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
+    padding: 5px !important;
+    text-align: center !important;
   }
 
   textarea.form-control {
     height: auto !important;
     overflow: visible !important;
     white-space: pre-wrap !important;
+    min-height: auto !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    font-size: 12px !important;
+    font-weight: bold !important;
   }
 
-  /* Ensure the analysis section appears alone on page 2 */
-  .second-page-analysis-block {
-    display: block !important;
-    page-break-inside: avoid;
+  .trainer-evaluation {
+    page-break-after: always;
+    margin-top: auto !important;
+    flex-shrink: 0 !important;
+    border: 2px solid #000 !important;
+    padding: 8px !important;
+    overflow: visible !important;
+  }
+
+  .header-info {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+  }
+
+  .second-page-header,
+  .analysis-subject-box {
+    page-break-before: always;
+  }
+
+  .card-body {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+
+  .table-responsive {
+    flex: 1 !important;
+    height: 100% !important;
+    overflow: visible !important;
+  }
+
+  .phase-title {
+    font-size: 12px !important;
+    font-weight: bold !important;
+  }
+
+  .objectives-input,
+  .formations-input,
+  .notes-input,
+  .content-input,
+  .duration-input {
+    min-height: 28px !important;
+    height: auto !important;
+  }
+
+  .table-responsive {
+    flex: 1 !important;
+    height: calc(100vh - 180px) !important;
+    overflow: visible !important;
+  }
+
+  .card-body {
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+  }
+
+  .technical-card-table {
+    height: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  .technical-card-table tbody {
+    height: 100% !important;
+  }
+
+  /* Landscape orientation adjustments */
+  @media print and (orientation: landscape) {
+    body {
+      margin: 5mm !important;
+      font-size: 8px !important;
+    }
+
+    .technical-card-table {
+      font-size: 12px !important;
+    }
+
+    .technical-card-table th,
+    .technical-card-table td {
+      padding: 3px !important;
+      font-size: 10px !important;
+      line-height: 1.0 !important;
+      min-height: 25px !important;
+    }
+
+    .trainer-evaluation {
+      padding: 6px !important;
+    }
+
+    .form-control,
+    .form-select {
+      font-size: 10px !important;
+      padding: 2px !important;
+    }
+
+    .objectives-input,
+    .formations-input,
+    .notes-input,
+    .content-input,
+    .duration-input {
+      min-height: 22px !important;
+    }
+
+    .technical-card-table tbody td {
+      min-height: 25px !important;
+    }
+
+    .table-responsive {
+      height: calc(100vh - 140px) !important;
+    }
+  }
+
+  .trainer-evaluation textarea {
+    resize: none !important;
+    overflow: visible !important;
+  }
+
+  .trainer-evaluation .box {
+    overflow: visible !important;
+    word-wrap: break-word !important;
+    hyphens: auto !important;
+  }
+
+  .technical-card-table tbody tr {
+    height: auto !important;
+  }
+
+  .technical-card-table tbody td {
+    height: auto !important;
+    min-height: 32px !important;
   }
 }

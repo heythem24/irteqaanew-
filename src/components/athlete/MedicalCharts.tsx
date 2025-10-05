@@ -16,6 +16,22 @@ import { Card } from 'react-bootstrap';
 import type { DailyWellness, InjuryRecord, MedicalAppointment, Treatment } from '../../types/medical';
 import { InjuryStatus } from '../../types/medical';
 
+// دالة ترجمة أنواع العلاج إلى العربية
+const getTreatmentTypeInArabic = (treatmentType: string): string => {
+  const translations: Record<string, string> = {
+    'rehabilitation': 'إعادة تأهيل',
+    'physiotherapy': 'علاج طبيعي',
+    'medication': 'علاج دوائي',
+    'surgery': 'جراحة',
+    'rest': 'راحة',
+    'ice_therapy': 'علاج بالثلج',
+    'heat_therapy': 'علاج بالحرارة',
+    'massage': 'تدليك علاجي',
+    'exercise_therapy': 'علاج بالتمارين'
+  };
+  return translations[treatmentType.toLowerCase()] || treatmentType;
+};
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -73,14 +89,14 @@ const MedicalCharts: React.FC<MedicalChartsProps> = ({ type, data }) => {
               appointments.filter(a => a.status === 'cancelled').length
             ],
             backgroundColor: [
-              'rgba(54, 162, 235, 0.6)',
-              'rgba(75, 192, 192, 0.6)',
-              'rgba(255, 99, 132, 0.6)'
+              'rgba(40, 167, 69, 0.8)', // أخضر واضح بدلاً من الأزرق الفاتح
+              'rgba(23, 162, 184, 0.8)', // أزرق متوسط
+              'rgba(220, 53, 69, 0.8)'   // أحمر
             ],
             borderColor: [
-              'rgb(54, 162, 235)',
-              'rgb(75, 192, 192)',
-              'rgb(255, 99, 132)'
+              'rgb(40, 167, 69)',
+              'rgb(23, 162, 184)',
+              'rgb(220, 53, 69)'
             ],
             borderWidth: 1
           }]
@@ -90,7 +106,8 @@ const MedicalCharts: React.FC<MedicalChartsProps> = ({ type, data }) => {
       case 'treatments':
         const treatments = data as Treatment[];
         const treatmentTypes = treatments.reduce((acc, treatment) => {
-          acc[treatment.treatmentType] = (acc[treatment.treatmentType] || 0) + 1;
+          const arabicType = getTreatmentTypeInArabic(treatment.treatmentType);
+          acc[arabicType] = (acc[arabicType] || 0) + 1;
           return acc;
         }, {} as Record<string, number>);
 
