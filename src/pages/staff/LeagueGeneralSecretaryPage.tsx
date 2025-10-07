@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import StaffMemberPage from '../../components/staff/StaffMemberPage';
 import LeagueGeneralSecretaryDashboard from '../../components/league-general-secretary/LeagueGeneralSecretaryDashboard';
+import RespectCommitmentForm from '../../components/league-general-secretary/RespectCommitmentForm';
+import SeasonCommitmentForm from '../../components/league-general-secretary/SeasonCommitmentForm';
 import { Tab, Nav, Container, Card, Alert, Spinner } from 'react-bootstrap';
 import { StaffPosition } from '../../types';
 import { LeaguesService, UsersService } from '../../services/firestoreService';
@@ -243,6 +245,26 @@ const LeagueGeneralSecretaryPage: React.FC = () => {
                     طلبات التحويل
                   </Nav.Link>
                 </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link
+                    eventKey="respect-commitment"
+                    className="bg-transparent border-0 text-white"
+                    style={{ borderRadius: '0' }}
+                  >
+                    <i className="fas fa-file-contract me-2"></i>
+                    إنخراط - إلتزام
+                  </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                  <Nav.Link
+                    eventKey="season-commitment"
+                    className="bg-transparent border-0 text-white"
+                    style={{ borderRadius: '0' }}
+                  >
+                    <i className="fas fa-file-signature me-2"></i>
+                    التزام للموسم الرياضي
+                  </Nav.Link>
+                </Nav.Item>
               </Nav>
             </Card.Header>
 
@@ -272,6 +294,18 @@ const LeagueGeneralSecretaryPage: React.FC = () => {
                         قيد التطوير - سيتم إضافة وظائف متقدمة لإدارة طلبات التحويل قريباً
                       </div>
                     </div>
+                  </Container>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="respect-commitment">
+                  <Container fluid className="py-4">
+                    <RespectCommitmentForm leagueId={wilayaId} />
+                  </Container>
+                </Tab.Pane>
+
+                <Tab.Pane eventKey="season-commitment">
+                  <Container fluid className="py-4">
+                    <SeasonCommitmentForm leagueId={wilayaId} />
                   </Container>
                 </Tab.Pane>
               </Tab.Content>

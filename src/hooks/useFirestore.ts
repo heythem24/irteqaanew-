@@ -43,6 +43,92 @@ export const useFirestoreData = <T>(collectionName: string) => {
   return { data, loading, error, refresh };
 };
 
+// Hook لحفظ واسترجاع نموذج الاحترام والانضرام
+export const useRespectCommitmentForm = (leagueId: string) => {
+  const [formData, setFormData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        if (!leagueId) { setFormData(null); setError(null); return; }
+        const ref = doc(collection(db, 'respect_commitment_forms'), String(leagueId));
+        const snap = await getDoc(ref);
+        const data = snap.exists() ? (snap.data()?.data ?? null) : null;
+        setFormData(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'حدث خطأ في تحميل البيانات');
+        console.error('Error loading respect commitment form:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [leagueId]);
+
+  const saveRespectCommitmentForm = async (data: any) => {
+    try {
+      const ref = doc(collection(db, 'respect_commitment_forms'), String(leagueId));
+      await setDoc(ref, { data }, { merge: true });
+      setFormData(data);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ في حفظ البيانات');
+      console.error('Error saving respect commitment form:', err);
+      return false;
+    }
+  };
+
+  return { formData, loading, error, saveRespectCommitmentForm };
+};
+
+// Hook لحفظ واسترجاع نموذج التزام الموسم الرياضي
+export const useSeasonCommitmentForm = (leagueId: string) => {
+  const [formData, setFormData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        if (!leagueId) { setFormData(null); setError(null); return; }
+        const ref = doc(collection(db, 'season_commitment_forms'), String(leagueId));
+        const snap = await getDoc(ref);
+        const data = snap.exists() ? (snap.data()?.data ?? null) : null;
+        setFormData(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'حدث خطأ في تحميل البيانات');
+        console.error('Error loading season commitment form:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [leagueId]);
+
+  const saveSeasonCommitmentForm = async (data: any) => {
+    try {
+      const ref = doc(collection(db, 'season_commitment_forms'), String(leagueId));
+      await setDoc(ref, { data }, { merge: true });
+      setFormData(data);
+      return true;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'حدث خطأ في حفظ البيانات');
+      console.error('Error saving season commitment form:', err);
+      return false;
+    }
+  };
+
+  return { formData, loading, error, saveSeasonCommitmentForm };
+};
+
 // Hook للتعامل مع بيانات النادي المحددة
 export const useClubData = <T>(collectionName: string, clubId: string, field: string = 'clubId') => {
   const [data, setData] = useState<T[]>([]);

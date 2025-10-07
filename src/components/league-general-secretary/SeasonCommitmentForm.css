@@ -1,0 +1,137 @@
+/* SeasonCommitmentForm Styles */
+
+.season-commitment-form {
+  direction: rtl;
+}
+
+.season-commitment-form .form-section {
+  margin-bottom: 2rem;
+}
+
+.season-commitment-form .form-section h6 {
+  color: #495057;
+  font-weight: bold;
+}
+
+.season-commitment-form .form-control {
+  border-radius: 0.375rem;
+  border: 1px solid #ced4da;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.season-commitment-form .form-control:focus {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.season-commitment-form .table {
+  margin-bottom: 0;
+}
+
+.season-commitment-form .table th {
+  background-color: #f8f9fa;
+  border: 2px solid #333;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.season-commitment-form .table td {
+  border: 2px solid #333;
+  vertical-align: middle;
+}
+
+.season-commitment-form .table .form-control {
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-weight: bold;
+}
+
+.season-commitment-form .table .form-control:focus {
+  background: #fff;
+  border: 1px solid #28a745;
+}
+
+.season-commitment-form .card {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.season-commitment-form .card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.season-commitment-form .btn {
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.season-commitment-form .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* Categories table specific styles */
+.season-commitment-form .categories-table th {
+  font-size: 14px;
+  padding: 8px;
+}
+
+.season-commitment-form .categories-table .bg-success {
+  background-color: #90EE90 !important;
+  color: #000 !important;
+}
+
+/* Schedule table specific styles */
+.season-commitment-form .schedule-table th {
+  background-color: #f0f0f0;
+  font-size: 14px;
+}
+
+.season-commitment-form .schedule-table .form-control {
+  font-size: 12px;
+}
+
+/* Print styles */
+@media print {
+  .season-commitment-form .card-header .btn {
+    display: none;
+  }
+  
+  .season-commitment-form .card {
+    border: none;
+    box-shadow: none;
+  }
+  
+  .season-commitment-form .card-header {
+    background: #f8f9fa !important;
+    color: #333 !important;
+  }
+  
+  .season-commitment-form .table {
+    font-size: 12px;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .season-commitment-form .card-body {
+    padding: 1rem;
+  }
+  
+  .season-commitment-form .btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .season-commitment-form .table {
+    font-size: 12px;
+  }
+  
+  .season-commitment-form .table th,
+  .season-commitment-form .table td {
+    padding: 4px;
+  }
+}
