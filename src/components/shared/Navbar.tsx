@@ -232,15 +232,81 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
               </Nav.Link>
               
               <NavDropdown title="الرابطات" id="leagues-dropdown">
-                {wilayas.map(wilaya => (
-                  <NavDropdown.Item
-                    key={wilaya.id}
-                    as={Link}
-                    to={`/league/${wilaya.id}`}
-                  >
-                    رابطة {wilaya.nameAr}
-                  </NavDropdown.Item>
-                ))}
+                {/* رابطة قسنطينة - متاحة */}
+                <NavDropdown.Item
+                  key={25}
+                  as={Link}
+                  to={`/league/25`}
+                  style={{
+                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    border: '2px solid #28a745',
+                    borderRadius: '8px',
+                    margin: '5px 10px',
+                    padding: '12px 20px',
+                    textAlign: 'center',
+                    boxShadow: '0 4px 8px rgba(40, 167, 69, 0.3)',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #218838 0%, #1e7e34 100%)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(40, 167, 69, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.3)';
+                  }}
+                >
+                  <div className="d-flex align-items-center justify-content-center">
+                    <i className="fas fa-star me-2" style={{ color: '#ffd700' }}></i>
+                    <span>رابطة قسنطينة</span>
+                    <i className="fas fa-arrow-left ms-2" style={{ fontSize: '0.8rem' }}></i>
+                  </div>
+                  <small style={{ 
+                    display: 'block', 
+                    marginTop: '4px', 
+                    opacity: 0.9,
+                    fontSize: '0.75rem'
+                  }}>
+                    متاحة الآن
+                  </small>
+                </NavDropdown.Item>
+                
+                <NavDropdown.Divider />
+                
+                {/* باقي الرابطات - معطلة */}
+                {wilayas
+                  .filter(wilaya => wilaya.id !== 25) // استبعاد قسنطينة
+                  .map(wilaya => (
+                    <NavDropdown.Item
+                      key={wilaya.id}
+                      style={{ 
+                        color: '#6c757d', 
+                        cursor: 'not-allowed',
+                        backgroundColor: '#f8f9fa',
+                        padding: '8px 20px'
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      <div className="d-flex justify-content-between align-items-center">
+                        <span style={{ opacity: 0.6 }}>
+                          رابطة {wilaya.nameAr}
+                        </span>
+                        <small className="text-muted" style={{ 
+                          fontSize: '0.7rem',
+                          marginRight: '10px',
+                          fontStyle: 'italic'
+                        }}>
+                          قريباً بإذن الله
+                        </small>
+                      </div>
+                    </NavDropdown.Item>
+                  ))}
               </NavDropdown>
               
               <Nav.Link 
