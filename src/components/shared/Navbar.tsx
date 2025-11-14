@@ -285,25 +285,27 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                   .map(wilaya => (
                     <NavDropdown.Item
                       key={wilaya.id}
+                      as={Link}
+                      to={`/league/${wilaya.id}`}
                       style={{ 
-                        color: '#6c757d', 
-                        cursor: 'not-allowed',
-                        backgroundColor: '#f8f9fa',
-                        padding: '8px 20px'
+                        color: '#212529',
+                        backgroundColor: '#ffffff',
+                        padding: '10px 20px',
+                        transition: 'background-color 0.2s ease, transform 0.1s ease'
                       }}
-                      onClick={(e) => e.preventDefault()}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#e9f7ff';
+                        e.currentTarget.style.transform = 'translateX(-2px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
                     >
                       <div className="d-flex justify-content-between align-items-center">
-                        <span style={{ opacity: 0.6 }}>
+                        <span>
                           رابطة {wilaya.nameAr}
                         </span>
-                        <small className="text-muted" style={{ 
-                          fontSize: '0.7rem',
-                          marginRight: '10px',
-                          fontStyle: 'italic'
-                        }}>
-                          قريباً بإذن الله
-                        </small>
                       </div>
                     </NavDropdown.Item>
                   ))}
