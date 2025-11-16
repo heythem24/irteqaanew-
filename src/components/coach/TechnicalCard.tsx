@@ -6,7 +6,7 @@ import { useTechnicalCard } from '../../hooks/useFirestore';
 import { UsersService as UserService } from '../../services/firestoreService';
 import './TechnicalCard.css';
 import './coach-responsive.css';
-const CARD_NUMBER_OPTIONS = Array.from({ length: 20 }, (_, index) => String(index + 1).padStart(2, '0'));
+const CARD_NUMBER_OPTIONS = Array.from({ length: 130 }, (_, index) => String(index + 1).padStart(2, '0'));
 const STATIC_AGE_CATEGORY_OPTIONS = Array.from(new Set(CATEGORIES.map(c => c.nameAr)));
 
 const createSubject = (cardNumber: string) => `تحليل الحصة ( مذكرة رقم ${cardNumber} )`;
