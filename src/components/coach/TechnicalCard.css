@@ -6,6 +6,8 @@
   font-size: 0.8rem;
   direction: rtl;
   width: 100%;
+  table-layout: auto;
+  min-width: 1200px;
 }
 
 .technical-card-table th {
@@ -17,6 +19,8 @@
   border: 2px solid #000;
   font-size: 0.75rem;
   vertical-align: middle;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .technical-card-table td {
@@ -28,39 +32,57 @@
 
 /* تصميم رؤوس الأعمدة */
 .phase-header {
-  width: 10%;
+  min-width: 120px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
 }
 
 .objectives-header {
-  width: 20%;
+  min-width: 150px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
 }
 
 .content-header {
-  width: 22%;
+  min-width: 280px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
 }
 
 .content-sub-header {
-  width: 6%;
+  min-width: 70px;
   background-color: #34ce57 !important;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
+  white-space: nowrap !important;
+  word-break: keep-all;
+  overflow: visible;
+  padding: 0.5rem 0.3rem !important;
 }
 
 .formations-header {
-  width: 16%;
+  min-width: 100px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  word-break: keep-all;
+  font-size: 0.75rem;
+  padding: 0.5rem !important;
 }
 
 .duration-header {
-  width: 18%;
+  min-width: 80px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
 }
 
 .notes-header {
-  width: 8%;
+  min-width: 90px;
   background-color: #28a745 !important;
+  white-space: nowrap !important;
+  padding: 0.5rem !important;
 }
 
 /* تصميم الخلايا */
@@ -171,6 +193,9 @@
 .content-cell {
   background-color: #fff;
   text-align: center;
+  min-width: 70px;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
 .formations-cell {
@@ -444,6 +469,8 @@
 .table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  display: block;
 }
 
 .technical-card-table tbody tr:hover {

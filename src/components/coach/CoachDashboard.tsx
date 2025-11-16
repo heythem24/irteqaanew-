@@ -17,6 +17,8 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({ coach, club }) => {
   const [activeSection, setActiveSection] = useState<string>('technical-profile');
   const navigate = useNavigate();
 
+  const [linkedLoadData, setLinkedLoadData] = useState<{ unitNumber: number; intensity: number; heartRate: number } | null>(null);
+
   const handleLogout = () => {
     UserService.logout();
     navigate('/login');
@@ -40,6 +42,10 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({ coach, club }) => {
     } finally {
       setLoadingPersonalSections(false);
     }
+  };
+
+  const handleApplyTrainingLoadToCard = (data: { unitNumber: number; intensity: number; heartRate: number }) => {
+    setLinkedLoadData(data);
   };
 
   // Load data on mount
@@ -66,10 +72,10 @@ const CoachDashboard: React.FC<CoachDashboardProps> = ({ coach, club }) => {
   const renderContent = () => {
     switch (activeSection) {
       case 'technical-profile':
-        return <TechnicalCard club={club} />;
+        return <TechnicalCard club={club} linkedLoadData={linkedLoadData} />;
 
       case 'training-load':
-        return <TrainingLoadDistribution club={club} />;
+        return <TrainingLoadDistribution club={club} onApplyToTechnicalCard={handleApplyTrainingLoadToCard} />;
 
       case 'athlete-management':
         return <AthleteManagement club={club} />;

@@ -9,9 +9,10 @@ import './coach-responsive.css';
 
 interface Props {
   club: Club;
+  onApplyToTechnicalCard?: (data: { unitNumber: number; intensity: number; heartRate: number }) => void;
 }
 
-const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
+const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCard }) => {
   // الحصول على المستخدم الحالي لاسم المدرب
   const currentUser = UserService.getCurrentUser();
   const trainerName = currentUser ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'المدرب' : 'المدرب';
@@ -169,8 +170,45 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
     return { dates, daysOfWeek, weeksCount };
   };
 
+  // دالة لحساب عدد الوحدات السابقة منذ بداية الموسم (سبتمبر → قبل الشهر الحالي)
+  const getSeasonUnitOffset = (month: number, year: number) => {
+    // ترتيب أشهر الموسم كما في القائمة months
+    const seasonMonths = months.map(m => m.value);
+    const currentIndex = seasonMonths.indexOf(month);
+
+    if (currentIndex <= 0) {
+      return 0;
+    }
+
+    let offset = 0;
+
+    for (let i = 0; i < currentIndex; i++) {
+      const prevMonth = seasonMonths[i];
+      const { dates: prevDates } = getTrainingDates(prevMonth, year);
+      offset += prevDates.filter((d: string) => d && d.trim() !== '').length;
+    }
+
+    return offset;
+  };
+
   // حساب التواريخ وأيام الأسبوع للشهر المحدد
   const { dates, daysOfWeek, weeksCount } = getTrainingDates(formData.selectedMonth, formData.selectedYear);
+
+  // حساب الترقيم المتسلسل للوحدات في الشهر الحالي مع مراعاة الأشهر السابقة في الموسم
+  const seasonUnitOffset = getSeasonUnitOffset(formData.selectedMonth, formData.selectedYear);
+  const unitNumbers: (number | '')[] = [];
+  {
+    let counter = seasonUnitOffset;
+    for (let i = 0; i < dates.length; i++) {
+      const hasDate = dates[i] && (dates[i] as string).trim() !== '';
+      if (hasDate) {
+        counter += 1;
+        unitNumbers.push(counter);
+      } else {
+        unitNumbers.push('');
+      }
+    }
+  }
 
   // فئات العمر
   const STATIC_AGE_CATEGORY_OPTIONS = Array.from(new Set(CATEGORIES.map(c => c.nameAr)));
@@ -185,10 +223,6 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
   useEffect(() => {
     setFormData(prev => ({ ...prev, trainer: trainerName }));
   }, [trainerName]);
-
-
-
-
 
   // حدود القيم لكل مستوى
   const limits = {
@@ -516,6 +550,62 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  // دالة لمعالجة النقر على رقم الوحدة
+  const handleUnitClick = (index: number) => {
+    if (!onApplyToTechnicalCard) return;
+
+    const unitNumber = unitNumbers[index];
+    if (!unitNumber || typeof unitNumber !== 'number') {
+      return;
+    }
+
+    const weekIndex = Math.floor(index / 3);
+    const dayIndex = index % 3;
+    const levels: ('maximum' | 'high' | 'medium')[] = ['maximum', 'high', 'medium'];
+
+    let selectedLevel: 'maximum' | 'high' | 'medium' | null = null;
+    let selectedIntensity: number | null = null;
+    let selectedHeartRate: number | null = null;
+
+    for (const level of levels) {
+      const week = trainingData[level]?.weeks?.[weekIndex];
+      if (!week) continue;
+      const percentage = week.percentages?.[dayIndex];
+      if (percentage !== null && percentage !== undefined) {
+        selectedLevel = level;
+        selectedIntensity = percentage;
+        selectedHeartRate = week.heartRates?.[dayIndex] ?? null;
+        break;
+      }
+    }
+
+    if (!selectedLevel || selectedIntensity === null) {
+      alert('لا توجد شدة مسجلة لهذه الوحدة في جدول درجة الحمل.');
+      return;
+    }
+
+    const heartRateValue = selectedHeartRate !== null
+      ? selectedHeartRate
+      : calculateHeartRate(selectedIntensity, selectedLevel);
+
+    const confirmed = window.confirm(
+      `تطبيق بيانات وحدة رقم ${unitNumber} على البطاقة الفنية؟\n` +
+      `الشدة: ${selectedIntensity}%\n` +
+      `نبض القلب: ${heartRateValue} ن/د`
+    );
+
+    if (!confirmed) return;
+
+    onApplyToTechnicalCard({
+      unitNumber: Number(unitNumber),
+      intensity: selectedIntensity,
+      heartRate: heartRateValue,
+    });
+
+    alert('تم إرسال بيانات الوحدة إلى البطاقة الفنية، يمكنك فتح البطاقة لمشاهدة التغييرات.');
+  };
+
   // طباعة توزيع درجة حمل التدريب
   const printTrainingLoad = () => {
     const printWindow = window.open('', '_blank');
@@ -523,8 +613,8 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
 
     // حساب التواريخ للطباعة
     const { dates: printDates, daysOfWeek: printDaysOfWeek, weeksCount: printWeeksCount } = getTrainingDates(formData.selectedMonth, formData.selectedYear);
-
-
+    // حساب تعويض رقم الوحدة عبر الموسم للطباعة (نفس منطق الواجهة)
+    const printSeasonUnitOffset = getSeasonUnitOffset(formData.selectedMonth, formData.selectedYear);
 
     const tableContent = `
       <!DOCTYPE html>
@@ -763,7 +853,17 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
             <!-- رقم الوحدة -->
             <tr>
               <td>رقم الوحدة</td>
-              ${Array.from({ length: printWeeksCount * 3 }, (_, index) => `<td>${index + 1}</td>`).join('')}
+              ${(() => {
+                let counter = printSeasonUnitOffset;
+                return Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+                  const date = printDates[index];
+                  if (date && date.trim() !== '') {
+                    counter += 1;
+                    return `<td>${counter}</td>`;
+                  }
+                  return '<td></td>';
+                }).join('');
+              })()}
             </tr>
             <!-- التاريخ -->
             <tr>
@@ -996,8 +1096,8 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
               <tr>
                 <th rowSpan={2} className="main-header">
                   <div className="header-content">
-                    <div className="weeks-label">الأسابيع</div>
-                    <div className="data-label">البيانات</div>
+                    <div className="weeks-label">البيانات</div>
+                    <div className="data-label">الأسابيع</div>
                   </div>
                 </th>
                 {Array.from({ length: weeksCount }, (_, index) => (
@@ -1023,9 +1123,23 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club }) => {
               {/* صف رقم الوحدة */}
               <tr>
                 <td className="row-label">رقم الوحدة</td>
-                {Array.from({ length: weeksCount * 3 }, (_, index) => (
-                  <td key={index}>{index + 1}</td>
-                ))}
+                {Array.from({ length: weeksCount * 3 }, (_, index) => {
+                  const value = unitNumbers[index];
+                  const isClickable = !!value && onApplyToTechnicalCard;
+                  return (
+                    <td
+                      key={index}
+                      className={isClickable ? 'unit-number-cell clickable' : 'unit-number-cell'}
+                      onClick={() => {
+                        if (isClickable) {
+                          handleUnitClick(index);
+                        }
+                      }}
+                    >
+                      {value ?? ''}
+                    </td>
+                  );
+                })}
               </tr>
               {/* صف التاريخ */}
               <tr>

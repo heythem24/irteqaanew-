@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Form, Row, Col, Button, Table } from 'react-bootstrap';
+import { Card, Form, Row, Col, Button, Table, Modal } from 'react-bootstrap';
 import { CATEGORIES, getCategoryByDOBToday } from '../../utils/categoryUtils';
 import type { Club } from '../../types';
 import { useTechnicalCard } from '../../hooks/useFirestore';
@@ -19,12 +19,13 @@ const extractCardNumber = (value?: string): string | undefined => {
 
 interface TechnicalCardProps {
   club: Club;
+  linkedLoadData?: { unitNumber: number; intensity: number; heartRate: number } | null;
 }
 
 // لاحقًا يمكن استعمال مُنشئ حالة الصفحة الثانية إن لزم
 
 
-const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
+const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) => {
   // Get current user for trainer name
   const currentUser = UserService.getCurrentUser();
   const trainerName = currentUser ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'المدرب' : 'المدرب';
@@ -88,10 +89,21 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
 
   // رقم البطاقة (قائمة منسدلة)
   const [cardNumber, setCardNumber] = useState<string>(extractCardNumber('تحليل الحصة ( مذكرة رقم 01 )') || '01');
+  const [hasAppliedLinkedData, setHasAppliedLinkedData] = useState(false);
 
   // استخدام Firestore بدلاً من localStorage
   const { cardData, saveTechnicalCard } = useTechnicalCard(club.id);
   const [ageCategoryOptions, setAgeCategoryOptions] = useState<string[]>(STATIC_AGE_CATEGORY_OPTIONS);
+
+  // حالة النوافذ المنبثقة للحسابات
+  const [showLoadModal, setShowLoadModal] = useState(false);
+  const [showRestModal, setShowRestModal] = useState(false);
+  const [currentInputRef, setCurrentInputRef] = useState<HTMLInputElement | null>(null);
+  const [loadValue, setLoadValue] = useState('');
+  const [loadTime, setLoadTime] = useState('');
+  const [restLoad, setRestLoad] = useState('');
+  const [restTime, setRestTime] = useState('');
+  const [lastLoadValue, setLastLoadValue] = useState(''); // للاحتفاظ بآخر قيمة حمولة
 
   // تحميل البيانات المحفوظة مع الحفاظ على اسم المدرب الحالي
   useEffect(() => {
@@ -113,13 +125,16 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           subject: cardData.secondPage.subject || sp.subject,
           analysisText: cardData.secondPage.analysisText || sp.analysisText,
         }));
-        // مزامنة رقم البطاقة من الموضوع المحفوظ
-        const n = extractCardNumber(cardData.secondPage.subject) || cardNumber || '01';
-        setCardNumber(n);
+
+        // مزامنة رقم البطاقة من الموضوع المحفوظ فقط إذا لم نطبق بيانات الربط بعد
+        if (!hasAppliedLinkedData && cardData.secondPage.subject) {
+          const n = extractCardNumber(cardData.secondPage.subject) || cardNumber || '01';
+          setCardNumber(n);
+        }
       }
 
-      // Apply saved table values back into inputs by DOM order
-      if (Array.isArray(cardData.tableValues) && containerRef.current) {
+      // Apply saved table values back into inputs by DOM order فقط إذا لم تُطبَّق بيانات الربط
+      if (Array.isArray(cardData.tableValues) && containerRef.current && !hasAppliedLinkedData) {
         const inputs = containerRef.current.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
           'textarea.phase-content-input, textarea.objectives-input, input.content-input, textarea.formations-input, textarea.duration-input, textarea.notes-input, input.content-input'
         );
@@ -134,20 +149,22 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
 
       refreshTextareas();
     }
-  }, [cardData, trainerName]);
+  }, [cardData, trainerName, hasAppliedLinkedData]);
 
   // استخدام جميع الفئات العمرية المتاحة
   useEffect(() => {
     setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
   }, []);
 
-  // تأكد من تزامن رقم البطاقة عند تغيير موضوع الصفحة الثانية يدويًا
+  // تحديث موضوع الصفحة الثانية عند تغيير رقم البطاقة
   useEffect(() => {
-    const n = extractCardNumber(secondPage.subject);
-    if (n && n !== cardNumber) {
-      setCardNumber(n);
-    }
-  }, [secondPage.subject]);
+    const newSubject = createSubject(cardNumber);
+    setSecondPage(sp => (
+      sp.subject === newSubject
+        ? sp
+        : { ...sp, subject: newSubject }
+    ));
+  }, [cardNumber, secondPage.subject]);
 
   // مزامنة اسم النادي واسم المدرب مع الصفحة الثانية عند تغيّرها
   useEffect(() => {
@@ -176,6 +193,41 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
   useEffect(() => {
     refreshTextareas();
   }, [secondPage, headerInfo]);
+
+  useEffect(() => {
+    if (!linkedLoadData || !containerRef.current) return;
+
+    setHasAppliedLinkedData(true);
+
+    const unitStr = String(linkedLoadData.unitNumber).padStart(2, '0');
+
+    setCardNumber(unitStr);
+    setSecondPage(sp => ({
+      ...sp,
+      subject: createSubject(unitStr)
+    }));
+
+    const root = containerRef.current;
+    const mainPhaseRows = root.querySelectorAll<HTMLTableRowElement>('tr.main-phase');
+
+    mainPhaseRows.forEach(row => {
+      const contentCells = row.querySelectorAll<HTMLTableCellElement>('td.content-cell');
+      if (contentCells.length < 3) return;
+
+      const intensityInput = contentCells[0].querySelector<HTMLInputElement>('input.content-input');
+      const heartRateInput = contentCells[2].querySelector<HTMLInputElement | HTMLTextAreaElement>('input.content-input, textarea.content-input');
+
+      if (intensityInput) {
+        intensityInput.value = `${linkedLoadData.intensity}`;
+      }
+
+      if (heartRateInput) {
+        heartRateInput.value = `${linkedLoadData.heartRate} ن/د`;
+      }
+    });
+
+    refreshTextareas();
+  }, [linkedLoadData]);
 
   // حفظ البيانات
   const saveData = async () => {
@@ -206,6 +258,118 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
   // تحديث معلومات الرأس
   const updateHeaderInfo = (field: keyof typeof headerInfo, value: any) => {
     setHeaderInfo(prev => ({ ...prev, [field]: value }));
+  };
+
+  // فتح نافذة حساب الحمولة
+  const openLoadModal = (inputElement: HTMLInputElement) => {
+    setCurrentInputRef(inputElement);
+    setLoadValue('');
+    setLoadTime('');
+    setShowLoadModal(true);
+  };
+
+  // فتح نافذة حساب الراحة
+  const openRestModal = (inputElement: HTMLInputElement) => {
+    setCurrentInputRef(inputElement);
+
+    // استخدام آخر قيمة حمولة تم إدخالها في نافذة الحمولة
+    if (lastLoadValue) {
+      setRestLoad(lastLoadValue);
+    } else {
+      setRestLoad('');
+    }
+
+    setRestTime('');
+    setShowRestModal(true);
+  };
+
+  // حساب وتطبيق قيمة الحمولة
+  const applyLoadCalculation = () => {
+    if (currentInputRef && loadValue && loadTime) {
+      const load = parseFloat(loadValue);
+      const time = parseFloat(loadTime);
+      if (!isNaN(load) && !isNaN(time)) {
+        const result = load * time;
+        currentInputRef.value = result.toString();
+        setLastLoadValue(loadValue); // حفظ قيمة الحمولة للاستخدام في الراحة
+        setShowLoadModal(false);
+        setLoadValue('');
+        setLoadTime('');
+        setCurrentInputRef(null);
+
+        // حساب المدة للصف وتحديث المدة الإجمالية
+        setTimeout(() => calculateRowDuration(currentInputRef), 100);
+      }
+    }
+  };
+
+  // حساب وتطبيق قيمة الراحة
+  const applyRestCalculation = () => {
+    if (currentInputRef && restLoad && restTime) {
+      const load = parseFloat(restLoad);
+      const time = parseFloat(restTime);
+      if (!isNaN(load) && !isNaN(time)) {
+        const rest = load - 1;
+        const result = rest * time;
+        currentInputRef.value = result.toString();
+        setShowRestModal(false);
+        setRestLoad('');
+        setRestTime('');
+        setCurrentInputRef(null);
+
+        // حساب المدة للصف وتحديث المدة الإجمالية
+        setTimeout(() => calculateRowDuration(currentInputRef), 100);
+      }
+    }
+  };
+
+  // حساب مدة الصف (الحمولة + الراحة) وتحديثها في عمود المدة
+  const calculateRowDuration = (inputElement: HTMLInputElement | null) => {
+    if (!inputElement) return;
+
+    const row = inputElement.closest('tr');
+    if (!row || !row.classList.contains('main-phase')) return;
+
+    // الحصول على قيم الحمولة والراحة
+    const contentCells = row.querySelectorAll('.content-cell');
+    const loadInput = contentCells[1]?.querySelector('input') as HTMLInputElement; // خانة الحمولة
+    const restInput = contentCells[3]?.querySelector('input') as HTMLInputElement; // خانة الراحة
+
+    const loadValue = parseFloat(loadInput?.value || '0');
+    const restValue = parseFloat(restInput?.value || '0');
+    const rowTotal = loadValue + restValue;
+
+    // تحديث خانة المدة في نفس الصف
+    const durationCell = row.querySelector('.duration-cell textarea') as HTMLTextAreaElement;
+    if (durationCell && rowTotal > 0) {
+      durationCell.value = `${rowTotal} د`;
+    }
+
+    // حساب المدة الإجمالية لجميع صفوف المرحلة الأساسية
+    calculateTotalDuration();
+  };
+
+  // حساب المدة الإجمالية وتحديثها في خانة المدة العلوية
+  const calculateTotalDuration = () => {
+    if (!containerRef.current) return;
+
+    const mainPhaseRows = containerRef.current.querySelectorAll('tr.main-phase');
+    let totalDuration = 0;
+
+    mainPhaseRows.forEach(row => {
+      const contentCells = row.querySelectorAll('.content-cell');
+      const loadInput = contentCells[1]?.querySelector('input') as HTMLInputElement;
+      const restInput = contentCells[3]?.querySelector('input') as HTMLInputElement;
+
+      const loadValue = parseFloat(loadInput?.value || '0');
+      const restValue = parseFloat(restInput?.value || '0');
+      totalDuration += loadValue + restValue;
+    });
+
+    // تحديث خانة المدة في معلومات الرأس
+    if (totalDuration > 0) {
+      setHeaderInfo(prev => ({ ...prev, sessionNumber: totalDuration }));
+    }
   };
 
   // طباعة البطاقة الفنية: صفحة 1 (العنوان + الجدول + تقييم المدرب) ثم فاصل صفحة وصفحة 2 (تحليل الحصة)
@@ -462,9 +626,9 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
               <th>العنوان</th>
               <th>المحتوى</th>
               <th></th>
-              <th>الحمولة</th>
               <th>الشدة</th>
               <th>التكرار</th>
+              <th>ن/د</th>
               <th>الراحة</th>
               <th></th>
               <th></th>
@@ -727,9 +891,9 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                 <th className="phase-sub-header" dir="rtl">العنوان</th>
                 <th className="phase-sub-header" dir="rtl">المحتوى</th>
                 <th></th>
-                <th className="content-sub-header" dir="rtl">الحمولة</th>
                 <th className="content-sub-header" dir="rtl">الشدة</th>
-                <th className="content-sub-header" dir="rtl">التكرار</th>
+                <th className="content-sub-header" dir="rtl">الحمولة</th>
+                <th className="content-sub-header" dir="rtl">ن/د</th>
                 <th className="content-sub-header" dir="rtl">الراحة</th>
                 <th></th>
                 <th></th>
@@ -930,11 +1094,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openLoadModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#fffacd' }} title="اضغط لحساب الحمولة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input load-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="content-cell">
@@ -944,11 +1112,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openRestModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#e0f7fa' }} title="اضغط لحساب الراحة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input rest-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="formations-cell">
@@ -1006,11 +1178,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openLoadModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#fffacd' }} title="اضغط لحساب الحمولة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input load-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="content-cell">
@@ -1020,11 +1196,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openRestModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#e0f7fa' }} title="اضغط لحساب الراحة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input rest-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="formations-cell">
@@ -1081,11 +1261,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openLoadModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#fffacd' }} title="اضغط لحساب الحمولة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input load-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="content-cell">
@@ -1095,11 +1279,15 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
                     dir="rtl"
                   />
                 </td>
-                <td className="content-cell">
+                <td className="content-cell" onClick={(e) => {
+                  const input = e.currentTarget.querySelector('input');
+                  if (input) openRestModal(input);
+                }} style={{ cursor: 'pointer', backgroundColor: '#e0f7fa' }} title="اضغط لحساب الراحة">
                   <Form.Control
                     type="text"
-                    className="content-input"
+                    className="content-input rest-input"
                     dir="rtl"
+                    placeholder="اضغط"
                   />
                 </td>
                 <td className="formations-cell">
@@ -1292,7 +1480,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
               display: 'inline-block',
               fontWeight: 'bold'
             }}>
-              الموضوع: {secondPage.subject}
+              <div>رقم الحصة: {cardNumber}</div>
+              <div>الموضوع: {secondPage.subject}</div>
             </div>
           </div>
 
@@ -1452,6 +1641,116 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club }) => {
           }
         `}</style>
       </Card.Body>
+
+      {/* نافذة حساب الحمولة */}
+      <Modal show={showLoadModal} onHide={() => setShowLoadModal(false)} centered dir="rtl">
+        <Modal.Header closeButton>
+          <Modal.Title>حساب الحمولة</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>الحمولة</Form.Label>
+              <Form.Control
+                type="number"
+                value={loadValue}
+                onChange={(e) => setLoadValue(e.target.value)}
+                placeholder="أدخل قيمة الحمولة"
+                autoFocus
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>الوقت (دقيقة)</Form.Label>
+              <Form.Control
+                type="number"
+                value={loadTime}
+                onChange={(e) => setLoadTime(e.target.value)}
+                placeholder="أدخل الوقت بالدقائق"
+              />
+            </Form.Group>
+            {loadValue && loadTime && (
+              <div className="alert alert-info" dir="rtl">
+                النتيجة: {parseFloat(loadValue) * parseFloat(loadTime)}
+              </div>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowLoadModal(false)}>
+            إلغاء
+          </Button>
+          <Button variant="primary" onClick={applyLoadCalculation}>
+            موافق
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* نافذة حساب الراحة */}
+      <Modal show={showRestModal} onHide={() => setShowRestModal(false)} centered dir="rtl">
+        <Modal.Header closeButton>
+          <Modal.Title>حساب الراحة</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            {restLoad ? (
+              <>
+                <div className="alert alert-info mb-3" dir="rtl">
+                  <strong>قيمة الحمولة:</strong> {restLoad}
+                </div>
+                <Form.Group className="mb-3">
+                  <Form.Label style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>قيمة الراحة</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={parseFloat(restLoad) - 1}
+                    readOnly
+                    style={{
+                      backgroundColor: '#d1ecf1',
+                      fontWeight: 'bold',
+                      fontSize: '1.2rem',
+                      textAlign: 'center',
+                      border: '2px solid #0dcaf0'
+                    }}
+                  />
+                  <Form.Text className="text-muted">
+                    (الحمولة - 1) = ({restLoad} - 1) = {parseFloat(restLoad) - 1}
+                  </Form.Text>
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>الوقت (دقيقة)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={restTime}
+                    onChange={(e) => setRestTime(e.target.value)}
+                    placeholder="أدخل الوقت بالدقائق"
+                    autoFocus
+                  />
+                </Form.Group>
+                {restTime && (
+                  <div className="alert alert-success" dir="rtl" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                    النتيجة النهائية: {parseFloat(restLoad) - 1} × {restTime} = {(parseFloat(restLoad) - 1) * parseFloat(restTime)}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="alert alert-warning" dir="rtl">
+                يرجى إدخال قيمة في خانة الحمولة أولاً
+              </div>
+            )}
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRestModal(false)}>
+            إلغاء
+          </Button>
+          <Button
+            variant="primary"
+            onClick={applyRestCalculation}
+            disabled={!restLoad || !restTime}
+          >
+            موافق
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Card>
   );
 };

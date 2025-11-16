@@ -21,8 +21,15 @@
   transition: all 0.3s ease;
   font-weight: bold;
   font-size: 16px;
-  min-height: 50px; /* زيادة الحد الأدنى للارتفاع */
-  min-width: 80px; /* حد أدنى للعرض */
+  min-height: 55px; /* زيادة الحد الأدنى للارتفاع قليلاً */
+  min-width: 100px; /* زيادة الحد الأدنى للعرض قليلاً لكل الخانات */
+}
+
+/* جعل العمود الأول أعرض بكثير ليظهر النص بالكامل كما في الطباعة */
+.training-load-table tr th:first-child,
+.training-load-table tr td:first-child {
+  width: 220px;
+  min-width: 220px;
 }
 
 .training-load-table th:hover,
@@ -34,7 +41,7 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   font-weight: bold;
-  width: 120px;
+  width: 220px; /* توسيع عمود رأس البيانات/الأسابيع بشكل واضح */
   position: relative;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
@@ -89,15 +96,17 @@
   padding: 15px 10px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   font-size: 16px;
-  width: 150px;
+  width: 220px; /* توسيع خانات عناوين الصفوف في العمود الأول لتظهر الجمل كاملة */
 }
 
 .vertical-text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: bold;
   color: #1e40af;
+  line-height: 1.9; /* زيادة المسافة بين الحروف العمودية */
+  padding: 8px 4px; /* توسيع المساحة داخل الخانة عمودياً وأفقياً */
 }
 
 .load-label {
@@ -105,12 +114,12 @@
   color: white;
   font-weight: bold;
   text-align: center;
-  width: 120px;
+  width: 220px; /* توسيع عمود درجة الحمل ليتناسق مع عرض العمود الأول ويستوعب النص بالكامل */
   font-size: 12px;
   position: relative;
   padding: 0;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-  height: 120px;
+  height: 170px; /* زيادة الارتفاع لإراحة النص العمودي والمحتوى الداخلي */
 }
 
 .load-header {
@@ -132,7 +141,8 @@
   border-left: 2px solid #fff;
   color: white;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  min-width: 40px;
+  min-width: 70px; /* توسيع مساحة نص درجة الحمل العمودي حتى لا تتلاصق الحروف */
+  line-height: 1.8; /* زيادة المسافة بين الحروف العمودية */
 }
 
 .load-divider {
@@ -144,8 +154,8 @@
   flex: 2;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  padding: 8px;
+  justify-content: space-evenly; /* توزيع أفضل للعناصر داخل الخانة */
+  padding: 10px; /* زيادة المساحة حول النص */
 }
 
 .load-sub-item {
@@ -153,26 +163,26 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  font-size: 10px;
-  line-height: 1.1;
+  font-size: 11px;
+  line-height: 1.5; /* زيادة المسافة بين الأسطر داخل كل مستوى (أقصى/عالي/متوسط) */
   margin: 4px 0;
-  padding: 2px 0;
+  padding: 3px 0;
 }
 
 .load-sub-item span {
   font-weight: bold;
-  margin-bottom: 2px;
-  font-size: 12px;
+  margin-bottom: 4px;
+  font-size: 13px; /* تكبير عنوان المستوى (أقصى/عالي/متوسط) */
   color: white;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
 }
 
 .load-sub-item small {
-  font-size: 8px;
+  font-size: 10px; /* تكبير نص النسب ونبضات القلب */
   font-weight: bold;
   color: white;
-  margin: 1px 0;
-  line-height: 1.2;
+  margin: 2px 0;
+  line-height: 1.4; /* جعل النص واضحاً وغير متلاصق */
   text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
 }
 
