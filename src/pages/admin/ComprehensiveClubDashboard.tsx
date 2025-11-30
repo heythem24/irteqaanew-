@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import BasicInfoSection from '../../components/admin/club/BasicInfoSection';
 import StaffManagementSection from '../../components/admin/club/StaffManagementSection';
 import SectionsManagementSection from '../../components/admin/club/SectionsManagementSection';
+import AdminTechnicalCard from '../../components/admin/AdminTechnicalCard';
 import { ClubsService, UsersService } from '../../services/firestoreService';
 
 import type { Staff, Athlete, User } from '../../types';
@@ -53,6 +54,7 @@ const ComprehensiveClubDashboard: React.FC = () => {
     { key: 'staff', label: 'الطاقم', icon: '👥' },
     { key: 'sections', label: 'الأقسام', icon: '📄' },
     { key: 'cards', label: 'البطاقات', icon: '🖼️' },
+    { key: 'technicalCard', label: 'البطاقة الفنية للمدرب', icon: '📋' },
     { key: 'tabs', label: 'التبويبات', icon: '📅' },
     { key: 'athletes', label: 'الرياضيون', icon: '🏃' },
     { key: 'achievements', label: 'الإنجازات', icon: '🏆' }
@@ -232,6 +234,8 @@ const ComprehensiveClubDashboard: React.FC = () => {
         return <SectionsManagementSection sections={clubData.sections || []} onUpdate={updateSections} />;
       case 'cards':
         return <div className="text-center p-5">قسم البطاقات قيد التطوير</div>;
+      case 'technicalCard':
+        return <AdminTechnicalCard club={clubData} />;
       case 'tabs':
         return <div className="text-center p-5">قسم التبويبات قيد التطوير</div>;
       case 'athletes':

@@ -1207,6 +1207,26 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
             <Tab eventKey="competitions" title="إدارة البطولات">
               <CompetitionsTab />
             </Tab>
+
+            <Tab eventKey="technical-card" title="البطاقة الفنية للمدرب">
+              <div className="text-center p-5">
+                <i className="fas fa-clipboard-list fa-4x text-primary mb-4"></i>
+                <h4 className="mb-3">البطاقة الفنية للمدرب</h4>
+                <p className="text-muted mb-4">
+                  للحصول على تجربة أفضل، يمكنك فتح البطاقة الفنية في صفحة مستقلة بحجم كامل
+                </p>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  onClick={() => {
+                    window.open('/admin/technical-card', '_blank');
+                  }}
+                >
+                  <i className="fas fa-external-link-alt me-2"></i>
+                  فتح البطاقة الفنية في صفحة جديدة
+                </Button>
+              </div>
+            </Tab>
           </Tabs>
         </Container>
       </Modal.Body>

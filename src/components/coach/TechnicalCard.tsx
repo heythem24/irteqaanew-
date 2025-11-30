@@ -91,8 +91,12 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
   const [cardNumber, setCardNumber] = useState<string>(extractCardNumber('تحليل الحصة ( مذكرة رقم 01 )') || '01');
   const [hasAppliedLinkedData, setHasAppliedLinkedData] = useState(false);
 
-  // استخدام Firestore بدلاً من localStorage
-  const { cardData, saveTechnicalCard } = useTechnicalCard(club.id);
+  // استخدام Firestore - يحمل القالب الافتراضي من الإدارة ثم تعديلات المدرب
+  const { cardData, loading, saveTechnicalCard } = useTechnicalCard(club.id, cardNumber);
+  
+  // Ref للحفظ التلقائي عند تطبيق بيانات الربط
+  const saveTechnicalCardRef = useRef(saveTechnicalCard);
+  saveTechnicalCardRef.current = saveTechnicalCard;
   const [ageCategoryOptions, setAgeCategoryOptions] = useState<string[]>(STATIC_AGE_CATEGORY_OPTIONS);
 
   // حالة النوافذ المنبثقة للحسابات
@@ -105,8 +109,46 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
   const [restTime, setRestTime] = useState('');
   const [lastLoadValue, setLastLoadValue] = useState(''); // للاحتفاظ بآخر قيمة حمولة
 
-  // تحميل البيانات المحفوظة مع الحفاظ على اسم المدرب الحالي
+  // القيم الافتراضية للبطاقة الجديدة
+  const getDefaultHeaderInfo = () => ({
+    trainer: trainerName,
+    specialty: 'جودو',
+    location: '',
+    equipment: 'تاتامي مطاطية / بساط 2x2 متر',
+    objectives: '',
+    sessionNumber: 90,
+    age: 20,
+    ageCategory: '',
+    gender: 'ذكور'
+  });
+
+  const getDefaultSecondPage = () => ({
+    clubName: club.nameAr || '',
+    coachName: trainerName,
+    clubAddress: '',
+    subject: createSubject(cardNumber),
+    analysisText: 'تم انجاز الحصة الخاصة بـ: التحضير البدني العام بنسبة ...... %\n\nوذلك بسبب:',
+  });
+
+  // متغير لتتبع آخر cardNumber تم تطبيق linkedLoadData عليه
+  const linkedDataCardNumberRef = useRef<string | null>(null);
+
+  // تحميل البيانات المحفوظة أو إعادة تعيين للقيم الافتراضية
   useEffect(() => {
+    if (loading) return; // انتظر حتى يتم التحميل
+    
+    // إذا تم تطبيق بيانات الربط من جدول توزيع الحمل على نفس رقم البطاقة، لا تكتب فوقها
+    // لكن إذا تغير رقم البطاقة يدوياً، اسمح بتحميل البيانات الجديدة
+    if (hasAppliedLinkedData && linkedDataCardNumberRef.current === cardNumber) {
+      return;
+    }
+    
+    // إذا تغير رقم البطاقة عن الذي تم تطبيق linkedLoadData عليه، أعد تعيين الحالة
+    if (hasAppliedLinkedData && linkedDataCardNumberRef.current !== cardNumber) {
+      setHasAppliedLinkedData(false);
+      linkedDataCardNumberRef.current = null;
+    }
+    
     if (cardData && cardData.headerInfo) {
       setHeaderInfo(_prev => ({
         ...cardData.headerInfo,
@@ -126,15 +168,10 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
           analysisText: cardData.secondPage.analysisText || sp.analysisText,
         }));
 
-        // مزامنة رقم البطاقة من الموضوع المحفوظ فقط إذا لم نطبق بيانات الربط بعد
-        if (!hasAppliedLinkedData && cardData.secondPage.subject) {
-          const n = extractCardNumber(cardData.secondPage.subject) || cardNumber || '01';
-          setCardNumber(n);
-        }
       }
 
       // Apply saved table values back into inputs by DOM order فقط إذا لم تُطبَّق بيانات الربط
-      if (Array.isArray(cardData.tableValues) && containerRef.current && !hasAppliedLinkedData) {
+      if (Array.isArray(cardData.tableValues) && containerRef.current) {
         const inputs = containerRef.current.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
           'textarea.phase-content-input, textarea.objectives-input, input.content-input, textarea.formations-input, textarea.duration-input, textarea.notes-input, input.content-input'
         );
@@ -148,8 +185,24 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
       }
 
       refreshTextareas();
+    } else {
+      // لا توجد بيانات محفوظة - إعادة تعيين للقيم الافتراضية
+      setHeaderInfo(getDefaultHeaderInfo());
+      setTrainerEvaluation('');
+      setSecondPage(getDefaultSecondPage());
+      
+      // إعادة تعيين قيم الجدول للقيم الافتراضية
+      if (containerRef.current) {
+        const inputs = containerRef.current.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+          'textarea.phase-content-input, textarea.objectives-input, input.content-input, textarea.formations-input, textarea.duration-input, textarea.notes-input'
+        );
+        inputs.forEach((el) => {
+          el.value = el.defaultValue || '';
+        });
+      }
+      refreshTextareas();
     }
-  }, [cardData, trainerName, hasAppliedLinkedData]);
+  }, [cardData, loading, cardNumber, trainerName, club.nameAr, hasAppliedLinkedData]);
 
   // استخدام جميع الفئات العمرية المتاحة
   useEffect(() => {
@@ -197,9 +250,11 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
   useEffect(() => {
     if (!linkedLoadData || !containerRef.current) return;
 
-    setHasAppliedLinkedData(true);
-
     const unitStr = String(linkedLoadData.unitNumber).padStart(2, '0');
+
+    // حفظ رقم البطاقة الذي تم تطبيق linkedLoadData عليه
+    linkedDataCardNumberRef.current = unitStr;
+    setHasAppliedLinkedData(true);
 
     setCardNumber(unitStr);
     setSecondPage(sp => ({
@@ -227,6 +282,39 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     });
 
     refreshTextareas();
+
+    // حفظ البيانات تلقائياً بعد تطبيق بيانات الربط
+    const autoSaveLinkedData = async () => {
+      try {
+        // انتظر قليلاً للتأكد من تحديث DOM
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        const tableValues: string[] = [];
+        if (containerRef.current) {
+          const inputs = containerRef.current.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+            'textarea.phase-content-input, textarea.objectives-input, input.content-input, textarea.formations-input, textarea.duration-input, textarea.notes-input, input.content-input'
+          );
+          inputs.forEach((el) => tableValues.push(el.value ?? ''));
+        }
+
+        const dataToSave = {
+          headerInfo,
+          trainerEvaluation,
+          secondPage: {
+            ...secondPage,
+            subject: createSubject(unitStr)
+          },
+          tableValues,
+        };
+        await saveTechnicalCardRef.current(dataToSave);
+        console.log('تم حفظ بيانات الربط تلقائياً');
+      } catch (err) {
+        console.error('خطأ في الحفظ التلقائي:', err);
+      }
+    };
+
+    autoSaveLinkedData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkedLoadData]);
 
   // حفظ البيانات
@@ -272,8 +360,11 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
   const openRestModal = (inputElement: HTMLInputElement) => {
     setCurrentInputRef(inputElement);
 
-    // استخدام آخر قيمة حمولة تم إدخالها في نافذة الحمولة
-    if (lastLoadValue) {
+    // أخذ قيمة الحمولة من نفس الخلية أولاً، وإن لم توجد فآخر قيمة حمولة مدخلة
+    const cellValue = inputElement.value?.trim();
+    if (cellValue) {
+      setRestLoad(cellValue);
+    } else if (lastLoadValue) {
       setRestLoad(lastLoadValue);
     } else {
       setRestLoad('');
@@ -309,7 +400,8 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
       const load = parseFloat(restLoad);
       const time = parseFloat(restTime);
       if (!isNaN(load) && !isNaN(time)) {
-        const rest = load - 1;
+        // جعل قيمة الراحة مبنية مباشرة على نفس قيمة الحمولة بدون طرح 1
+        const rest = load;
         const result = rest * time;
         currentInputRef.value = result.toString();
         setShowRestModal(false);
@@ -323,6 +415,34 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     }
   };
 
+  // دالة مساعدة لتحويل نص المدة إلى دقائق (تدعم د، ث أو رقم عشري)
+  const parseDurationToMinutes = (value: string): number => {
+    const trimmed = value.trim();
+    if (!trimmed) return 0;
+
+    // ثواني: 15ث
+    if (trimmed.endsWith('ث')) {
+      const num = parseFloat(trimmed.slice(0, -1));
+      return isNaN(num) ? 0 : num / 60;
+    }
+
+    // دقائق: 1د أو 1 د
+    if (trimmed.endsWith('د')) {
+      const num = parseFloat(trimmed.slice(0, -1));
+      return isNaN(num) ? 0 : num;
+    }
+
+    // قيمة رقمية مباشرة تعتبر بالدقائق (تدعم الفواصل)
+    const num = parseFloat(trimmed.replace(',', '.'));
+    return isNaN(num) ? 0 : num;
+  };
+
+  // دالة مساعدة لتنسيق الدقائق مع تقريب معقول وإزالة الأصفار الزائدة
+  const formatMinutes = (value: number): string => {
+    const rounded = Number(value.toFixed(2));
+    return rounded.toString();
+  };
+
   // حساب مدة الصف (الحمولة + الراحة) وتحديثها في عمود المدة
   const calculateRowDuration = (inputElement: HTMLInputElement | null) => {
     if (!inputElement) return;
@@ -330,7 +450,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     const row = inputElement.closest('tr');
     if (!row || !row.classList.contains('main-phase')) return;
 
-    // الحصول على قيم الحمولة والراحة
+    // الحصول على قيم الحمولة والراحة (تُستخدم هنا كدقائق)
     const contentCells = row.querySelectorAll('.content-cell');
     const loadInput = contentCells[1]?.querySelector('input') as HTMLInputElement; // خانة الحمولة
     const restInput = contentCells[3]?.querySelector('input') as HTMLInputElement; // خانة الراحة
@@ -339,36 +459,32 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     const restValue = parseFloat(restInput?.value || '0');
     const rowTotal = loadValue + restValue;
 
-    // تحديث خانة المدة في نفس الصف
+    // تحديث خانة المدة في نفس الصف (كنص بالدقائق مع الحرف د)
     const durationCell = row.querySelector('.duration-cell textarea') as HTMLTextAreaElement;
     if (durationCell && rowTotal > 0) {
-      durationCell.value = `${rowTotal} د`;
+      durationCell.value = `${formatMinutes(rowTotal)}د`;
     }
 
     // حساب المدة الإجمالية لجميع صفوف المرحلة الأساسية
     calculateTotalDuration();
   };
 
-  // حساب المدة الإجمالية وتحديثها في خانة المدة العلوية
+  // حساب المدة الإجمالية وتحديثها في خانة المدة العلوية (بدقائق مع دعم ثواني من خانات المدة)
   const calculateTotalDuration = () => {
     if (!containerRef.current) return;
-
     const mainPhaseRows = containerRef.current.querySelectorAll('tr.main-phase');
-    let totalDuration = 0;
+    let totalDurationMinutes = 0;
 
     mainPhaseRows.forEach(row => {
-      const contentCells = row.querySelectorAll('.content-cell');
-      const loadInput = contentCells[1]?.querySelector('input') as HTMLInputElement;
-      const restInput = contentCells[3]?.querySelector('input') as HTMLInputElement;
-
-      const loadValue = parseFloat(loadInput?.value || '0');
-      const restValue = parseFloat(restInput?.value || '0');
-      totalDuration += loadValue + restValue;
+      const durationCell = row.querySelector('.duration-cell textarea') as HTMLTextAreaElement | null;
+      if (!durationCell) return;
+      const minutes = parseDurationToMinutes(durationCell.value || '');
+      totalDurationMinutes += minutes;
     });
 
-    // تحديث خانة المدة في معلومات الرأس
-    if (totalDuration > 0) {
-      setHeaderInfo(prev => ({ ...prev, sessionNumber: totalDuration }));
+    // تحديث خانة المدة في معلومات الرأس (بالدقائق، مع السماح بالفواصل العشرية)
+    if (totalDurationMinutes > 0) {
+      setHeaderInfo(prev => ({ ...prev, sessionNumber: Number(totalDurationMinutes.toFixed(2)) }));
     }
   };
 
@@ -930,7 +1046,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                 <td className="content-cell">
                   <Form.Control
                     type="text"
-                    defaultValue="5"
+                    defaultValue=""
                     className="content-input"
                     dir="rtl"
                   />
@@ -969,7 +1085,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    defaultValue="+ 5"
+                    defaultValue=""
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1006,7 +1122,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                 <td className="content-cell">
                   <Form.Control
                     type="text"
-                    defaultValue="5"
+                    defaultValue=""
                     className="content-input"
                     dir="rtl"
                   />
@@ -1045,7 +1161,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={3}
-                    defaultValue="العمل بشدة متوسطة&#10;+ 5"
+                    defaultValue="العمل بشدة متوسطة&#10;"
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1089,7 +1205,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                 <td className="content-cell">
                   <Form.Control
                     type="text"
-                    defaultValue="10"
+                    defaultValue=""
                     className="content-input"
                     dir="rtl"
                   />
@@ -1102,7 +1218,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input load-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="content-cell">
@@ -1120,7 +1236,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input rest-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="formations-cell">
@@ -1136,7 +1252,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    defaultValue="العمل بشدة متوسطة&#10;+ 30"
+                    defaultValue="العمل بشدة متوسطة&#10;"
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1173,7 +1289,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                 <td className="content-cell">
                   <Form.Control
                     type="text"
-                    defaultValue="10"
+                    defaultValue=""
                     className="content-input"
                     dir="rtl"
                   />
@@ -1186,7 +1302,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input load-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="content-cell">
@@ -1204,7 +1320,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input rest-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="formations-cell">
@@ -1220,7 +1336,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    defaultValue="العمل بشدة متوسطة&#10;+ 30"
+                    defaultValue="العمل بشدة متوسطة&#10;"
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1269,7 +1385,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input load-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="content-cell">
@@ -1287,7 +1403,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     type="text"
                     className="content-input rest-input"
                     dir="rtl"
-                    placeholder="اضغط"
+                    placeholder=""
                   />
                 </td>
                 <td className="formations-cell">
@@ -1303,7 +1419,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    defaultValue="+ 12"
+                    defaultValue=""
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1385,7 +1501,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Control
                     as="textarea"
                     rows={2}
-                    defaultValue="النهاية&#10;+ 1"
+                    defaultValue="النهاية&#10;"
                     className="duration-input"
                     dir="rtl"
                   />
@@ -1660,7 +1776,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>الوقت (دقيقة)</Form.Label>
+              <Form.Label>الوقت (دقيقة\ثانية)</Form.Label>
               <Form.Control
                 type="number"
                 value={loadTime}
@@ -1701,7 +1817,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                   <Form.Label style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>قيمة الراحة</Form.Label>
                   <Form.Control
                     type="text"
-                    value={parseFloat(restLoad) - 1}
+                    value={restLoad}
                     readOnly
                     style={{
                       backgroundColor: '#d1ecf1',
@@ -1712,11 +1828,11 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                     }}
                   />
                   <Form.Text className="text-muted">
-                    (الحمولة - 1) = ({restLoad} - 1) = {parseFloat(restLoad) - 1}
+                    قيمة الراحة مساوية لقيمة الحمولة: {restLoad}
                   </Form.Text>
                 </Form.Group>
                 <Form.Group className="mb-3">
-                  <Form.Label>الوقت (دقيقة)</Form.Label>
+                  <Form.Label>الوقت (دقيقة\ثانية)</Form.Label>
                   <Form.Control
                     type="number"
                     value={restTime}
@@ -1727,7 +1843,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
                 </Form.Group>
                 {restTime && (
                   <div className="alert alert-success" dir="rtl" style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
-                    النتيجة النهائية: {parseFloat(restLoad) - 1} × {restTime} = {(parseFloat(restLoad) - 1) * parseFloat(restTime)}
+                    النتيجة النهائية: {parseFloat(restLoad)} × {restTime} = {parseFloat(restLoad) * parseFloat(restTime)}
                   </div>
                 )}
               </>

@@ -423,84 +423,7 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
             </h5>
           </div>
 
-        {/* تحسين عرض الأعمدة الواسعة والمحتوى الطويل */}
-        <style>
-          {`
-            .athlete-roster-table th,
-            .athlete-roster-table td {
-              white-space: normal !important;
-              word-break: break-word !important;
-              vertical-align: middle !important;
-            }
-            /* الاسم واللقب */
-            .athlete-roster-table th:nth-child(2),
-            .athlete-roster-table td:nth-child(2) {
-              min-width: 260px;
-            }
-            /* اسم الأب */
-            .athlete-roster-table th:nth-child(3),
-            .athlete-roster-table td:nth-child(3) {
-              min-width: 220px;
-            }
-            /* اسم ولقب الأم */
-            .athlete-roster-table th:nth-child(4),
-            .athlete-roster-table td:nth-child(4) {
-              min-width: 280px;
-            }
-            /* تاريخ الميلاد */
-            .athlete-roster-table th:nth-child(5),
-            .athlete-roster-table td:nth-child(5) {
-              min-width: 180px;
-            }
-            /* مكان الميلاد */
-            .athlete-roster-table th:nth-child(6),
-            .athlete-roster-table td:nth-child(6) {
-              min-width: 240px;
-            }
-            /* العمر */
-            .athlete-roster-table th:nth-child(7),
-            .athlete-roster-table td:nth-child(7) {
-              min-width: 130px;
-            }
-            /* الفئة */
-            .athlete-roster-table th:nth-child(8),
-            .athlete-roster-table td:nth-child(8) {
-              min-width: 160px;
-            }
-            /* الصنف (الجنس) */
-            .athlete-roster-table th:nth-child(9),
-            .athlete-roster-table td:nth-child(9) {
-              min-width: 160px;
-            }
-            /* الوزن */
-            .athlete-roster-table th:nth-child(10),
-            .athlete-roster-table td:nth-child(10) {
-              min-width: 200px;
-            }
-            /* الطول */
-            .athlete-roster-table th:nth-child(11),
-            .athlete-roster-table td:nth-child(11) {
-              min-width: 160px;
-            }
-            /* فصيلة الدم */
-            .athlete-roster-table th:nth-child(12),
-            .athlete-roster-table td:nth-child(12) {
-              min-width: 170px;
-            }
-            /* رقم الهاتف */
-            .athlete-roster-table th:nth-child(13),
-            .athlete-roster-table td:nth-child(13) {
-              min-width: 220px;
-            }
 
-            @media (max-width: 768px) {
-              .athlete-roster-table th,
-              .athlete-roster-table td {
-                min-width: auto !important;
-              }
-            }
-          `}
-        </style>
           <div className="text-start d-flex gap-2">
             <Button
               variant="outline-light"
@@ -687,48 +610,6 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
               </Form.Group>
             </Col>
           </Row>
-          <style>
-            {`
-              /* Improve readability: prevent glyph overlap and allow wrapping */
-              .athlete-roster-table th,
-              .athlete-roster-table td {
-                line-height: 1.4;
-                white-space: normal;
-                word-break: break-word;
-              }
-              /* Achievements column */
-              .athlete-roster-table th:nth-child(14),
-              .athlete-roster-table td:nth-child(14) {
-                min-width: 320px;
-              }
-              /* International ranking column */
-              .athlete-roster-table th:nth-child(15),
-              .athlete-roster-table td:nth-child(15) {
-                min-width: 180px;
-              }
-              .athlete-roster-table .form-control {
-                width: 100%;
-              }
-              @media (max-width: 768px) {
-                .athlete-roster-table {
-                  font-size: 12px;
-                }
-                .athlete-roster-table th,
-                .athlete-roster-table td {
-                  padding: 6px 4px;
-                  line-height: 1.45;
-                }
-                .athlete-roster-table th:nth-child(14),
-                .athlete-roster-table td:nth-child(14) {
-                  min-width: 260px;
-                }
-                .athlete-roster-table th:nth-child(15),
-                .athlete-roster-table td:nth-child(15) {
-                  min-width: 160px;
-                }
-              }
-            `}
-          </style>
           <div className="table-responsive">
             <Table
               striped

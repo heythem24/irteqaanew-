@@ -308,8 +308,57 @@ export const usePhysicalTests = (testType: string, clubId: string) => {
   return { testResults, loading, error, saveTestResults, deleteTestResults };
 };
 
-// Hook للبطاقة الفنية
-export const useTechnicalCard = (clubId: string) => {
+// Hook للبطاقات الفنية الافتراضية (من الإدارة) - حسب رقم الحصة
+export const useAdminTechnicalCard = (cardNumber: string) => {
+  const [cardData, setCardData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCardData = async () => {
+      try {
+        setLoading(true);
+        if (!cardNumber) {
+          setCardData(null);
+          setError(null);
+          return;
+        }
+        const ref = doc(collection(db, 'adminTechnicalCards'), String(cardNumber));
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          setCardData(snap.data());
+        } else {
+          setCardData(null);
+        }
+        setError(null);
+      } catch (err) {
+        setError('حدث خطأ في تحميل البطاقة الفنية');
+        console.error('Error loading admin technical card:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCardData();
+  }, [cardNumber]);
+
+  const saveAdminTechnicalCard = async (data: any) => {
+    try {
+      const ref = doc(collection(db, 'adminTechnicalCards'), String(cardNumber));
+      await setDoc(ref, { ...data, cardNumber, updatedAt: new Date() }, { merge: true });
+      setCardData(data);
+      setError(null);
+    } catch (err) {
+      setError('حدث خطأ في حفظ البطاقة الفنية');
+      throw err;
+    }
+  };
+
+  return { cardData, setCardData, loading, error, saveAdminTechnicalCard };
+};
+
+// Hook للبطاقة الفنية للمدرب - يحمل القالب الافتراضي أولاً ثم تعديلات المدرب
+export const useTechnicalCard = (clubId: string, cardNumber?: string) => {
   const [cardData, setCardData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -323,13 +372,55 @@ export const useTechnicalCard = (clubId: string) => {
           setError(null);
           return;
         }
-        const ref = doc(collection(db, 'technicalCards'), String(clubId));
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          setCardData(snap.data());
+        
+        // أولاً: تحميل بيانات المدرب الخاصة
+        const coachRef = doc(collection(db, 'technicalCards'), `${clubId}_${cardNumber || 'default'}`);
+        const coachSnap = await getDoc(coachRef);
+
+        // ثانياً: تحميل القالب الافتراضي من الإدارة (إن وُجد رقم حصة)
+        let adminData: any = null;
+        let adminUpdatedAt: number | null = null;
+        if (cardNumber) {
+          const adminRef = doc(collection(db, 'adminTechnicalCards'), String(cardNumber));
+          const adminSnap = await getDoc(adminRef);
+          if (adminSnap.exists()) {
+            adminData = adminSnap.data();
+            const rawAdminUpdatedAt = (adminData as any)?.updatedAt;
+            if (rawAdminUpdatedAt instanceof Date) {
+              adminUpdatedAt = rawAdminUpdatedAt.getTime();
+            } else if (rawAdminUpdatedAt && typeof (rawAdminUpdatedAt as any).toDate === 'function') {
+              adminUpdatedAt = (rawAdminUpdatedAt as any).toDate().getTime();
+            }
+          }
+        }
+
+        if (coachSnap.exists()) {
+          const coachData = coachSnap.data();
+          const rawCoachUpdatedAt = (coachData as any)?.updatedAt;
+          let coachUpdatedAt: number | null = null;
+          if (rawCoachUpdatedAt instanceof Date) {
+            coachUpdatedAt = rawCoachUpdatedAt.getTime();
+          } else if (rawCoachUpdatedAt && typeof (rawCoachUpdatedAt as any).toDate === 'function') {
+            coachUpdatedAt = (rawCoachUpdatedAt as any).toDate().getTime();
+          }
+
+          // إذا كانت بطاقة الإدارة أحدث من بطاقة المدرب، نفضّل قالب الإدارة
+          if (adminData && adminUpdatedAt !== null && coachUpdatedAt !== null && adminUpdatedAt > coachUpdatedAt) {
+            setCardData(adminData);
+          } else if (adminData && coachUpdatedAt === null && adminUpdatedAt !== null) {
+            // في حالة عدم وجود updatedAt عند المدرب ووجوده عند الإدارة نفضّل الإدارة
+            setCardData(adminData);
+          } else {
+            // المدرب لديه نسخة أحدث أو لا توجد إدارة أصلاً
+            setCardData(coachData);
+          }
+        } else if (adminData) {
+          // لا توجد بيانات خاصة للمدرب، نستخدم قالب الإدارة إن وجد
+          setCardData(adminData);
         } else {
           setCardData(null);
         }
+
         setError(null);
       } catch (err) {
         setError('حدث خطأ في تحميل البطاقة الفنية');
@@ -342,12 +433,12 @@ export const useTechnicalCard = (clubId: string) => {
     if (clubId) {
       loadCardData();
     }
-  }, [clubId]);
+  }, [clubId, cardNumber]);
 
   const saveTechnicalCard = async (data: any) => {
     try {
-      const ref = doc(collection(db, 'technicalCards'), String(clubId));
-      await setDoc(ref, data, { merge: true });
+      const ref = doc(collection(db, 'technicalCards'), `${clubId}_${cardNumber || 'default'}`);
+      await setDoc(ref, { ...data, clubId, cardNumber, updatedAt: new Date() }, { merge: true });
       setCardData(data);
       setError(null);
     } catch (err) {

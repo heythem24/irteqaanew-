@@ -24,6 +24,7 @@ import CompetitionsPage from './pages/CompetitionsPage';
 import CompetitionDetailPage from './pages/CompetitionDetailPage';
 import CreateClubPage from './pages/admin/CreateClubPage';
 import ComprehensiveClubDashboard from './pages/admin/ComprehensiveClubDashboard';
+import TechnicalCardPage from './pages/admin/TechnicalCardPage';
 import UserLoginPage from './pages/UserLoginPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
@@ -301,6 +302,16 @@ function App() {
               <Navbar variant="main" />
               <main className="flex-grow-1">
                 <ComprehensiveClubDashboard />
+              </main>
+            </>
+          } />
+
+          {/* صفحة البطاقة الفنية للمدرب */}
+          <Route path="/admin/technical-card" element={
+            <>
+              <Navbar variant="main" />
+              <main className="flex-grow-1">
+                <TechnicalCardPage />
               </main>
             </>
           } />

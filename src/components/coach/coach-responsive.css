@@ -20,20 +20,24 @@
 /* Mobile optimizations */
 @media (max-width: 576px) {
   .coach-table {
-    min-width: 720px; /* ensure horizontal scroll with reasonable width */
+    min-width: 720px;
+    /* ensure horizontal scroll with reasonable width */
     font-size: 0.9rem;
   }
+
   .coach-table th,
   .coach-table td {
     padding: 0.4rem;
     white-space: nowrap;
     vertical-align: middle;
   }
+
   /* But allow first column to wrap naturally so its text doesn't get cut */
   .coach-table th:first-child,
   .coach-table td:first-child {
     white-space: normal !important;
-    min-width: 120px; /* give labels breathing room */
+    min-width: 120px;
+    /* give labels breathing room */
   }
 }
 
@@ -44,78 +48,164 @@
   }
 }
 
-/* Athlete Roster specific column sizing to prevent truncation */
+/* Athlete Roster specific - compact styling */
 .athlete-roster-table th,
 .athlete-roster-table td {
-  white-space: normal !important;
-  word-break: break-word !important;
+  white-space: nowrap !important;
   vertical-align: middle !important;
+  padding: 0.4rem 0.5rem !important;
+  font-size: 0.875rem;
+}
+
+/* Input fields inside table cells - make them compact */
+.athlete-roster-table .form-control {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  height: auto !important;
+  min-height: 32px !important;
+}
+
+/* Select dropdowns - fix arrow overlap issue */
+.athlete-roster-table .form-select {
+  padding: 0.25rem 1.8rem 0.25rem 0.5rem !important;
+  font-size: 0.8rem !important;
+  height: auto !important;
+  min-height: 32px !important;
+  background-position: left 0.5rem center !important;
+  min-width: 70px !important;
+  text-overflow: ellipsis;
+}
+
+/* # column */
+.athlete-roster-table th:nth-child(1),
+.athlete-roster-table td:nth-child(1) {
+  min-width: 35px;
+  width: 35px;
 }
 
 /* الاسم واللقب */
 .athlete-roster-table th:nth-child(2),
 .athlete-roster-table td:nth-child(2) {
-  min-width: 260px;
+  min-width: 130px;
 }
+
 /* اسم الأب */
 .athlete-roster-table th:nth-child(3),
 .athlete-roster-table td:nth-child(3) {
-  min-width: 220px;
+  min-width: 110px;
 }
+
 /* اسم ولقب الأم */
 .athlete-roster-table th:nth-child(4),
 .athlete-roster-table td:nth-child(4) {
-  min-width: 280px;
+  min-width: 130px;
 }
+
 /* تاريخ الميلاد */
 .athlete-roster-table th:nth-child(5),
 .athlete-roster-table td:nth-child(5) {
-  min-width: 180px;
+  min-width: 100px;
 }
+
 /* مكان الميلاد */
 .athlete-roster-table th:nth-child(6),
 .athlete-roster-table td:nth-child(6) {
-  min-width: 240px;
+  min-width: 100px;
 }
+
 /* العمر */
 .athlete-roster-table th:nth-child(7),
 .athlete-roster-table td:nth-child(7) {
-  min-width: 130px;
+  min-width: 50px;
 }
+
 /* الفئة */
 .athlete-roster-table th:nth-child(8),
 .athlete-roster-table td:nth-child(8) {
-  min-width: 160px;
+  min-width: 70px;
 }
+
 /* الصنف */
 .athlete-roster-table th:nth-child(9),
 .athlete-roster-table td:nth-child(9) {
-  min-width: 160px;
+  min-width: 70px;
 }
+
 /* الوزن */
 .athlete-roster-table th:nth-child(10),
 .athlete-roster-table td:nth-child(10) {
-  min-width: 200px;
+  min-width: 80px;
 }
+
 /* الطول */
 .athlete-roster-table th:nth-child(11),
 .athlete-roster-table td:nth-child(11) {
-  min-width: 160px;
+  min-width: 70px;
 }
+
 /* فصيلة الدم */
 .athlete-roster-table th:nth-child(12),
 .athlete-roster-table td:nth-child(12) {
-  min-width: 170px;
+  min-width: 80px;
 }
+
 /* رقم الهاتف */
 .athlete-roster-table th:nth-child(13),
 .athlete-roster-table td:nth-child(13) {
+  min-width: 100px;
+}
+
+/* الإنجازات الرياضية - wider for full text visibility */
+.athlete-roster-table th:nth-child(14),
+.athlete-roster-table td:nth-child(14) {
+  min-width: 320px;
+}
+
+/* التصنيف الدولي - wider for full text visibility */
+.athlete-roster-table th:nth-child(15),
+.athlete-roster-table td:nth-child(15) {
   min-width: 220px;
 }
 
+/* القوائم المنسدلة في عمود الإنجازات - عرض كافي لرؤية النص كاملاً */
+.athlete-roster-table td:nth-child(14) .form-select {
+  min-width: 140px !important;
+  width: auto !important;
+}
+
+/* القوائم المنسدلة في عمود التصنيف الدولي */
+.athlete-roster-table td:nth-child(15) .form-select {
+  min-width: 80px !important;
+  width: auto !important;
+}
+
+/* حقول السنة والترتيب */
+.athlete-roster-table td:nth-child(14) .form-control,
+.athlete-roster-table td:nth-child(15) .form-control {
+  min-width: 70px !important;
+  width: 70px !important;
+}
+
+/* RTL support for select dropdowns */
+.athlete-roster-table .form-select[dir="rtl"],
+.athlete-roster-table td[dir="rtl"] .form-select {
+  padding: 0.25rem 0.5rem 0.25rem 1.8rem !important;
+  background-position: right 0.5rem center !important;
+}
+
 @media (max-width: 768px) {
-  /* On small screens, allow horizontal scrolling with reasonable base width */
   .athlete-roster-table.coach-table {
-    min-width: 1100px;
+    min-width: 1000px;
+  }
+
+  .athlete-roster-table th,
+  .athlete-roster-table td {
+    padding: 0.3rem 0.4rem !important;
+    font-size: 0.8rem;
+  }
+
+  .athlete-roster-table td:nth-child(14),
+  .athlete-roster-table td:nth-child(15) {
+    min-width: 180px;
   }
 }
