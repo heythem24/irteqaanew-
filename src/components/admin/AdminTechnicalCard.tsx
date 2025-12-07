@@ -172,13 +172,6 @@ const AdminTechnicalCard: React.FC<AdminTechnicalCardProps> = ({ linkedLoadData 
   }, [cardData, loading, cardNumber]);
 
   useEffect(() => {
-    const newSubject = createSubject(cardNumber);
-    setSecondPage(sp => (
-      sp.subject === newSubject ? sp : { ...sp, subject: newSubject }
-    ));
-  }, [cardNumber]);
-
-  useEffect(() => {
     setSecondPage(sp => ({
       ...sp,
       clubAddress: headerInfo.location,

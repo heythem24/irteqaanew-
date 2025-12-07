@@ -155,37 +155,50 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
                   id="physical-tests-dropdown"
                   className="nav-dropdown-custom"
                 >
-              <NavDropdown.Item onClick={() => setActiveSection('max-strength-dynamic')}>
-                <i className="fas fa-dumbbell me-2"></i>
-                اختبار القوة القصوى المتحركة
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('max-strength-static')}>
-                <i className="fas fa-weight-hanging me-2"></i>
-                اختبار القوة القصوى الثابتة
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('special-speed')}>
-                <i className="fas fa-running me-2"></i>
-                اختبار السرعة الخاصة
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('morphological')}>
-                <i className="fas fa-ruler me-2"></i>
-                الصفات المورفولوجية
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('explosive-strength-kumi')}>
-                <i className="fas fa-fist-raised me-2"></i>
-                اختبار القوة الانفجارية الخاصة (kumi-kata)
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('special-endurance')}>
-                <i className="fas fa-heartbeat me-2"></i>
-                اختبار المداومة الخاصة
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('speed-strength')}>
-                <i className="fas fa-bolt me-2"></i>
-                اختبارات القوة المميزة بالسرعة
-              </NavDropdown.Item>
-            </NavDropdown>
+                  <NavDropdown.Item onClick={() => setActiveSection('max-strength-dynamic')}>
+                    <i className="fas fa-dumbbell me-2"></i>
+                    اختبار القوة القصوى المتحركة
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('max-strength-static')}>
+                    <i className="fas fa-weight-hanging me-2"></i>
+                    اختبار القوة القصوى الثابتة
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('special-speed')}>
+                    <i className="fas fa-running me-2"></i>
+                    اختبار السرعة الخاصة
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('explosive-strength-kumi')}>
+                    <i className="fas fa-fist-raised me-2"></i>
+                    اختبار القوة الانفجارية الخاصة (kumi-kata)
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('special-endurance')}>
+                    <i className="fas fa-heartbeat me-2"></i>
+                    اختبار المداومة الخاصة
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('speed-strength')}>
+                    <i className="fas fa-bolt me-2"></i>
+                    اختبارات القوة المميزة بالسرعة
+                  </NavDropdown.Item>
+                </NavDropdown>
 
-            {/* الاختبارات المهارية */}
+                {/* الاختبارات المورفولوجية */}
+                <NavDropdown 
+                  title={
+                    <span className="d-flex align-items-center">
+                      <i className="fas fa-ruler me-2"></i>
+                      الاختبارات المورفولوجية
+                    </span>
+                  } 
+                  id="morphological-tests-dropdown"
+                  className="nav-dropdown-custom"
+                >
+                  <NavDropdown.Item onClick={() => setActiveSection('morphological')}>
+                    <i className="fas fa-ruler me-2"></i>
+                    الصفات المورفولوجية
+                  </NavDropdown.Item>
+                </NavDropdown>
+
+                {/* الاختبارات المهارية */}
             <NavDropdown 
               title={
                 <span>

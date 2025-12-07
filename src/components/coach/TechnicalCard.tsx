@@ -209,16 +209,6 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     setAgeCategoryOptions(STATIC_AGE_CATEGORY_OPTIONS);
   }, []);
 
-  // تحديث موضوع الصفحة الثانية عند تغيير رقم البطاقة
-  useEffect(() => {
-    const newSubject = createSubject(cardNumber);
-    setSecondPage(sp => (
-      sp.subject === newSubject
-        ? sp
-        : { ...sp, subject: newSubject }
-    ));
-  }, [cardNumber, secondPage.subject]);
-
   // مزامنة اسم النادي واسم المدرب مع الصفحة الثانية عند تغيّرها
   useEffect(() => {
     setSecondPage(sp => ({
@@ -257,10 +247,6 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
     setHasAppliedLinkedData(true);
 
     setCardNumber(unitStr);
-    setSecondPage(sp => ({
-      ...sp,
-      subject: createSubject(unitStr)
-    }));
 
     const root = containerRef.current;
     const mainPhaseRows = root.querySelectorAll<HTMLTableRowElement>('tr.main-phase');
@@ -300,10 +286,7 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
         const dataToSave = {
           headerInfo,
           trainerEvaluation,
-          secondPage: {
-            ...secondPage,
-            subject: createSubject(unitStr)
-          },
+          secondPage,
           tableValues,
         };
         await saveTechnicalCardRef.current(dataToSave);
@@ -831,7 +814,6 @@ const TechnicalCard: React.FC<TechnicalCardProps> = ({ club, linkedLoadData }) =
               onChange={(e) => {
                 const value = e.target.value;
                 setCardNumber(value);
-                setSecondPage((sp) => ({ ...sp, subject: createSubject(value) }));
               }}
               style={{ width: '80px', display: 'inline-block' }}
               className="ms-1"
