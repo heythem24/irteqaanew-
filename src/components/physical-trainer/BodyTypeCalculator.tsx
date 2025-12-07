@@ -510,30 +510,37 @@ const BodyTypeCalculator: React.FC<BodyTypeCalculatorProps> = ({ clubId }) => {
           {`
             .body-type-table {
               font-size: 14px;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .body-type-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 10px 6px;
+              vertical-align: middle !important;
+              padding: 12px 20px !important;
               border: 2px solid #1976d2;
-              white-space: normal;
+              white-space: nowrap !important;
+              min-width: 130px !important;
+              overflow: visible !important;
+              text-overflow: unset !important;
             }
             
             .body-type-table td {
-              vertical-align: middle;
-              padding: 6px;
+              vertical-align: middle !important;
+              padding: 10px 18px !important;
               border: 1px solid #ddd;
-              white-space: normal;
+              white-space: nowrap !important;
+              min-width: 120px !important;
             }
             
             .body-type-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 6px;
+              padding: 8px 10px;
               font-size: 13px;
+              min-width: 100px;
             }
             
             .body-type-table input:focus {

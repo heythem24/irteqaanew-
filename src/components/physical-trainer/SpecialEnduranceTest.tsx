@@ -455,34 +455,38 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
         <style>
           {`
             .endurance-test-table {
-              font-size: 11px;
+              font-size: 12px;
+              table-layout: auto !important;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .endurance-test-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 8px 4px;
+              vertical-align: middle !important;
+              padding: 12px 18px !important;
               border: 2px solid #1976d2;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 120px !important;
             }
             
             .endurance-test-table td {
-              vertical-align: middle;
-              padding: 4px;
+              vertical-align: middle !important;
+              padding: 10px 15px !important;
               border: 1px solid #ddd;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 100px !important;
             }
             
             .endurance-test-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 4px;
-              font-size: 10px;
-              width: 100%;
+              padding: 6px 10px;
+              font-size: 12px;
+              width: auto;
+              min-width: 70px;
             }
             
             .endurance-test-table input:focus {
@@ -491,7 +495,7 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
             }
 
             .endurance-test-table .small {
-              font-size: 9px;
+              font-size: 11px;
               line-height: 1.2;
             }
 

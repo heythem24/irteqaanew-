@@ -440,32 +440,36 @@ const MaxStaticStrengthTest: React.FC<MaxStaticStrengthTestProps> = ({ clubId })
           {`
             .static-strength-test-table {
               font-size: 13px;
+              table-layout: auto !important;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .static-strength-test-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 12px 8px;
+              vertical-align: middle !important;
+              padding: 12px 20px !important;
               border: 2px solid #1976d2;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 160px !important;
             }
             
             .static-strength-test-table td {
-              vertical-align: middle;
-              padding: 8px;
+              vertical-align: middle !important;
+              padding: 10px 18px !important;
               border: 1px solid #ddd;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 140px !important;
             }
             
             .static-strength-test-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 6px;
+              padding: 8px 10px;
               font-size: 12px;
+              min-width: 100px;
             }
             
             .static-strength-test-table input:focus {

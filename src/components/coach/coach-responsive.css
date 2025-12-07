@@ -10,32 +10,193 @@
   width: 100%;
 }
 
+/* Fix for all table cells - text should display in single line */
+.coach-table th,
+.coach-table td {
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+  padding: 8px 12px !important;
+  min-width: fit-content !important;
+}
+
 /* Ensure the first column (labels) wraps and is readable */
 .coach-table th:first-child,
 .coach-table td:first-child {
-  white-space: normal !important;
-  word-break: break-word;
+  white-space: nowrap !important;
+  min-width: 120px !important;
+}
+
+/* Physical trainer tables - ensure proper text display */
+.strength-test-table th,
+.strength-test-table td,
+.morphological-table th,
+.morphological-table td,
+.groundwork-skills-table th,
+.groundwork-skills-table td,
+.static-strength-test-table th,
+.static-strength-test-table td,
+.speed-test-table th,
+.speed-test-table td,
+.explosive-strength-test-table th,
+.explosive-strength-test-table td,
+.endurance-test-table th,
+.endurance-test-table td,
+.speed-strength-table th,
+.speed-strength-table td {
+  white-space: nowrap !important;
+  min-width: fit-content !important;
+  padding: 8px 12px !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+}
+
+/* Table headers - ensure full text is visible without ellipsis */
+.coach-table th,
+.strength-test-table th,
+.morphological-table th,
+.groundwork-skills-table th,
+.static-strength-test-table th,
+.speed-test-table th,
+.explosive-strength-test-table th,
+.endurance-test-table th,
+.speed-strength-table th,
+.body-type-table th,
+.body-composition-table th {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  min-width: max-content !important;
+  padding: 10px 15px !important;
+}
+
+/* Bootstrap table-dark headers fix */
+.table-dark th,
+thead.table-dark th {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: unset !important;
+  min-width: max-content !important;
+}
+
+/* Form controls inside physical trainer tables */
+.coach-table .form-control,
+.coach-table .form-select {
+  white-space: nowrap !important;
+  min-width: 100px !important;
+}
+
+/* ============================================= */
+/* جداول المحاولات (الأولى، الثانية، الثالثة) */
+/* ============================================= */
+.strength-test-table th,
+.static-strength-test-table th,
+.explosive-strength-test-table th {
+  min-width: 140px !important;
+  padding: 12px 20px !important;
+}
+
+.strength-test-table td,
+.static-strength-test-table td,
+.explosive-strength-test-table td {
+  min-width: 120px !important;
+  padding: 10px 15px !important;
+}
+
+.strength-test-table .form-control,
+.static-strength-test-table .form-control,
+.explosive-strength-test-table .form-control {
+  min-width: 100px !important;
+}
+
+/* ============================================= */
+/* جدول القوة المميزة بالسرعة */
+/* ============================================= */
+.speed-strength-table th {
+  min-width: 150px !important;
+  padding: 12px 20px !important;
+}
+
+.speed-strength-table td {
+  min-width: 130px !important;
+  padding: 10px 18px !important;
+}
+
+.speed-strength-table .form-control {
+  min-width: 110px !important;
+}
+
+/* ============================================= */
+/* جدول الصفات المورفولوجية */
+/* ============================================= */
+.morphological-table th {
+  min-width: 140px !important;
+  padding: 12px 18px !important;
+}
+
+.morphological-table td {
+  min-width: 130px !important;
+  padding: 10px 15px !important;
+}
+
+.morphological-table .form-select {
+  min-width: 140px !important;
+}
+
+/* ============================================= */
+/* جداول حساب نمط الجسم */
+/* ============================================= */
+.body-type-table th,
+.body-composition-table th {
+  min-width: 130px !important;
+  padding: 12px 18px !important;
+}
+
+.body-type-table td,
+.body-composition-table td {
+  min-width: 120px !important;
+  padding: 10px 15px !important;
+}
+
+.body-type-table .form-control,
+.body-composition-table .form-control {
+  min-width: 100px !important;
+}
+
+/* عمود الاسم واللقب - أوسع */
+.body-type-table th:nth-child(2),
+.body-type-table td:nth-child(2),
+.body-composition-table th:nth-child(1),
+.body-composition-table td:nth-child(1) {
+  min-width: 150px !important;
+}
+
+/* ============================================= */
+/* مسافات بين الأعمدة لجميع الجداول */
+/* ============================================= */
+.coach-table th,
+.coach-table td {
+  border-spacing: 5px !important;
 }
 
 /* Mobile optimizations */
 @media (max-width: 576px) {
   .coach-table {
-    min-width: 720px;
+    min-width: 900px;
     /* ensure horizontal scroll with reasonable width */
     font-size: 0.9rem;
   }
 
   .coach-table th,
   .coach-table td {
-    padding: 0.4rem;
-    white-space: nowrap;
+    padding: 0.5rem 0.75rem !important;
+    white-space: nowrap !important;
     vertical-align: middle;
   }
 
   /* But allow first column to wrap naturally so its text doesn't get cut */
   .coach-table th:first-child,
   .coach-table td:first-child {
-    white-space: normal !important;
+    white-space: nowrap !important;
     min-width: 120px;
     /* give labels breathing room */
   }
@@ -44,7 +205,7 @@
 /* Small tablets */
 @media (min-width: 577px) and (max-width: 768px) {
   .coach-table {
-    min-width: 900px;
+    min-width: 1000px;
   }
 }
 

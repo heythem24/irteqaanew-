@@ -527,31 +527,36 @@ const BodyCompositionCalculator: React.FC<BodyCompositionCalculatorProps> = ({ c
           {`
             .body-composition-table {
               font-size: 12px;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .body-composition-table th {
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 10px 6px;
+              vertical-align: middle !important;
+              padding: 12px 20px !important;
               border: 2px solid #dee2e6;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 140px !important;
+              overflow: visible !important;
+              text-overflow: unset !important;
             }
             
             .body-composition-table td {
-              vertical-align: middle;
-              padding: 6px;
+              vertical-align: middle !important;
+              padding: 10px 18px !important;
               border: 1px solid #ddd;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 130px !important;
             }
             
             .body-composition-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 4px;
-              font-size: 11px;
+              padding: 8px 10px;
+              font-size: 12px;
+              min-width: 100px;
             }
             
             .body-composition-table input:focus {

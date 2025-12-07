@@ -419,35 +419,38 @@ const MorphologicalTraits: React.FC<MorphologicalTraitsProps> = ({ clubId }) => 
           {`
             .morphological-table {
               font-size: 12px;
+              table-layout: auto !important;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .morphological-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 10px 6px;
+              vertical-align: middle !important;
+              padding: 12px 20px !important;
               border: 2px solid #1976d2;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 150px !important;
             }
             
             .morphological-table td {
-              vertical-align: middle;
-              padding: 6px;
+              vertical-align: middle !important;
+              padding: 10px 18px !important;
               border: 1px solid #ddd;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 140px !important;
             }
             
             .morphological-table input,
             .morphological-table select {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 4px;
-              font-size: 11px;
-              width: 100%;
-              min-width: 100px;
+              padding: 6px 10px;
+              font-size: 12px;
+              width: auto;
+              min-width: 120px;
             }
             
             .morphological-table input:focus,

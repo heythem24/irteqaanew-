@@ -393,34 +393,37 @@ const GroundworkSkillsTest: React.FC<GroundworkSkillsTestProps> = ({ clubId }) =
           {`
             .groundwork-skills-table {
               font-size: 12px;
+              table-layout: auto !important;
+              border-collapse: separate !important;
+              border-spacing: 2px !important;
             }
             
             .groundwork-skills-table th {
               background-color: #e3f2fd;
               font-weight: bold;
               text-align: center;
-              vertical-align: middle;
-              padding: 10px 6px;
+              vertical-align: middle !important;
+              padding: 12px 20px !important;
               border: 2px solid #1976d2;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 150px !important;
             }
             
             .groundwork-skills-table td {
-              vertical-align: middle;
-              padding: 6px;
+              vertical-align: middle !important;
+              padding: 10px 18px !important;
               border: 1px solid #ddd;
-              white-space: normal;
-              word-break: break-word;
+              white-space: nowrap !important;
+              min-width: 130px !important;
             }
             
             .groundwork-skills-table input {
               border: 1px solid #ccc;
               border-radius: 4px;
-              padding: 4px;
-              font-size: 11px;
-              width: 100%;
-              min-width: 80px;
+              padding: 8px 10px;
+              font-size: 12px;
+              width: auto;
+              min-width: 100px;
             }
             
             .groundwork-skills-table input:focus {
