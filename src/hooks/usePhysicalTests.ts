@@ -198,6 +198,11 @@ export const useMorphologicalTraits = (clubId: string) => {
   return usePhysicalTest('morphological-traits', clubId);
 };
 
+// Hook لقياسات القلب والجهاز الدوري
+export const useCardioCirculatoryMeasurements = (clubId: string) => {
+  return usePhysicalTest('cardio-circulatory-measurements', clubId);
+};
+
 // Hook لاختبار القوة الثابتة القصوى
 export const useMaxStaticStrengthTest = (clubId: string) => {
   return usePhysicalTest('max-static-strength-test', clubId);

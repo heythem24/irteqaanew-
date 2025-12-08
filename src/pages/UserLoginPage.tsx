@@ -255,33 +255,6 @@ const UserLoginPage: React.FC = () => {
                   />
                 </Form.Group>
 
-                {(!selectedRole) && (
-                  <Form.Group className="mb-4" controlId="role">
-                    <Form.Label>الدور (اختياري)</Form.Label>
-                    <Form.Select
-                      value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value)}
-                      disabled={isLoading}
-                    >
-                      <option value="">— بدون تحديد —</option>
-                      <option value="club_president">رئيس النادي</option>
-                      <option value="coach">المدرب</option>
-                      <option value="physical_trainer">المحضر البدني</option>
-                      <option value="club_general_secretary">الكاتب العام للنادي</option>
-                      <option value="club_treasurer">أمين مال النادي</option>
-                      <option value="medical_staff">الطاقم الطبي</option>
-                      <option value="athlete">رياضي</option>
-                      <option value="league_president">رئيس الرابطة</option>
-                      <option value="league_technical_director">المدير التقني للرابطة</option>
-                      <option value="technical_director">المدير التقني</option>
-                      <option value="general_secretary">الكاتب العام للرابطة</option>
-                      <option value="treasurer">أمين مال الرابطة</option>
-                      <option value="admin">مسؤول النظام</option>
-                    </Form.Select>
-                    <Form.Text className="text-muted">اختر الدور إذا كان اسم المستخدم مستخدماً لأكثر من حساب.</Form.Text>
-                  </Form.Group>
-                )}
-
                 <Button
                   variant="primary"
                   type="submit"

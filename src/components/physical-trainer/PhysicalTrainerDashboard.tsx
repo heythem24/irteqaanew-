@@ -9,6 +9,7 @@ import MaxDynamicStrengthTest from './MaxDynamicStrengthTest';
 import MaxStaticStrengthTest from './MaxStaticStrengthTest';
 import SpecialSpeedTest from './SpecialSpeedTest';
 import MorphologicalTraits from './MorphologicalTraits';
+import CardioCirculatoryMeasurements from './CardioCirculatoryMeasurements';
 import ExplosiveStrengthKumiTest from './ExplosiveStrengthKumiTest';
 import SpecialEnduranceTest from './SpecialEnduranceTest';
 import SpeedStrengthTests from './SpeedStrengthTests';
@@ -44,6 +45,9 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
 
       case 'morphological':
         return <MorphologicalTraits clubId={club.id} />;
+
+      case 'cardio-measurements':
+        return <CardioCirculatoryMeasurements clubId={club.id} />;
 
       case 'explosive-strength-kumi':
         return <ExplosiveStrengthKumiTest clubId={club.id} />;
@@ -195,6 +199,10 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
                   <NavDropdown.Item onClick={() => setActiveSection('morphological')}>
                     <i className="fas fa-ruler me-2"></i>
                     الصفات المورفولوجية
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('cardio-measurements')}>
+                    <i className="fas fa-heartbeat me-2"></i>
+                    قياسات القلب والجهاز الدوري
                   </NavDropdown.Item>
                 </NavDropdown>
 
