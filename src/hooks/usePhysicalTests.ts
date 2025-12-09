@@ -203,6 +203,36 @@ export const useCardioCirculatoryMeasurements = (clubId: string) => {
   return usePhysicalTest('cardio-circulatory-measurements', clubId);
 };
 
+// Hook لقياسات الجهاز التنفسي
+export const useRespiratoryMeasurements = (clubId: string) => {
+  return usePhysicalTest('respiratory-measurements', clubId);
+};
+
+// Hook لقياسات الاستقلاب
+export const useMetabolicMeasurements = (clubId: string) => {
+  return usePhysicalTest('metabolic-measurements', clubId);
+};
+
+// Hook لقياسات الجهاز العصبي والوظائف العصبية العضلية
+export const useNeuromuscularMeasurements = (clubId: string) => {
+  return usePhysicalTest('neuromuscular-measurements', clubId);
+};
+
+// Hook لقياسات الحرارة والتوازن المائي
+export const useThermalWaterBalanceMeasurements = (clubId: string) => {
+  return usePhysicalTest('thermal-water-balance-measurements', clubId);
+};
+
+// Hook لقياسات الهرمونات
+export const useHormonalMeasurements = (clubId: string) => {
+  return usePhysicalTest('hormonal-measurements', clubId);
+};
+
+// Hook لمقاييس الإدراك الذاتي
+export const useSelfPerceptionMeasurements = (clubId: string) => {
+  return usePhysicalTest('self-perception-measurements', clubId);
+};
+
 // Hook لاختبار القوة الثابتة القصوى
 export const useMaxStaticStrengthTest = (clubId: string) => {
   return usePhysicalTest('max-static-strength-test', clubId);

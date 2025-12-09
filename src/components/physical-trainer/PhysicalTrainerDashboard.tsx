@@ -10,6 +10,12 @@ import MaxStaticStrengthTest from './MaxStaticStrengthTest';
 import SpecialSpeedTest from './SpecialSpeedTest';
 import MorphologicalTraits from './MorphologicalTraits';
 import CardioCirculatoryMeasurements from './CardioCirculatoryMeasurements';
+import RespiratoryMeasurements from './RespiratoryMeasurements';
+import MetabolicMeasurements from './MetabolicMeasurements';
+import NeuromuscularMeasurements from './NeuromuscularMeasurements';
+import ThermalWaterBalanceMeasurements from './ThermalWaterBalanceMeasurements';
+import HormonalMeasurements from './HormonalMeasurements';
+import SelfPerceptionMeasurements from './SelfPerceptionMeasurements';
 import ExplosiveStrengthKumiTest from './ExplosiveStrengthKumiTest';
 import SpecialEnduranceTest from './SpecialEnduranceTest';
 import SpeedStrengthTests from './SpeedStrengthTests';
@@ -48,6 +54,24 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
 
       case 'cardio-measurements':
         return <CardioCirculatoryMeasurements clubId={club.id} />;
+
+      case 'respiratory-measurements':
+        return <RespiratoryMeasurements clubId={club.id} />;
+
+      case 'metabolic-measurements':
+        return <MetabolicMeasurements clubId={club.id} />;
+
+      case 'neuromuscular-measurements':
+        return <NeuromuscularMeasurements clubId={club.id} />;
+
+      case 'thermal-water-balance-measurements':
+        return <ThermalWaterBalanceMeasurements clubId={club.id} />;
+
+      case 'hormonal-measurements':
+        return <HormonalMeasurements clubId={club.id} />;
+
+      case 'self-perception-measurements':
+        return <SelfPerceptionMeasurements clubId={club.id} />;
 
       case 'explosive-strength-kumi':
         return <ExplosiveStrengthKumiTest clubId={club.id} />;
@@ -203,6 +227,30 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
                   <NavDropdown.Item onClick={() => setActiveSection('cardio-measurements')}>
                     <i className="fas fa-heartbeat me-2"></i>
                     قياسات القلب والجهاز الدوري
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('respiratory-measurements')}>
+                    <i className="fas fa-lungs me-2"></i>
+                    قياسات الجهاز التنفسي
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('metabolic-measurements')}>
+                    <i className="fas fa-fire me-2"></i>
+                    قياسات الاستقلاب
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('neuromuscular-measurements')}>
+                    <i className="fas fa-brain me-2"></i>
+                    قياسات الجهاز العصبي والوظائف العصبية العضلية
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('thermal-water-balance-measurements')}>
+                    <i className="fas fa-temperature-high me-2"></i>
+                    قياسات الحرارة والتوازن المائي
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('hormonal-measurements')}>
+                    <i className="fas fa-vial me-2"></i>
+                    قياسات الهرمونات
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('self-perception-measurements')}>
+                    <i className="fas fa-smile me-2"></i>
+                    مقاييس الإدراك الذاتي
                   </NavDropdown.Item>
                 </NavDropdown>
 
