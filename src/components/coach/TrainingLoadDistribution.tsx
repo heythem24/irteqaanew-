@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Form, Table } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Card, Button, Row, Col, Form, Table, Alert } from 'react-bootstrap';
 import type { Club, TrainingData } from '../../types';
 import { useTrainingLoad } from '../../hooks/useTrainingData';
+import { useHeartRateData } from '../../hooks/useHeartRateData';
 import { UsersService as UserService } from '../../services/firestoreService';
 import { CATEGORIES } from '../../utils/categoryUtils';
 import './TrainingLoadDistribution.css';
@@ -16,6 +17,16 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
   // الحصول على المستخدم الحالي لاسم المدرب
   const currentUser = UserService.getCurrentUser();
   const trainerName = currentUser ? `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim() || 'المدرب' : 'المدرب';
+
+  // استقبال بيانات نبضات القلب من المحضر البدني
+  const { heartRateData, loading: heartRateLoading } = useHeartRateData(club.id);
+
+  // تتبع البيانات المستلمة
+  useEffect(() => {
+    console.log('Heart Rate Data Updated:', heartRateData);
+    console.log('Loading:', heartRateLoading);
+    console.log('Club ID:', club.id);
+  }, [heartRateData, heartRateLoading, club.id]);
 
   // معلومات النموذج
   const [formData, setFormData] = useState({
@@ -224,74 +235,138 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
     setFormData(prev => ({ ...prev, trainer: trainerName }));
   }, [trainerName]);
 
-  // حدود القيم لكل مستوى
-  const limits = {
-    maximum: { percentage: { min: 86, max: 95 }, heartRate: { min: 185, max: 198 } },
+  // حدود القيم لكل مستوى - النطاقات ثابتة
+  const limits = useMemo(() => ({
+    maximum: {
+      percentage: { min: 86, max: 95 },
+      heartRate: { min: 185, max: 198 }
+    },
     high: { percentage: { min: 76, max: 85 }, heartRate: { min: 171, max: 184 } },
     medium: { percentage: { min: 65, max: 75 }, heartRate: { min: 156, max: 170 } }
+  }), []);
+
+  // حساب الشدة من نبضات القلب (العكس)
+  const calculatePercentageFromHeartRate = (heartRate: number, loadLevel: 'maximum' | 'high' | 'medium'): number => {
+    const levelLimits = limits[loadLevel];
+
+    // التأكد من أن نبضات القلب ضمن النطاق المسموح
+    if (heartRate < levelLimits.heartRate.min || heartRate > levelLimits.heartRate.max) {
+      return 0;
+    }
+
+    // حساب النسبة المئوية بناءً على التناسب الخطي
+    const heartRateRange = levelLimits.heartRate.max - levelLimits.heartRate.min;
+    const percentageRange = levelLimits.percentage.max - levelLimits.percentage.min;
+    const relativePosition = (heartRate - levelLimits.heartRate.min) / heartRateRange;
+    const percentage = levelLimits.percentage.min + (percentageRange * relativePosition);
+
+    return Math.round(percentage);
   };
 
-  const [trainingData, setTrainingData] = useState<TrainingData>(() => {
-    // دالة مساعدة لحساب نبضات القلب أثناء التهيئة
-    const calculateHeartRateForInit = (percentage: number, level: 'maximum' | 'high' | 'medium'): number => {
-      const levelLimits = limits[level];
 
-      if (percentage < levelLimits.percentage.min || percentage > levelLimits.percentage.max) {
-        return 0;
-      }
 
-      const percentageRange = levelLimits.percentage.max - levelLimits.percentage.min;
-      const heartRateRange = levelLimits.heartRate.max - levelLimits.heartRate.min;
-      const relativePosition = (percentage - levelLimits.percentage.min) / percentageRange;
-      const heartRate = levelLimits.heartRate.min + (heartRateRange * relativePosition);
-
-      return Math.round(heartRate);
-    };
-
-    return {
-      maximum: {
-        weeks: [
-          { percentages: [null, 90, 90], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), calculateHeartRateForInit(90, 'maximum')] },
-          { percentages: [null, 90, 90], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), calculateHeartRateForInit(90, 'maximum')] },
-          { percentages: [null, 90, null], heartRates: [null, calculateHeartRateForInit(90, 'maximum'), null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] }
-        ]
-      },
-      high: {
-        weeks: [
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] }
-        ]
-      },
-      medium: {
-        weeks: [
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, 70], heartRates: [null, null, calculateHeartRateForInit(70, 'medium')] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] },
-          { percentages: [null, null, null], heartRates: [null, null, null] }
-        ]
-      }
-    };
+  const [trainingData, setTrainingData] = useState<TrainingData>({
+    maximum: {
+      weeks: [
+        { percentages: [null, 90, 90], heartRates: [null, 191, 191] },
+        { percentages: [null, 90, 90], heartRates: [null, 191, 191] },
+        { percentages: [null, 90, null], heartRates: [null, 191, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] }
+      ]
+    },
+    high: {
+      weeks: [
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] }
+      ]
+    },
+    medium: {
+      weeks: [
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, 70], heartRates: [null, null, 163] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] },
+        { percentages: [null, null, null], heartRates: [null, null, null] }
+      ]
+    }
   });
+
+  // تتبع آخر وقت تم فيه تطبيق بيانات المحضر البدني
+  const [lastAppliedHeartRateTime, setLastAppliedHeartRateTime] = useState<string | null>(null);
+
+  // تطبيق بيانات المحضر البدني على جميع الخلايا (مسح القديم وتطبيق الجديد)
+  useEffect(() => {
+    if (heartRateData?.averageMaxHR && heartRateData?.sentAt) {
+      // تحقق من أن هذه بيانات جديدة لم يتم تطبيقها من قبل
+      if (lastAppliedHeartRateTime === heartRateData.sentAt) {
+        console.log('البيانات مطبقة مسبقاً، تخطي...');
+        return;
+      }
+
+      const receivedHeartRate = heartRateData.averageMaxHR;
+      const calculatedPercentage = calculatePercentageFromHeartRate(receivedHeartRate, 'maximum');
+
+      console.log(`بيانات المحضر البدني الجديدة: ${receivedHeartRate} ن/د → شدة ${calculatedPercentage}%`);
+
+      if (calculatedPercentage > 0) {
+        setTrainingData(prev => {
+          const newData = JSON.parse(JSON.stringify(prev));
+
+          // مسح جميع القيم في العالي والمتوسط
+          newData.high.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((_: any, dayIndex: number) => {
+              newData.high.weeks[weekIndex].percentages[dayIndex] = null;
+              newData.high.weeks[weekIndex].heartRates[dayIndex] = null;
+            });
+          });
+
+          newData.medium.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((_: any, dayIndex: number) => {
+              newData.medium.weeks[weekIndex].percentages[dayIndex] = null;
+              newData.medium.weeks[weekIndex].heartRates[dayIndex] = null;
+            });
+          });
+
+          // تحديث جميع خلايا المستوى الأقصى التي لها قيم
+          newData.maximum.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((percentage: number | null, dayIndex: number) => {
+              if (percentage !== null && percentage !== undefined) {
+                newData.maximum.weeks[weekIndex].percentages[dayIndex] = calculatedPercentage;
+                newData.maximum.weeks[weekIndex].heartRates[dayIndex] = receivedHeartRate;
+                console.log(`تحديث خلية [${weekIndex}][${dayIndex}]: ${calculatedPercentage}% → ${receivedHeartRate} ن/د`);
+              }
+            });
+          });
+
+          return newData;
+        });
+
+        // تحديث وقت آخر تطبيق
+        setLastAppliedHeartRateTime(heartRateData.sentAt);
+      }
+    }
+  }, [heartRateData?.averageMaxHR, heartRateData?.sentAt, lastAppliedHeartRateTime]);
 
   // حساب نبضات القلب من النسبة المئوية بناءً على النطاقات المحددة
   const calculateHeartRate = (percentage: number, loadLevel: 'maximum' | 'high' | 'medium'): number => {
     const levelLimits = limits[loadLevel];
 
+    console.log(`حساب نبضات القلب: ${percentage}% للمستوى ${loadLevel}`, levelLimits);
+
     // التأكد من أن النسبة ضمن النطاق المسموح
     if (percentage < levelLimits.percentage.min || percentage > levelLimits.percentage.max) {
+      console.log('النسبة خارج النطاق المسموح');
       return 0; // إرجاع 0 إذا كانت النسبة خارج النطاق
     }
 
-    // حساب نبضات القلب بناءً على التناسب الخطي ضمن النطاق
+    // حساب نبضات القلب بناءً على التناسب الخطي ضمن النطاق (لجميع المستويات)
     const percentageRange = levelLimits.percentage.max - levelLimits.percentage.min;
     const heartRateRange = levelLimits.heartRate.max - levelLimits.heartRate.min;
 
@@ -300,9 +375,13 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
 
     // حساب نبضات القلب المقابلة
     const heartRate = levelLimits.heartRate.min + (heartRateRange * relativePosition);
+    const roundedHeartRate = Math.round(heartRate);
 
-    return Math.round(heartRate);
+    console.log(`النتيجة: ${percentage}% → ${roundedHeartRate} ن/د`);
+    return roundedHeartRate;
   };
+
+
 
   // تحديد مستوى الحمل بناءً على النسبة المئوية
   const getLoadLevel = (percentage: number): string => {
@@ -415,6 +494,7 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
         const isValid = (numValue >= levelLimits.percentage.min && numValue <= levelLimits.percentage.max);
 
         if (isValid) {
+          // حساب نبضات القلب بناءً على الشدة والحدود المحدثة
           const heartRate = calculateHeartRate(numValue, loadLevel);
           newData[loadLevel].weeks[weekIndex].heartRates[dayIndex] = heartRate;
         } else {
@@ -523,6 +603,9 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
       // تحميل بيانات درجات الحمل إذا كانت موجودة
       if (loadData.trainingData) {
         setTrainingData(loadData.trainingData);
+
+        // إعادة تعيين وقت آخر تطبيق لضمان تطبيق بيانات المحضر البدني بعد التحميل
+        setLastAppliedHeartRateTime(null);
       }
     }
   }, [loadData, trainerName]);
@@ -549,6 +632,51 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
 
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // دالة لإعادة تطبيق بيانات المحضر البدني على جميع الخلايا
+  const reapplyHeartRateData = () => {
+    if (heartRateData?.averageMaxHR) {
+      const receivedHeartRate = heartRateData.averageMaxHR;
+      const calculatedPercentage = calculatePercentageFromHeartRate(receivedHeartRate, 'maximum');
+
+      if (calculatedPercentage > 0) {
+        setTrainingData(prev => {
+          const newData = JSON.parse(JSON.stringify(prev));
+          let updatedCount = 0;
+
+          // مسح جميع القيم في العالي والمتوسط
+          newData.high.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((_: any, dayIndex: number) => {
+              newData.high.weeks[weekIndex].percentages[dayIndex] = null;
+              newData.high.weeks[weekIndex].heartRates[dayIndex] = null;
+            });
+          });
+
+          newData.medium.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((_: any, dayIndex: number) => {
+              newData.medium.weeks[weekIndex].percentages[dayIndex] = null;
+              newData.medium.weeks[weekIndex].heartRates[dayIndex] = null;
+            });
+          });
+
+          // تحديث جميع خلايا المستوى الأقصى التي لها قيم
+          newData.maximum.weeks.forEach((week: any, weekIndex: number) => {
+            week.percentages.forEach((percentage: number | null, dayIndex: number) => {
+              if (percentage !== null && percentage !== undefined) {
+                newData.maximum.weeks[weekIndex].percentages[dayIndex] = calculatedPercentage;
+                newData.maximum.weeks[weekIndex].heartRates[dayIndex] = receivedHeartRate;
+                updatedCount++;
+              }
+            });
+          });
+
+          return newData;
+        });
+
+        alert(`تم إعادة تطبيق بيانات المحضر البدني:\n- نبضات القلب: ${receivedHeartRate} ن/د\n- الشدة: ${calculatedPercentage}%\n\nتم مسح قيم العالي والمتوسط وتحديث المستوى الأقصى`);
+      }
+    }
   };
 
   // دالة لمعالجة النقر على رقم الوحدة
@@ -854,16 +982,16 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
             <tr>
               <td>رقم الوحدة</td>
               ${(() => {
-                let counter = printSeasonUnitOffset;
-                return Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-                  const date = printDates[index];
-                  if (date && date.trim() !== '') {
-                    counter += 1;
-                    return `<td>${counter}</td>`;
-                  }
-                  return '<td></td>';
-                }).join('');
-              })()}
+        let counter = printSeasonUnitOffset;
+        return Array.from({ length: printWeeksCount * 3 }, (_, index) => {
+          const date = printDates[index];
+          if (date && date.trim() !== '') {
+            counter += 1;
+            return `<td>${counter}</td>`;
+          }
+          return '<td></td>';
+        }).join('');
+      })()}
             </tr>
             <!-- التاريخ -->
             <tr>
@@ -886,19 +1014,19 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
                 </div>
               </td>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const percentage = trainingData.maximum.weeks[weekIndex]?.percentages[dayInWeek];
-      return `<td class="input-cell">${percentage || ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const percentage = trainingData.maximum.weeks[weekIndex]?.percentages[dayInWeek];
+        return `<td class="input-cell">${percentage || ''}</td>`;
+      }).join('')}
             </tr>
             <tr>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const heartRate = trainingData.maximum.weeks[weekIndex]?.heartRates[dayInWeek];
-      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const heartRate = trainingData.maximum.weeks[weekIndex]?.heartRates[dayInWeek];
+        return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+      }).join('')}
             </tr>
 
             <!-- العالي -->
@@ -911,19 +1039,19 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
                 </div>
               </td>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const percentage = trainingData.high.weeks[weekIndex]?.percentages[dayInWeek];
-      return `<td class="input-cell">${percentage || ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const percentage = trainingData.high.weeks[weekIndex]?.percentages[dayInWeek];
+        return `<td class="input-cell">${percentage || ''}</td>`;
+      }).join('')}
             </tr>
             <tr>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const heartRate = trainingData.high.weeks[weekIndex]?.heartRates[dayInWeek];
-      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const heartRate = trainingData.high.weeks[weekIndex]?.heartRates[dayInWeek];
+        return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+      }).join('')}
             </tr>
 
             <!-- المتوسط -->
@@ -936,37 +1064,37 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
                 </div>
               </td>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const percentage = trainingData.medium.weeks[weekIndex]?.percentages[dayInWeek];
-      return `<td class="input-cell">${percentage || ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const percentage = trainingData.medium.weeks[weekIndex]?.percentages[dayInWeek];
+        return `<td class="input-cell">${percentage || ''}</td>`;
+      }).join('')}
             </tr>
             <tr>
               ${Array.from({ length: printWeeksCount * 3 }, (_, index) => {
-      const weekIndex = Math.floor(index / 3);
-      const dayInWeek = index % 3;
-      const heartRate = trainingData.medium.weeks[weekIndex]?.heartRates[dayInWeek];
-      return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
-    }).join('')}
+        const weekIndex = Math.floor(index / 3);
+        const dayInWeek = index % 3;
+        const heartRate = trainingData.medium.weeks[weekIndex]?.heartRates[dayInWeek];
+        return `<td class="heart-rate-display">${heartRate ? heartRate + ' ن/د' : ''}</td>`;
+      }).join('')}
             </tr>
 
             <!-- زمن التدريب الأسبوعي -->
             <tr>
               <td class="row-label">زمن التدريب الأسبوعي</td>
               ${Array.from({ length: printWeeksCount }, (_, weekIndex) => {
-      const weeklyTime = calculateWeeklyTrainingTime(weekIndex);
-      return `<td colspan="3" class="weekly-time">${weeklyTime.time}<br/>${weeklyTime.level}</td>`;
-    }).join('')}
+        const weeklyTime = calculateWeeklyTrainingTime(weekIndex);
+        return `<td colspan="3" class="weekly-time">${weeklyTime.time}<br/>${weeklyTime.level}</td>`;
+      }).join('')}
             </tr>
 
             <!-- متوسط درجة الحمل الأسبوعية -->
             <tr>
               <td class="row-label">متوسط درجة الحمل الأسبوعية</td>
               ${Array.from({ length: printWeeksCount }, (_, weekIndex) => {
-      const average = calculateWeeklyAverage(weekIndex);
-      return `<td colspan="3" class="weekly-average">% ${average}</td>`;
-    }).join('')}
+        const average = calculateWeeklyAverage(weekIndex);
+        return `<td colspan="3" class="weekly-average">% ${average}</td>`;
+      }).join('')}
             </tr>
           </tbody>
         </table>
@@ -1088,6 +1216,42 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
             </Button>
           </Col>
         </Row>
+
+        {/* عرض معلومات نبضات القلب المستلمة من المحضر البدني */}
+
+
+
+        {heartRateData && (
+          <Alert variant="success" className="mb-3" dir="rtl">
+            <div className="d-flex align-items-center justify-content-between">
+              <div>
+                <i className="fas fa-heartbeat me-2"></i>
+                <strong>متوسط نبضات القلب الأقصى من المحضر البدني:</strong> {heartRateData.averageMaxHR} ن/د
+                <span className="badge bg-success ms-2">مُطبق</span>
+              </div>
+              <div className="d-flex align-items-center">
+                <small className="text-muted me-3">
+                  {new Date(heartRateData.sentAt).toLocaleString('fr-FR')}
+                </small>
+                <Button
+                  variant="outline-success"
+                  size="sm"
+                  onClick={reapplyHeartRateData}
+                >
+                  <i className="fas fa-sync-alt me-1"></i>
+                  إعادة تطبيق
+                </Button>
+              </div>
+            </div>
+          </Alert>
+        )}
+
+        {!heartRateData && !heartRateLoading && (
+          <Alert variant="warning" className="mb-3" dir="rtl">
+            <i className="fas fa-exclamation-triangle me-2"></i>
+            لم يتم استلام بيانات نبضات القلب من المحضر البدني بعد. سيتم استخدام القيم الافتراضية (185-198 ن/د).
+          </Alert>
+        )}
 
         {/* الجدول الرئيسي */}
         <div className="table-responsive" style={{ overflowX: 'auto', minHeight: '600px' }}>

@@ -108,7 +108,7 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
   return (
     <div className="min-vh-100" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
       {/* Header Section */}
-      <section className="position-relative py-5" style={{ 
+      <section className="position-relative py-5" style={{
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         overflow: 'hidden'
       }}>
@@ -117,7 +117,7 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           opacity: 0.3
         }}></div>
-        
+
         <Container className="position-relative">
           <Row className="align-items-center">
             <Col md={9}>
@@ -173,13 +173,13 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
             <div className="col-12">
               <Nav variant="pills" className="justify-content-center flex-wrap gap-3">
                 {/* الاختبارات البدنية */}
-                <NavDropdown 
+                <NavDropdown
                   title={
                     <span className="d-flex align-items-center">
                       <i className="fas fa-dumbbell me-2"></i>
                       الاختبارات البدنية
                     </span>
-                  } 
+                  }
                   id="physical-tests-dropdown"
                   className="nav-dropdown-custom"
                 >
@@ -210,13 +210,13 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
                 </NavDropdown>
 
                 {/* الاختبارات المورفولوجية */}
-                <NavDropdown 
+                <NavDropdown
                   title={
                     <span className="d-flex align-items-center">
                       <i className="fas fa-ruler me-2"></i>
                       الاختبارات المورفولوجية
                     </span>
-                  } 
+                  }
                   id="morphological-tests-dropdown"
                   className="nav-dropdown-custom"
                 >
@@ -255,38 +255,38 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
                 </NavDropdown>
 
                 {/* الاختبارات المهارية */}
-            <NavDropdown 
-              title={
-                <span>
-                  <i className="fas fa-user-ninja me-2"></i>
-                  الاختبارات المهارية
-                </span>
-              } 
-              id="skill-tests-dropdown"
-              className="mx-1 mb-2"
-            >
-              <NavDropdown.Item onClick={() => setActiveSection('ground-skills')}>
-                <i className="fas fa-user-ninja me-2"></i>
-                مهارات اللعب الأرضي\20ث
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('throwing-skills')}>
-                <i className="fas fa-hand-rock me-2"></i>
-                مهارات الرمي
-              </NavDropdown.Item>
-              <NavDropdown.Item onClick={() => setActiveSection('uchi-komi')}>
-                <i className="fas fa-redo me-2"></i>
-                الأوتشي-كومي
-              </NavDropdown.Item>
-            </NavDropdown>
+                <NavDropdown
+                  title={
+                    <span>
+                      <i className="fas fa-user-ninja me-2"></i>
+                      الاختبارات المهارية
+                    </span>
+                  }
+                  id="skill-tests-dropdown"
+                  className="mx-1 mb-2"
+                >
+                  <NavDropdown.Item onClick={() => setActiveSection('ground-skills')}>
+                    <i className="fas fa-user-ninja me-2"></i>
+                    مهارات اللعب الأرضي\20ث
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('throwing-skills')}>
+                    <i className="fas fa-hand-rock me-2"></i>
+                    مهارات الرمي
+                  </NavDropdown.Item>
+                  <NavDropdown.Item onClick={() => setActiveSection('uchi-komi')}>
+                    <i className="fas fa-redo me-2"></i>
+                    الأوتشي-كومي
+                  </NavDropdown.Item>
+                </NavDropdown>
 
                 {/* حساب نمط الجسم */}
-                <NavDropdown 
+                <NavDropdown
                   title={
                     <span className="d-flex align-items-center">
                       <i className="fas fa-user-md me-2"></i>
                       حساب نمط الجسم
                     </span>
-                  } 
+                  }
                   id="body-type-dropdown"
                   className="nav-dropdown-custom"
                 >
@@ -374,9 +374,10 @@ const PhysicalTrainerDashboard: React.FC<PhysicalTrainerDashboardProps> = ({ phy
             box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
             border-radius: 15px !important;
             padding: 15px 0 !important;
-            margin-top: 10px !important;
+            margin-top: 15px !important;
             background: white !important;
             min-width: 250px !important;
+            z-index: 1050 !important;
           }
 
           .nav-dropdown-custom .dropdown-item {

@@ -101,7 +101,27 @@ const CardioCirculatoryMeasurements: React.FC<CardioCirculatoryMeasurementsProps
   }, [clubAthletes]);
 
   const updateRow = (id: number, field: keyof CardioRow, value: string) => {
+    // التحقق من عمود الأقصى - لا يسمح بأكثر من 220
+    if (field === 'hrMax') {
+      const numValue = parseInt(value);
+      if (value !== '' && (!isNaN(numValue) && numValue > 220)) {
+        return; // لا تحديث إذا كان أكبر من 220
+      }
+    }
+    
     setRows(prev => prev.map(row => (row.id === id ? { ...row, [field]: value } : row)));
+  };
+
+  // حساب متوسط نبضات القلب الأقصى
+  const calculateAverageMaxHR = (): number => {
+    const validValues = rows
+      .map(row => parseInt(row.hrMax))
+      .filter(val => !isNaN(val) && val > 0);
+    
+    if (validValues.length === 0) return 0;
+    
+    const sum = validValues.reduce((acc, val) => acc + val, 0);
+    return Math.round(sum / validValues.length);
   };
 
   const handleSave = async () => {
@@ -114,6 +134,57 @@ const CardioCirculatoryMeasurements: React.FC<CardioCirculatoryMeasurementsProps
       alert('حدث خطأ في حفظ البيانات');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // دالة إرسال متوسط نبضات القلب للمدرب
+  const sendHeartRateToCoach = async () => {
+    const averageHR = calculateAverageMaxHR();
+    
+    if (averageHR === 0) {
+      alert('لا يوجد متوسط نبضات قلب لإرساله. يرجى إدخال قيم في عمود "الأقصى" أولاً.');
+      return;
+    }
+
+    // التحقق من أن المتوسط ضمن النطاق المطلوب (185-198)
+    if (averageHR < 185 || averageHR > 198) {
+      alert(`متوسط نبضات القلب (${averageHR} ن/د) يجب أن يكون بين 185-198 ن/د لإرساله للمدرب.`);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `هل تريد إرسال متوسط نبضات القلب (${averageHR} ن/د) للمدرب؟\n` +
+      `سيتم استخدام هذه القيمة في توزيع درجة حمل التدريب.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      // حفظ متوسط نبضات القلب في قاعدة البيانات للمدرب
+      const { doc, setDoc } = await import('firebase/firestore');
+      const { db } = await import('../../config/firebase');
+      
+      const heartRateRef = doc(db, 'clubs', clubId, 'heartRateData', 'averageMaxHR');
+      const dataToSend = {
+        averageMaxHR: averageHR,
+        sentAt: new Date().toISOString(),
+        sentBy: 'physical-trainer'
+      };
+      
+      console.log('Sending heart rate data:', dataToSend);
+      console.log('Document path:', `clubs/${clubId}/heartRateData/averageMaxHR`);
+      
+      await setDoc(heartRateRef, dataToSend);
+      
+      console.log('Heart rate data sent successfully');
+
+      // حساب الشدة المقابلة لنبضات القلب المرسلة
+      const calculatedPercentage = Math.round(86 + ((averageHR - 185) * (95 - 86) / (198 - 185)));
+      
+      alert(`تم إرسال متوسط نبضات القلب (${averageHR} ن/د) للمدرب بنجاح!\n\nالشدة المقابلة: ${calculatedPercentage}%\n\nسيتم تطبيق هذه القيم على جميع خلايا المستوى الأقصى في جدول توزيع درجة حمل التدريب عند المدرب.`);
+    } catch (error) {
+      console.error('Error sending heart rate to coach:', error);
+      alert('حدث خطأ في إرسال البيانات للمدرب');
     }
   };
 
@@ -144,6 +215,16 @@ const CardioCirculatoryMeasurements: React.FC<CardioCirculatoryMeasurementsProps
                   حفظ البيانات
                 </>
               )}
+            </Button>
+            
+            <Button
+              variant="primary"
+              onClick={sendHeartRateToCoach}
+              disabled={saving || calculateAverageMaxHR() === 0}
+              className="me-2"
+            >
+              <i className="fas fa-paper-plane me-2"></i>
+              إرسال المتوسط للمدرب ({calculateAverageMaxHR() > 0 ? `${calculateAverageMaxHR()} ن/د` : 'لا يوجد'})
             </Button>
           </Col>
         </Row>
@@ -221,10 +302,13 @@ const CardioCirculatoryMeasurements: React.FC<CardioCirculatoryMeasurementsProps
                   </td>
                   <td className="text-center align-middle">
                     <Form.Control
-                      type="text"
+                      type="number"
                       size="sm"
                       value={row.hrMax}
                       onChange={(e) => updateRow(row.id, 'hrMax', e.target.value)}
+                      min="0"
+                      max="220"
+                      placeholder="0-220"
                     />
                   </td>
                   <td className="text-center align-middle">
@@ -261,6 +345,18 @@ const CardioCirculatoryMeasurements: React.FC<CardioCirculatoryMeasurementsProps
                   </td>
                 </tr>
               ))}
+              {/* صف المتوسط */}
+              <tr className="table-warning">
+                <td className="text-center align-middle fw-bold" colSpan={6}>
+                  مجموع متوسط نبضات القلب
+                </td>
+                <td className="text-center align-middle bg-success text-white fw-bold">
+                  {calculateAverageMaxHR() > 0 ? calculateAverageMaxHR() : '-'}
+                </td>
+                <td className="text-center align-middle" colSpan={3}>
+                  -
+                </td>
+              </tr>
             </tbody>
           </Table>
         </div>
