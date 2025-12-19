@@ -884,35 +884,56 @@ export class UsersService {
   static async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     const usersRef = collection(db, 'users');
 
-    // Resolve leagueId from club if missing but clubId provided
-    let resolvedLeagueId = userData.leagueId;
-    try {
-      if (!resolvedLeagueId && userData.clubId) {
-        const club = await ClubsService.getClubById(userData.clubId);
-        if (club?.leagueId) {
-          resolvedLeagueId = club.leagueId;
-        }
+    // التحقق من التكرار: نفس الاسم + نفس الدور + نفس المكان (نادي أو رابطة)
+    // يُسمح بنفس الاسم لأدوار مختلفة في نفس المكان
+    // يُسمح بنفس الاسم لنفس الدور في أماكن مختلفة
+    
+    if (userData.clubId) {
+      // مستخدم نادي: التحقق من وجود نفس الاسم + نفس الدور + نفس النادي
+      const duplicateQuery = query(
+        usersRef,
+        where('username', '==', userData.username),
+        where('role', '==', userData.role),
+        where('clubId', '==', userData.clubId)
+      );
+      const querySnapshot = await getDocs(duplicateQuery);
+      if (!querySnapshot.empty) {
+        throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل في هذا النادي مع هذا الدور`);
       }
-    } catch { }
-
-    // Build filters only for defined values to avoid Firestore undefined error
-    const filters = [
-      where('username', '==', userData.username),
-      where('role', '==', userData.role),
-    ];
-    if (userData.clubId) filters.push(where('clubId', '==', userData.clubId));
-    if (resolvedLeagueId) filters.push(where('leagueId', '==', resolvedLeagueId));
-
-    const q = query(usersRef, ...filters);
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل في هذا النادي/الرابطة مع هذا الدور`);
+    } else if (userData.leagueId) {
+      // مستخدم رابطة: التحقق من وجود نفس الاسم + نفس الدور + نفس الرابطة (بدون نادي)
+      const duplicateQuery = query(
+        usersRef,
+        where('username', '==', userData.username),
+        where('role', '==', userData.role),
+        where('leagueId', '==', userData.leagueId)
+      );
+      const querySnapshot = await getDocs(duplicateQuery);
+      // فلترة لاستبعاد مستخدمي النوادي
+      const duplicates = querySnapshot.docs.filter(d => !d.data().clubId);
+      if (duplicates.length > 0) {
+        throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل في هذه الرابطة مع هذا الدور`);
+      }
+    } else {
+      // مستخدم عام (admin): التحقق من وجود نفس الاسم + نفس الدور (بدون نادي أو رابطة)
+      const duplicateQuery = query(
+        usersRef,
+        where('username', '==', userData.username),
+        where('role', '==', userData.role)
+      );
+      const querySnapshot = await getDocs(duplicateQuery);
+      const duplicates = querySnapshot.docs.filter(d => {
+        const data = d.data();
+        return !data.clubId && !data.leagueId;
+      });
+      if (duplicates.length > 0) {
+        throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل مع هذا الدور`);
+      }
     }
 
-    // Prepare payload and strip undefined fields (Firestore does not accept undefined)
+    // Prepare payload
     const basePayload: any = {
       ...userData,
-      leagueId: resolvedLeagueId ?? undefined,
       isActive: userData.isActive ?? true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -1010,69 +1031,117 @@ export class UsersService {
     await deleteDoc(ref);
   }
 
-  static async login(username: string, password: string, role?: string, clubId?: string): Promise<User | null> {
+  static async login(username: string, password: string, role?: string, clubId?: string, leagueId?: string): Promise<User | null> {
     // السماح بأسماء مستخدمين متكررة عبر أندية/رابطات مختلفة
+    // كل مستخدم فريد بناءً على: username + password + (clubId أو leagueId)
     const usersRef = collection(db, 'users');
-    const filters = [where('username', '==', username), where('password', '==', password)];
+    const baseFilters = [where('username', '==', username), where('password', '==', password)];
 
-    // إذا تم تحديد النادي، نبحث داخل النادي المحدد فقط
+    console.log('===Login Debug: Parameters===', { username, role, clubId, leagueId });
+
+    // إذا تم تحديد النادي، نبحث داخل النادي المحدد
     if (clubId) {
-      filters.push(where('clubId', '==', clubId));
+      const filters = [...baseFilters, where('clubId', '==', clubId)];
+      if (role) filters.push(where('role', '==', role));
+      const q = query(usersRef, ...filters);
+      const snap = await getDocs(q);
+      console.log('===Login Debug: Club search results===', snap.size);
+      if (!snap.empty) {
+        const user = mapUserData(snap.docs[0].id, snap.docs[0].data());
+        if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
+        localStorage.setItem('current_user', JSON.stringify(user));
+        await this.updateUser(user.id, { lastLogin: new Date() });
+        return user;
+      }
+      return null;
     }
 
-    // إذا تم تحديد الدور، نبحث بالدور المحدد فقط
-    if (role) {
-      filters.push(where('role', '==', role));
-    }
-
-    const q = query(usersRef, ...filters);
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      // إذا لم نجد نتائج مع فلترة النادي، نبحث بدون فلترة النادي لكن مع فلترة الرابطة إن وجدت
-      const fallbackFilters = [where('username', '==', username), where('password', '==', password)];
+    // إذا تم تحديد الرابطة، نبحث داخل الرابطة المحددة (بدون نادي)
+    if (leagueId) {
+      console.log('===Login Debug: Searching for league user with leagueId===', leagueId);
+      
+      // أولاً: البحث بـ leagueId
+      const filters = [...baseFilters, where('leagueId', '==', leagueId)];
+      if (role) filters.push(where('role', '==', role));
+      const q = query(usersRef, ...filters);
+      const snap = await getDocs(q);
+      console.log('===Login Debug: League search results===', snap.size);
+      
+      // فلترة النتائج لاستبعاد مستخدمي النوادي
+      const leagueUsers = snap.docs.filter(d => {
+        const data = d.data();
+        return !data.clubId; // فقط مستخدمي الرابطة (بدون نادي)
+      });
+      
+      console.log('===Login Debug: League users (no club)===', leagueUsers.length);
+      
+      if (leagueUsers.length > 0) {
+        const user = mapUserData(leagueUsers[0].id, leagueUsers[0].data());
+        if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
+        localStorage.setItem('current_user', JSON.stringify(user));
+        await this.updateUser(user.id, { lastLogin: new Date() });
+        return user;
+      }
+      
+      // ثانياً: البحث البديل - مستخدم رابطة بدون leagueId محفوظ (للتوافق مع المستخدمين القدامى)
+      console.log('===Login Debug: Trying fallback search for league users without leagueId===');
+      const fallbackFilters = [...baseFilters];
       if (role) fallbackFilters.push(where('role', '==', role));
-
       const fallbackQ = query(usersRef, ...fallbackFilters);
       const fallbackSnap = await getDocs(fallbackQ);
-      if (fallbackSnap.empty) return null;
-
-      const candidates = fallbackSnap.docs.map(d => mapUserData(d.id, d.data()));
-      const user = candidates
-        .sort((a, b) => {
-          const ta = (a.createdAt as any)?.getTime?.() || 0;
-          const tb = (b.createdAt as any)?.getTime?.() || 0;
-          return tb - ta; // أحدث أولاً
-        })[0];
-
-      if (!user.isActive) {
-        throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
+      console.log('===Login Debug: Fallback search results===', fallbackSnap.size);
+      
+      // فلترة للحصول على مستخدمي الرابطة فقط (بدون clubId)
+      const fallbackLeagueUsers = fallbackSnap.docs.filter(d => {
+        const data = d.data();
+        return !data.clubId; // مستخدم رابطة (بدون نادي)
+      });
+      
+      console.log('===Login Debug: Fallback league users===', fallbackLeagueUsers.length);
+      
+      if (fallbackLeagueUsers.length > 0) {
+        const user = mapUserData(fallbackLeagueUsers[0].id, fallbackLeagueUsers[0].data());
+        if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
+        
+        // تحديث المستخدم بـ leagueId الصحيح
+        await this.updateUser(user.id, { leagueId: leagueId, lastLogin: new Date() });
+        user.leagueId = leagueId;
+        
+        localStorage.setItem('current_user', JSON.stringify(user));
+        return user;
       }
+      
+      return null;
+    }
 
+    // البحث العام - جلب كل المستخدمين بنفس البيانات
+    const filters = [...baseFilters];
+    if (role) filters.push(where('role', '==', role));
+    const q = query(usersRef, ...filters);
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+
+    const candidates = snap.docs.map(d => mapUserData(d.id, d.data()));
+    
+    // إذا وجد مستخدم واحد فقط، نسجل دخوله مباشرة
+    if (candidates.length === 1) {
+      const user = candidates[0];
+      if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
       localStorage.setItem('current_user', JSON.stringify(user));
       await this.updateUser(user.id, { lastLogin: new Date() });
       return user;
     }
 
-    // اختيار المستخدم المناسب من النتائج
-    const candidates = snap.docs.map(d => mapUserData(d.id, d.data()));
-    const user = candidates
-      .sort((a, b) => {
-        const ta = (a.createdAt as any)?.getTime?.() || 0;
-        const tb = (b.createdAt as any)?.getTime?.() || 0;
-        return tb - ta; // أحدث أولاً
-      })[0];
-
-    if (!user.isActive) {
-      throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
-    }
-
-    localStorage.setItem('current_user', JSON.stringify(user));
-
-    // Update last login time
-    await this.updateUser(user.id, { lastLogin: new Date() });
-
-    return user;
+    // إذا وجد أكثر من مستخدم، نحفظ القائمة للاختيار
+    const availableAccounts = candidates.map(c => ({
+      id: c.id,
+      role: c.role,
+      clubId: c.clubId,
+      leagueId: c.leagueId,
+      isActive: c.isActive
+    }));
+    localStorage.setItem('available_accounts', JSON.stringify(availableAccounts));
+    throw new Error('MULTIPLE_ACCOUNTS');
   }
 
   static logout(): void {

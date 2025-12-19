@@ -4,6 +4,32 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UsersService, ClubsService } from '../services/firestoreService';
 import { Link } from 'react-router-dom';
 
+interface AvailableAccount {
+  id: string;
+  role: string;
+  clubId?: string;
+  leagueId?: string;
+  isActive: boolean;
+}
+
+const getRoleDisplayName = (role: string): string => {
+  const roleNames: Record<string, string> = {
+    'general_secretary': 'الكاتب العام للرابطة',
+    'club_general_secretary': 'الكاتب العام للنادي',
+    'league_president': 'رئيس الرابطة',
+    'club_president': 'رئيس النادي',
+    'coach': 'المدرب',
+    'physical_trainer': 'المحضر البدني',
+    'treasurer': 'أمين المال للرابطة',
+    'club_treasurer': 'أمين المال للنادي',
+    'technical_director': 'المدير الفني',
+    'medical_staff': 'الطاقم الطبي',
+    'athlete': 'رياضي',
+    'admin': 'مدير النظام'
+  };
+  return roleNames[role] || role;
+};
+
 const UserLoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -11,7 +37,11 @@ const UserLoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedClubId, setSelectedClubId] = useState<string>('');
+  const [selectedLeagueId, setSelectedLeagueId] = useState<string>('');
+  const [selectedWilayaId, setSelectedWilayaId] = useState<string>('');
   const [currentUserMismatch, setCurrentUserMismatch] = useState<{ hasUser: boolean; mismatch: boolean; currentRole?: string; currentClubId?: string }>({ hasUser: false, mismatch: false });
+  const [availableAccounts, setAvailableAccounts] = useState<AvailableAccount[]>([]);
+  const [showAccountSelector, setShowAccountSelector] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -50,20 +80,27 @@ const UserLoginPage: React.FC = () => {
     checkAndRedirect();
   }, [navigate, location.state, location.search]);
 
-  // Read role and clubId from query params, prefill and optionally hide selector
+  // Read role, clubId, leagueId from query params
   useEffect(() => {
     try {
       const sp = new URLSearchParams(location.search);
       const roleParam = sp.get('role');
       const clubParam = sp.get('clubId');
+      const leagueParam = sp.get('leagueId');
+      const wilayaParam = sp.get('wilayaId');
       if (roleParam) setSelectedRole(roleParam);
       if (clubParam) setSelectedClubId(clubParam);
+      if (leagueParam) setSelectedLeagueId(leagueParam);
+      if (wilayaParam) setSelectedWilayaId(wilayaParam);
       // If already logged in, check mismatch with intent
       const cu = UsersService.getCurrentUser();
       if (cu) {
         const desiredRole = roleParam || undefined;
         const desiredClub = clubParam || undefined;
-        const mismatch = (!!desiredRole && cu.role !== desiredRole) || (!!desiredClub && cu.clubId !== desiredClub);
+        const desiredLeague = leagueParam || undefined;
+        const mismatch = (!!desiredRole && cu.role !== desiredRole) || 
+                        (!!desiredClub && cu.clubId !== desiredClub) ||
+                        (!!desiredLeague && cu.leagueId !== desiredLeague);
         setCurrentUserMismatch({ hasUser: true, mismatch: Boolean(mismatch), currentRole: cu.role, currentClubId: cu.clubId });
       } else {
         setCurrentUserMismatch({ hasUser: false, mismatch: false });
@@ -80,7 +117,7 @@ const UserLoginPage: React.FC = () => {
   };
 
   const redirectToUserPage = async (user: any) => {
-    const { role, clubId } = user;
+    const { role, clubId, leagueId } = user;
 
     const clubRoles = [
       'club_president', 'coach', 'physical_trainer', 'club_general_secretary', 
@@ -96,21 +133,14 @@ const UserLoginPage: React.FC = () => {
     try {
       if (clubId) {
         console.log('===Login Debug: Checking club existence for clubId===', clubId);
-        console.log('===Login Debug: User details===', { username, role, clubId });
         
         try {
           const clubExists = await ClubsService.getClubById(clubId);
-          console.log('===Login Debug: Club existence check result===', clubExists);
-          
           if (!clubExists) {
-            console.error('===Login Debug: Club not found for user===', { username, role, clubId });
             setError('النادي المرتبط بحسابك لم يعد موجودًا. يرجى التواصل مع المسؤول.');
             return;
           }
-          
-          console.log('===Login Debug: Club found, proceeding with login===', clubExists);
         } catch (clubError) {
-          console.error('===Login Debug: Error checking club existence===', clubError);
           setError('حدث خطأ أثناء التحقق من وجود النادي. يرجى التواصل مع المسؤول.');
           return;
         }
@@ -129,14 +159,16 @@ const UserLoginPage: React.FC = () => {
         }
         navigate(path);
       } else {
+        // استخدام wilayaId من الـ URL أو من بيانات المستخدم
+        const wilayaId = selectedWilayaId || '01';
         let path = '';
         switch (role) {
-          case 'league_president': path = '/league/01/staff/president'; break;
-          case 'technical_director': path = '/league/01/staff/technical-director'; break;
-          case 'league_technical_director': path = '/league/01/staff/technical-director'; break;
-          case 'general_secretary': path = '/league/01/staff/general-secretary'; break;
-          case 'treasurer': path = '/league/01/staff/treasurer'; break;
-          case 'admin': navigate('/'); break; // Admin goes to homepage for now
+          case 'league_president': path = `/league/${wilayaId}/staff/president`; break;
+          case 'technical_director': path = `/league/${wilayaId}/staff/technical-director`; break;
+          case 'league_technical_director': path = `/league/${wilayaId}/staff/technical-director`; break;
+          case 'general_secretary': path = `/league/${wilayaId}/staff/general-secretary`; break;
+          case 'treasurer': path = `/league/${wilayaId}/staff/treasurer`; break;
+          case 'admin': navigate('/'); return;
           default: setError('دور المستخدم غير معروف أو غير مرتبط بكيان.'); return;
         }
         navigate(path);
@@ -153,12 +185,13 @@ const UserLoginPage: React.FC = () => {
     setError(null);
 
     try {
-      console.log('===Login Debug: Attempting login for username===', username);
+      console.log('===Login Debug: Attempting login===', { username, selectedRole, selectedClubId, selectedLeagueId });
       const user = await UsersService.login(
         username,
         password,
         selectedRole || undefined,
-        selectedClubId || undefined
+        selectedClubId || undefined,
+        selectedLeagueId || undefined
       );
       console.log('===Login Debug: Login result===', user);
 
@@ -188,6 +221,32 @@ const UserLoginPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Login exception:', err);
+      if (err instanceof Error && err.message === 'MULTIPLE_ACCOUNTS') {
+        // عرض قائمة الحسابات المتاحة للاختيار
+        const accounts = localStorage.getItem('available_accounts');
+        if (accounts) {
+          setAvailableAccounts(JSON.parse(accounts));
+          setShowAccountSelector(true);
+          localStorage.removeItem('available_accounts');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSelectAccount = async (account: AvailableAccount) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const user = await UsersService.login(username, password, account.role, account.clubId, account.leagueId);
+      if (user) {
+        setShowAccountSelector(false);
+        await redirectToUserPage(user);
+      }
+    } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء تسجيل الدخول.');
     } finally {
       setIsLoading(false);
@@ -229,6 +288,8 @@ const UserLoginPage: React.FC = () => {
                   </div>
                 </Alert>
               )}
+
+
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3" controlId="username">

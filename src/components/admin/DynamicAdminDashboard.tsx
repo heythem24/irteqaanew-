@@ -37,7 +37,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
   const [selectedLeague, setSelectedLeague] = useState<string>('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'danger' | 'info'; message: string } | null>(null);
-  
+
   const [users, setUsers] = useState<User[]>([]);
   const [showCreateUserForm, setShowCreateUserForm] = useState(false);
   const [newUser, setNewUser] = useState<Partial<User>>({
@@ -257,10 +257,10 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       setShowCreateForm(false);
       setNewClub({ name: '', nameAr: '', leagueId: '', sportId: 'judo-001', isActive: true, isFeatured: false });
       fetchClubs();
-      
+
       // Find the selected league to get wilayaId
       const selectedLeague = leagues.find(l => l.id === newClub.leagueId);
-      
+
       // Dispatch custom event to notify navbar that a club was created
       window.dispatchEvent(new CustomEvent('clubCreated', {
         detail: {
@@ -293,14 +293,20 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       return;
     }
     const clubRequiredRoles: UserRole[] = ['club_president', 'coach', 'physical_trainer', 'club_general_secretary', 'club_treasurer', 'medical_staff', 'athlete', 'technical_director'];
+    const leagueRequiredRoles: UserRole[] = ['league_president', 'league_technical_director', 'general_secretary', 'treasurer'];
+
     if (clubRequiredRoles.includes(newUser.role as UserRole) && !newUser.clubId) {
       showAlert('danger', 'الرجاء اختيار نادي لهذا الدور');
+      return;
+    }
+    if (leagueRequiredRoles.includes(newUser.role as UserRole) && !newUser.leagueId) {
+      showAlert('danger', 'الرجاء اختيار رابطة لهذا الدور');
       return;
     }
     try {
       await UsersService.createUser(newUser as Omit<User, 'id' | 'createdAt' | 'updatedAt'>);
       setShowCreateUserForm(false);
-      setNewUser({ username: '', password: '', role: 'athlete', firstName: '', lastName: '', isActive: true });
+      setNewUser({ username: '', password: '', role: 'athlete', firstName: '', lastName: '', isActive: true, clubId: undefined, leagueId: undefined });
       showAlert('success', `تم إنشاء المستخدم بنجاح!`);
       fetchUsers();
     } catch (error) {
@@ -351,6 +357,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
         lastName: editUser.lastName || '',
         role: editUser.role || 'athlete',
         clubId: editUser.clubId || undefined,
+        leagueId: editUser.leagueId || undefined,
         isActive: editUser.isActive ?? true,
         image: editUser.image,
         // Only update password if provided (avoid overwriting with empty)
@@ -371,10 +378,10 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                 localStorage.setItem('current_user', JSON.stringify(merged));
               }
             }
-          } catch {}
+          } catch { }
           window.dispatchEvent(new CustomEvent('userUpdated', { detail: { userId: editingUserId } }));
         }
-      } catch {}
+      } catch { }
       setShowEditUser(false);
       setEditingUserId(null);
     } catch (e) {
@@ -396,8 +403,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       }
     }
   };
-  
-    const getRoleLabel = (role: UserRole) => {
+
+  const getRoleLabel = (role: UserRole) => {
     const roleLabels: Record<UserRole, string> = {
       'admin': 'مدير النظام', 'league_president': 'رئيس الرابطة', 'league_technical_director': 'المدير التقني للرابطة', 'technical_director': 'المدير الفني',
       'general_secretary': 'الأمين العام', 'treasurer': 'أمين الصندوق', 'club_president': 'رئيس النادي',
@@ -436,17 +443,17 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
 
   const addFeaturedLeague = () => {
     setNewFeatured({
-      id: '', 
-      leagueId: '', 
-      wilayaId: '', 
-      title: '', 
-      titleAr: '', 
-      description: '', 
+      id: '',
+      leagueId: '',
+      wilayaId: '',
+      title: '',
+      titleAr: '',
+      description: '',
       descriptionAr: '',
-      image: '', 
-      highlight: '', 
-      highlightAr: '', 
-      isActive: true, 
+      image: '',
+      highlight: '',
+      highlightAr: '',
+      isActive: true,
       createdAt: new Date()
     });
     setEditingFeaturedId(null);
@@ -579,8 +586,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>تصفية حسب الرابطة</Form.Label>
-                    <Form.Select 
-                      value={selectedLeague} 
+                    <Form.Select
+                      value={selectedLeague}
                       onChange={(e) => setSelectedLeague(e.target.value)}
                     >
                       <option value="">جميع الرابطات</option>
@@ -593,8 +600,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                   </Form.Group>
                 </Col>
                 <Col md={6} className="d-flex align-items-end">
-                  <Button 
-                    variant="success" 
+                  <Button
+                    variant="success"
                     onClick={() => setShowCreateForm(!showCreateForm)}
                     className="w-100"
                   >
@@ -614,9 +621,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>الرابطة *</Form.Label>
-                          <Form.Select 
-                            value={newClub.leagueId} 
-                            onChange={(e) => setNewClub({...newClub, leagueId: e.target.value})}
+                          <Form.Select
+                            value={newClub.leagueId}
+                            onChange={(e) => setNewClub({ ...newClub, leagueId: e.target.value })}
                             required
                           >
                             <option value="">اختر الرابطة...</option>
@@ -631,9 +638,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>اسم النادي (عربي) *</Form.Label>
-                          <Form.Control 
-                            value={newClub.nameAr} 
-                            onChange={(e) => setNewClub({...newClub, nameAr: e.target.value})}
+                          <Form.Control
+                            value={newClub.nameAr}
+                            onChange={(e) => setNewClub({ ...newClub, nameAr: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -643,9 +650,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                       <Col md={6}>
                         <Form.Group className="mb-3">
                           <Form.Label>اسم النادي (إنجليزي) *</Form.Label>
-                          <Form.Control 
-                            value={newClub.name} 
-                            onChange={(e) => setNewClub({...newClub, name: e.target.value})}
+                          <Form.Control
+                            value={newClub.name}
+                            onChange={(e) => setNewClub({ ...newClub, name: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -702,8 +709,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                               >
                                 <i className="fas fa-edit"></i>
                               </Button>
-                              <Button 
-                                variant="outline-danger" 
+                              <Button
+                                variant="outline-danger"
                                 size="sm"
                                 onClick={() => handleDeleteClub(club.id)}
                               >
@@ -816,7 +823,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
             </Tab>
 
             <Tab eventKey="users" title="إدارة المستخدمين">
-               <Row className="mb-3">
+              <Row className="mb-3">
                 <Col md={6}>
                   <Button
                     variant="success"
@@ -849,7 +856,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Label>اسم المستخدم *</Form.Label>
                           <Form.Control
                             value={newUser.username}
-                            onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                            onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -860,7 +867,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Control
                             type="password"
                             value={newUser.password}
-                            onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -872,7 +879,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Label>الاسم الأول *</Form.Label>
                           <Form.Control
                             value={newUser.firstName}
-                            onChange={(e) => setNewUser({...newUser, firstName: e.target.value})}
+                            onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -882,7 +889,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Label>الاسم الأخير *</Form.Label>
                           <Form.Control
                             value={newUser.lastName}
-                            onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
+                            onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })}
                             required
                           />
                         </Form.Group>
@@ -894,7 +901,11 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Label>الدور *</Form.Label>
                           <Form.Select
                             value={newUser.role}
-                            onChange={(e) => setNewUser({...newUser, role: e.target.value as UserRole})}
+                            onChange={(e) => {
+                              const newRole = e.target.value as UserRole;
+                              // مسح clubId و leagueId عند تغيير الدور
+                              setNewUser({ ...newUser, role: newRole, clubId: undefined, leagueId: undefined });
+                            }}
                             required
                           >
                             <option value="admin">مدير النظام</option>
@@ -914,26 +925,43 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>النادي</Form.Label>
-                          <Form.Select
-                            value={newUser.clubId || ''}
-                            onChange={(e) => setNewUser({ ...newUser, clubId: e.target.value || undefined })}
-                          >
-                            <option value="">-- اختر النادي --</option>
-                            {leagues.map(league => {
-                              const leagueClubs = clubs.filter(c => String(c.leagueId) === String(league.id) || String(c.leagueId) === String(league.wilayaId));
-                              if (leagueClubs.length === 0) return null;
-                              return (
-                                <optgroup key={league.id} label={`${league.nameAr} (${league.wilayaNameAr})`}>
-                                  {leagueClubs.map(club => (
-                                    <option key={club.id} value={club.id}>{club.nameAr}</option>
-                                  ))}
-                                </optgroup>
-                              );
-                            })}
-                          </Form.Select>
-                        </Form.Group>
+                        {/* حقل الرابطة للأدوار المتعلقة بالرابطة */}
+                        {['league_president', 'league_technical_director', 'general_secretary', 'treasurer'].includes(newUser.role || '') ? (
+                          <Form.Group className="mb-3">
+                            <Form.Label>الرابطة *</Form.Label>
+                            <Form.Select
+                              value={newUser.leagueId || ''}
+                              onChange={(e) => setNewUser({ ...newUser, leagueId: e.target.value || undefined, clubId: undefined })}
+                              required
+                            >
+                              <option value="">-- اختر الرابطة --</option>
+                              {leagues.map(league => (
+                                <option key={league.id} value={league.id}>{league.nameAr} ({league.wilayaNameAr})</option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        ) : (
+                          <Form.Group className="mb-3">
+                            <Form.Label>النادي</Form.Label>
+                            <Form.Select
+                              value={newUser.clubId || ''}
+                              onChange={(e) => setNewUser({ ...newUser, clubId: e.target.value || undefined, leagueId: undefined })}
+                            >
+                              <option value="">-- اختر النادي --</option>
+                              {leagues.map(league => {
+                                const leagueClubs = clubs.filter(c => String(c.leagueId) === String(league.id) || String(c.leagueId) === String(league.wilayaId));
+                                if (leagueClubs.length === 0) return null;
+                                return (
+                                  <optgroup key={league.id} label={`${league.nameAr} (${league.wilayaNameAr})`}>
+                                    {leagueClubs.map(club => (
+                                      <option key={club.id} value={club.id}>{club.nameAr}</option>
+                                    ))}
+                                  </optgroup>
+                                );
+                              })}
+                            </Form.Select>
+                          </Form.Group>
+                        )}
                       </Col>
                     </Row>
                     <Row>
@@ -963,7 +991,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                         <th>اسم المستخدم</th>
                         <th>الاسم الكامل</th>
                         <th>الدور</th>
-                        <th>النادي</th>
+                        <th>النادي/الرابطة</th>
                         <th>الحالة</th>
                         <th>الإجراءات</th>
                       </tr>
@@ -971,12 +999,13 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                     <tbody>
                       {users.map(user => {
                         const userClub = user.clubId ? clubs.find(club => club.id === user.clubId) : null;
+                        const userLeague = user.leagueId ? leagues.find(league => league.id === user.leagueId) : null;
                         return (
                           <tr key={user.id}>
                             <td><code>{user.username}</code></td>
                             <td>{user.firstName} {user.lastName}</td>
                             <td>{getRoleLabel(user.role)}</td>
-                            <td>{userClub ? userClub.nameAr : '--'}</td>
+                            <td>{userClub ? userClub.nameAr : (userLeague ? userLeague.nameAr : '--')}</td>
                             <td>
                               <Badge bg={user.isActive ? 'success' : 'secondary'}>
                                 {user.isActive ? 'نشط' : 'غير نشط'}
@@ -1113,7 +1142,7 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                           <Form.Label>الدور</Form.Label>
                           <Form.Select
                             value={editUser.role || 'athlete'}
-                            onChange={(e) => setEditUser(prev => ({ ...prev, role: e.target.value as any }))}
+                            onChange={(e) => setEditUser(prev => ({ ...prev, role: e.target.value as any, clubId: undefined, leagueId: undefined }))}
                           >
                             <option value="admin">مدير النظام</option>
                             <option value="league_president">رئيس الرابطة</option>
@@ -1132,26 +1161,42 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                         </Form.Group>
                       </Col>
                       <Col md={6}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>النادي</Form.Label>
-                          <Form.Select
-                            value={editUser.clubId || ''}
-                            onChange={(e) => setEditUser(prev => ({ ...prev, clubId: e.target.value || undefined }))}
-                          >
-                            <option value="">-- اختر النادي --</option>
-                            {leagues.map(league => {
-                              const leagueClubs = clubs.filter(c => String(c.leagueId) === String(league.id) || String(c.leagueId) === String(league.wilayaId));
-                              if (leagueClubs.length === 0) return null;
-                              return (
-                                <optgroup key={league.id} label={`${league.nameAr} (${league.wilayaNameAr})`}>
-                                  {leagueClubs.map(club => (
-                                    <option key={club.id} value={club.id}>{club.nameAr}</option>
-                                  ))}
-                                </optgroup>
-                              );
-                            })}
-                          </Form.Select>
-                        </Form.Group>
+                        {/* حقل الرابطة للأدوار المتعلقة بالرابطة */}
+                        {['league_president', 'league_technical_director', 'general_secretary', 'treasurer'].includes(editUser.role || '') ? (
+                          <Form.Group className="mb-3">
+                            <Form.Label>الرابطة</Form.Label>
+                            <Form.Select
+                              value={editUser.leagueId || ''}
+                              onChange={(e) => setEditUser(prev => ({ ...prev, leagueId: e.target.value || undefined, clubId: undefined }))}
+                            >
+                              <option value="">-- اختر الرابطة --</option>
+                              {leagues.map(league => (
+                                <option key={league.id} value={league.id}>{league.nameAr} ({league.wilayaNameAr})</option>
+                              ))}
+                            </Form.Select>
+                          </Form.Group>
+                        ) : (
+                          <Form.Group className="mb-3">
+                            <Form.Label>النادي</Form.Label>
+                            <Form.Select
+                              value={editUser.clubId || ''}
+                              onChange={(e) => setEditUser(prev => ({ ...prev, clubId: e.target.value || undefined, leagueId: undefined }))}
+                            >
+                              <option value="">-- اختر النادي --</option>
+                              {leagues.map(league => {
+                                const leagueClubs = clubs.filter(c => String(c.leagueId) === String(league.id) || String(c.leagueId) === String(league.wilayaId));
+                                if (leagueClubs.length === 0) return null;
+                                return (
+                                  <optgroup key={league.id} label={`${league.nameAr} (${league.wilayaNameAr})`}>
+                                    {leagueClubs.map(club => (
+                                      <option key={club.id} value={club.id}>{club.nameAr}</option>
+                                    ))}
+                                  </optgroup>
+                                );
+                              })}
+                            </Form.Select>
+                          </Form.Group>
+                        )}
                       </Col>
                     </Row>
                     <Form.Check
@@ -1241,8 +1286,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
               <Col md={12} className="mb-3">
                 <Form.Group>
                   <Form.Label>اختر الرابطة</Form.Label>
-                  <Form.Select 
-                    value={newFeatured.leagueId || ''} 
+                  <Form.Select
+                    value={newFeatured.leagueId || ''}
                     onChange={handleLeagueSelect}
                     className="mb-3"
                   >
@@ -1260,9 +1305,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>معرف الرابطة</Form.Label>
-                  <Form.Control 
-                    value={newFeatured.leagueId || ''} 
-                    onChange={(e) => setNewFeatured({...newFeatured, leagueId: e.target.value})} 
+                  <Form.Control
+                    value={newFeatured.leagueId || ''}
+                    onChange={(e) => setNewFeatured({ ...newFeatured, leagueId: e.target.value })}
                     required
                     readOnly
                   />
@@ -1271,9 +1316,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>معرف الولاية</Form.Label>
-                  <Form.Control 
-                    value={newFeatured.wilayaId || ''} 
-                    onChange={(e) => setNewFeatured({...newFeatured, wilayaId: e.target.value})} 
+                  <Form.Control
+                    value={newFeatured.wilayaId || ''}
+                    onChange={(e) => setNewFeatured({ ...newFeatured, wilayaId: e.target.value })}
                     required
                   />
                   <Form.Text className="text-muted">سيتم تعبئته تلقائياً عند اختيار الرابطة</Form.Text>
@@ -1282,31 +1327,31 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
             </Row>
             <Form.Group className="mb-3">
               <Form.Label>العنوان (عربي)</Form.Label>
-              <Form.Control value={newFeatured.titleAr || ''} onChange={(e) => setNewFeatured({...newFeatured, titleAr: e.target.value})} />
+              <Form.Control value={newFeatured.titleAr || ''} onChange={(e) => setNewFeatured({ ...newFeatured, titleAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>العنوان (إنجليزي)</Form.Label>
-              <Form.Control value={newFeatured.title || ''} onChange={(e) => setNewFeatured({...newFeatured, title: e.target.value})} />
+              <Form.Control value={newFeatured.title || ''} onChange={(e) => setNewFeatured({ ...newFeatured, title: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>الوصف (عربي)</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newFeatured.descriptionAr || ''} onChange={(e) => setNewFeatured({...newFeatured, descriptionAr: e.target.value})} />
+              <Form.Control as="textarea" rows={3} value={newFeatured.descriptionAr || ''} onChange={(e) => setNewFeatured({ ...newFeatured, descriptionAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>الوصف (إنجليزي)</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newFeatured.description || ''} onChange={(e) => setNewFeatured({...newFeatured, description: e.target.value})} />
+              <Form.Control as="textarea" rows={3} value={newFeatured.description || ''} onChange={(e) => setNewFeatured({ ...newFeatured, description: e.target.value })} />
             </Form.Group>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>تمييز (عربي)</Form.Label>
-                  <Form.Control value={newFeatured.highlightAr || ''} onChange={(e) => setNewFeatured({...newFeatured, highlightAr: e.target.value})} />
+                  <Form.Control value={newFeatured.highlightAr || ''} onChange={(e) => setNewFeatured({ ...newFeatured, highlightAr: e.target.value })} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Highlight (EN)</Form.Label>
-                  <Form.Control value={newFeatured.highlight || ''} onChange={(e) => setNewFeatured({...newFeatured, highlight: e.target.value})} />
+                  <Form.Control value={newFeatured.highlight || ''} onChange={(e) => setNewFeatured({ ...newFeatured, highlight: e.target.value })} />
                 </Form.Group>
               </Col>
             </Row>
@@ -1330,12 +1375,12 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                 style={{ display: 'none' }}
               />
               <Form.Text className="text-muted">يمكنك أيضاً لصق رابط صورة مباشرة:</Form.Text>
-              <Form.Control className="mt-2" placeholder="https://..." value={newFeatured.image || ''} onChange={(e) => setNewFeatured({...newFeatured, image: e.target.value})} />
+              <Form.Control className="mt-2" placeholder="https://..." value={newFeatured.image || ''} onChange={(e) => setNewFeatured({ ...newFeatured, image: e.target.value })} />
               {newFeatured.image ? (
-                <div className="mt-2"><img src={newFeatured.image} alt="preview" style={{maxWidth:'100%', height:'auto'}} /></div>
+                <div className="mt-2"><img src={newFeatured.image} alt="preview" style={{ maxWidth: '100%', height: 'auto' }} /></div>
               ) : null}
             </Form.Group>
-            <Form.Check type="switch" label="نشط" checked={!!newFeatured.isActive} onChange={(e) => setNewFeatured({...newFeatured, isActive: e.currentTarget.checked})} />
+            <Form.Check type="switch" label="نشط" checked={!!newFeatured.isActive} onChange={(e) => setNewFeatured({ ...newFeatured, isActive: e.currentTarget.checked })} />
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -1379,31 +1424,31 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>العنوان (عربي)</Form.Label>
-              <Form.Control value={newNews.titleAr || ''} onChange={(e) => setNewNews({...newNews, titleAr: e.target.value})} />
+              <Form.Control value={newNews.titleAr || ''} onChange={(e) => setNewNews({ ...newNews, titleAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>العنوان (إنجليزي)</Form.Label>
-              <Form.Control value={newNews.title || ''} onChange={(e) => setNewNews({...newNews, title: e.target.value})} />
+              <Form.Control value={newNews.title || ''} onChange={(e) => setNewNews({ ...newNews, title: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>المحتوى (عربي)</Form.Label>
-              <Form.Control as="textarea" rows={4} value={newNews.contentAr || ''} onChange={(e) => setNewNews({...newNews, contentAr: e.target.value})} />
+              <Form.Control as="textarea" rows={4} value={newNews.contentAr || ''} onChange={(e) => setNewNews({ ...newNews, contentAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>المحتوى (إنجليزي)</Form.Label>
-              <Form.Control as="textarea" rows={4} value={newNews.content || ''} onChange={(e) => setNewNews({...newNews, content: e.target.value})} />
+              <Form.Control as="textarea" rows={4} value={newNews.content || ''} onChange={(e) => setNewNews({ ...newNews, content: e.target.value })} />
             </Form.Group>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>الكاتب (عربي)</Form.Label>
-                  <Form.Control value={newNews.authorAr || ''} onChange={(e) => setNewNews({...newNews, authorAr: e.target.value})} />
+                  <Form.Control value={newNews.authorAr || ''} onChange={(e) => setNewNews({ ...newNews, authorAr: e.target.value })} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Author (EN)</Form.Label>
-                  <Form.Control value={newNews.author || ''} onChange={(e) => setNewNews({...newNews, author: e.target.value})} />
+                  <Form.Control value={newNews.author || ''} onChange={(e) => setNewNews({ ...newNews, author: e.target.value })} />
                 </Form.Group>
               </Col>
             </Row>
@@ -1427,17 +1472,17 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                 style={{ display: 'none' }}
               />
               <Form.Text className="text-muted">يمكنك أيضاً لصق رابط صورة مباشرة:</Form.Text>
-              <Form.Control className="mt-2" placeholder="https://..." value={newNews.image || ''} onChange={(e) => setNewNews({...newNews, image: e.target.value})} />
+              <Form.Control className="mt-2" placeholder="https://..." value={newNews.image || ''} onChange={(e) => setNewNews({ ...newNews, image: e.target.value })} />
               {newNews.image ? (
-                <div className="mt-2"><img src={newNews.image} alt="preview" style={{maxWidth:'100%', height:'auto'}} /></div>
+                <div className="mt-2"><img src={newNews.image} alt="preview" style={{ maxWidth: '100%', height: 'auto' }} /></div>
               ) : null}
             </Form.Group>
             <Row>
               <Col md={6}>
-                <Form.Check type="switch" label="منشور" checked={!!newNews.isPublished} onChange={(e) => setNewNews({...newNews, isPublished: e.currentTarget.checked})} />
+                <Form.Check type="switch" label="منشور" checked={!!newNews.isPublished} onChange={(e) => setNewNews({ ...newNews, isPublished: e.currentTarget.checked })} />
               </Col>
               <Col md={6}>
-                <Form.Check type="switch" label="مميز" checked={!!newNews.isFeatured} onChange={(e) => setNewNews({...newNews, isFeatured: e.currentTarget.checked})} />
+                <Form.Check type="switch" label="مميز" checked={!!newNews.isFeatured} onChange={(e) => setNewNews({ ...newNews, isFeatured: e.currentTarget.checked })} />
               </Col>
             </Row>
           </Form>
@@ -1486,49 +1531,49 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>العنوان (عربي)</Form.Label>
-                  <Form.Control value={newAchievement.titleAr || ''} onChange={(e) => setNewAchievement({...newAchievement, titleAr: e.target.value})} />
+                  <Form.Control value={newAchievement.titleAr || ''} onChange={(e) => setNewAchievement({ ...newAchievement, titleAr: e.target.value })} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>العنوان (إنجليزي)</Form.Label>
-                  <Form.Control value={newAchievement.title || ''} onChange={(e) => setNewAchievement({...newAchievement, title: e.target.value})} />
+                  <Form.Control value={newAchievement.title || ''} onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })} />
                 </Form.Group>
               </Col>
             </Row>
             <Form.Group className="mb-3">
               <Form.Label>الوصف (عربي)</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newAchievement.descriptionAr || ''} onChange={(e) => setNewAchievement({...newAchievement, descriptionAr: e.target.value})} />
+              <Form.Control as="textarea" rows={3} value={newAchievement.descriptionAr || ''} onChange={(e) => setNewAchievement({ ...newAchievement, descriptionAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>الوصف (إنجليزي)</Form.Label>
-              <Form.Control as="textarea" rows={3} value={newAchievement.description || ''} onChange={(e) => setNewAchievement({...newAchievement, description: e.target.value})} />
+              <Form.Control as="textarea" rows={3} value={newAchievement.description || ''} onChange={(e) => setNewAchievement({ ...newAchievement, description: e.target.value })} />
             </Form.Group>
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>اسم الرياضي (عربي)</Form.Label>
-                  <Form.Control value={newAchievement.athleteNameAr || ''} onChange={(e) => setNewAchievement({...newAchievement, athleteNameAr: e.target.value})} />
+                  <Form.Control value={newAchievement.athleteNameAr || ''} onChange={(e) => setNewAchievement({ ...newAchievement, athleteNameAr: e.target.value })} />
                 </Form.Group>
               </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Athlete (EN)</Form.Label>
-                  <Form.Control value={newAchievement.athleteName || ''} onChange={(e) => setNewAchievement({...newAchievement, athleteName: e.target.value})} />
+                  <Form.Control value={newAchievement.athleteName || ''} onChange={(e) => setNewAchievement({ ...newAchievement, athleteName: e.target.value })} />
                 </Form.Group>
               </Col>
             </Row>
             <Form.Group className="mb-3">
               <Form.Label>اسم النادي (عربي) - اختياري</Form.Label>
-              <Form.Control value={newAchievement.clubNameAr || ''} onChange={(e) => setNewAchievement({...newAchievement, clubNameAr: e.target.value})} />
+              <Form.Control value={newAchievement.clubNameAr || ''} onChange={(e) => setNewAchievement({ ...newAchievement, clubNameAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>نوع الإنجاز (عربي)</Form.Label>
-              <Form.Control value={newAchievement.achievementTypeAr || ''} onChange={(e) => setNewAchievement({...newAchievement, achievementTypeAr: e.target.value})} />
+              <Form.Control value={newAchievement.achievementTypeAr || ''} onChange={(e) => setNewAchievement({ ...newAchievement, achievementTypeAr: e.target.value })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>تاريخ الإنجاز</Form.Label>
-              <Form.Control type="date" value={toDateInputValue(newAchievement.achievementDate)} onChange={(e) => setNewAchievement({...newAchievement, achievementDate: new Date(e.target.value)})} />
+              <Form.Control type="date" value={toDateInputValue(newAchievement.achievementDate)} onChange={(e) => setNewAchievement({ ...newAchievement, achievementDate: new Date(e.target.value) })} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>صورة</Form.Label>
@@ -1550,17 +1595,17 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
                 style={{ display: 'none' }}
               />
               <Form.Text className="text-muted">يمكنك أيضاً لصق رابط صورة مباشرة:</Form.Text>
-              <Form.Control className="mt-2" placeholder="https://..." value={newAchievement.image || ''} onChange={(e) => setNewAchievement({...newAchievement, image: e.target.value})} />
+              <Form.Control className="mt-2" placeholder="https://..." value={newAchievement.image || ''} onChange={(e) => setNewAchievement({ ...newAchievement, image: e.target.value })} />
               {newAchievement.image ? (
-                <div className="mt-2"><img src={newAchievement.image} alt="preview" style={{maxWidth:'100%', height:'auto'}} /></div>
+                <div className="mt-2"><img src={newAchievement.image} alt="preview" style={{ maxWidth: '100%', height: 'auto' }} /></div>
               ) : null}
             </Form.Group>
             <Row>
               <Col md={6}>
-                <Form.Check type="switch" label="مميز" checked={!!newAchievement.isFeatured} onChange={(e) => setNewAchievement({...newAchievement, isFeatured: e.currentTarget.checked})} />
+                <Form.Check type="switch" label="مميز" checked={!!newAchievement.isFeatured} onChange={(e) => setNewAchievement({ ...newAchievement, isFeatured: e.currentTarget.checked })} />
               </Col>
               <Col md={6}>
-                <Form.Check type="switch" label="نشط" checked={!!newAchievement.isActive} onChange={(e) => setNewAchievement({...newAchievement, isActive: e.currentTarget.checked})} />
+                <Form.Check type="switch" label="نشط" checked={!!newAchievement.isActive} onChange={(e) => setNewAchievement({ ...newAchievement, isActive: e.currentTarget.checked })} />
               </Col>
             </Row>
           </Form>

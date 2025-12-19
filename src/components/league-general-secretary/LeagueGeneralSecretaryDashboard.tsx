@@ -2,6 +2,13 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Nav, Tab, Alert } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import TransferRequestForm from './TransferRequestForm';
+import BasicLaw from './BasicLaw';
+import InternalRegulations from './InternalRegulations';
+import DisciplinarySystem from './DisciplinarySystem';
+import FoundingMembersList from './FoundingMembersList';
+import ExecutiveBoardList from './ExecutiveBoardList';
+import HandoverReport from './HandoverReport';
+import TrainingContract from './TrainingContract';
 
 interface LeagueGeneralSecretaryDashboardProps {
   leagueId?: string;
@@ -115,6 +122,48 @@ const LeagueGeneralSecretaryDashboard: React.FC<LeagueGeneralSecretaryDashboardP
                     <Nav.Link eventKey="documents" className="text-end border-0 rounded-0" dir="rtl">
                       <i className="fas fa-folder-open me-2"></i>
                       الوثائق الرسمية
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="basic-law" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-book me-2"></i>
+                      القانون الأساسي
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="internal-regulations" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-gavel me-2"></i>
+                      النظام الداخلي
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="disciplinary-system" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-balance-scale me-2"></i>
+                      النظام التأديبي
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="founding-members" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-users me-2"></i>
+                      قائمة الأعضاء المؤسسين
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="executive-board" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-user-tie me-2"></i>
+                      قائمة أعضاء المكتب التنفيذي
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="handover-report" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-file-signature me-2"></i>
+                      محضر تسليم واستلام المهام
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="training-contract" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-file-contract me-2"></i>
+                      عقد تدريب
                     </Nav.Link>
                   </Nav.Item>
                 </Nav>
@@ -295,6 +344,41 @@ const LeagueGeneralSecretaryDashboard: React.FC<LeagueGeneralSecretaryDashboardP
                     </Alert>
                   </Card.Body>
                 </Card>
+              </Tab.Pane>
+
+              {/* القانون الأساسي */}
+              <Tab.Pane eventKey="basic-law">
+                <BasicLaw />
+              </Tab.Pane>
+
+              {/* النظام الداخلي */}
+              <Tab.Pane eventKey="internal-regulations">
+                <InternalRegulations />
+              </Tab.Pane>
+
+              {/* النظام التأديبي */}
+              <Tab.Pane eventKey="disciplinary-system">
+                <DisciplinarySystem />
+              </Tab.Pane>
+
+              {/* قائمة الأعضاء المؤسسين */}
+              <Tab.Pane eventKey="founding-members">
+                <FoundingMembersList />
+              </Tab.Pane>
+
+              {/* قائمة أعضاء المكتب التنفيذي */}
+              <Tab.Pane eventKey="executive-board">
+                <ExecutiveBoardList />
+              </Tab.Pane>
+
+              {/* محضر تسليم واستلام المهام */}
+              <Tab.Pane eventKey="handover-report">
+                <HandoverReport />
+              </Tab.Pane>
+
+              {/* عقد تدريب */}
+              <Tab.Pane eventKey="training-contract">
+                <TrainingContract />
               </Tab.Pane>
             </Tab.Content>
           </Col>

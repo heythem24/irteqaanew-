@@ -1,0 +1,69 @@
+.regulation-content {
+    font-family: 'Tajawal', 'Arial', sans-serif;
+    line-height: 1.8;
+}
+
+.chapter-header h3 {
+    font-weight: bold;
+}
+
+.article {
+    transition: all 0.3s ease;
+}
+
+.article:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.article h5, .article h6 {
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.index-item {
+    transition: all 0.3s ease;
+}
+
+.index-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(-5px);
+}
+
+.committee-item {
+    background-color: #fff;
+    transition: all 0.3s ease;
+}
+
+.committee-item:hover {
+    background-color: #f8f9fa;
+}
+
+.signature-box {
+    min-height: 120px;
+}
+
+.signature-line {
+    min-height: 50px;
+}
+
+.nav-link {
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(40, 167, 69, 0.1);
+    transform: translateX(-5px);
+}
+
+.nav-link.active {
+    background-color: #28a745 !important;
+}
+
+.divider hr {
+    border-top: 2px solid #28a745;
+}
+
+.sticky-top {
+    z-index: 100;
+}

@@ -1,0 +1,134 @@
+.law-container {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 40px;
+  min-height: 600px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.law-page {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.8;
+  color: #333;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 20px;
+}
+
+.page-header h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #007bff;
+}
+
+.page-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #555;
+}
+
+.page-content {
+  font-size: 14px;
+  line-height: 1.9;
+}
+
+.page-content p {
+  margin-bottom: 15px;
+  text-align: justify;
+}
+
+.page-content ul {
+  margin-left: 20px;
+  margin-right: 0;
+}
+
+.page-content li {
+  margin-bottom: 12px;
+  text-align: justify;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.article {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-right: 4px solid #007bff;
+}
+
+.article h5 {
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+.article p {
+  margin-bottom: 10px;
+}
+
+.article ul {
+  margin-top: 10px;
+}
+
+.article li {
+  margin-bottom: 8px;
+}
+
+.page-number {
+  text-align: center;
+  font-weight: bold;
+  color: #999;
+  margin-top: 30px;
+}
+
+.page-indicator {
+  min-width: 40px;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+/* تنسيق للطباعة */
+@media print {
+  .law-container {
+    box-shadow: none;
+    border: none;
+    padding: 0;
+  }
+
+  .page-indicator,
+  .btn {
+    display: none;
+  }
+}
+
+/* تنسيق للأجهزة الصغيرة */
+@media (max-width: 768px) {
+  .law-container {
+    padding: 20px;
+    min-height: auto;
+  }
+
+  .page-header h2 {
+    font-size: 20px;
+  }
+
+  .page-header h3 {
+    font-size: 16px;
+  }
+
+  .page-content {
+    font-size: 13px;
+  }
+
+  .article {
+    padding: 10px;
+  }
+}

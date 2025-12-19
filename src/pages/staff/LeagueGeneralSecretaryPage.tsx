@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import StaffMemberPage from '../../components/staff/StaffMemberPage';
 import LeagueGeneralSecretaryDashboard from '../../components/league-general-secretary/LeagueGeneralSecretaryDashboard';
 import RespectCommitmentForm from '../../components/league-general-secretary/RespectCommitmentForm';
 import SeasonCommitmentForm from '../../components/league-general-secretary/SeasonCommitmentForm';
 import { Tab, Nav, Container, Card, Alert, Spinner } from 'react-bootstrap';
 import { StaffPosition } from '../../types';
 import { LeaguesService, UsersService } from '../../services/firestoreService';
-import { StaffService } from '../../services/mockDataService';
 import { leagues as mockLeagues, staff as mockStaff } from '../../data/mockData';
-import type { Staff, League, User } from '../../types';
+import type { Staff, League } from '../../types';
 
 // Mock data for the general secretary as fallback
 const generalSecretaryData = {
@@ -175,10 +173,8 @@ const LeagueGeneralSecretaryPage: React.FC = () => {
     return () => { mounted = false; };
   }, [wilayaId]);
   
-  // Check if coming from navbar transfer request link
-  const location = window.location;
-  const fromTransferRequest = location.hash === '#transfer-request';
-  const defaultTab = fromTransferRequest ? 'dashboard' : 'profile';
+  // الصفحة الافتراضية هي لوحة التحكم
+  const defaultTab = 'dashboard';
 
   if (loading) {
     return (
@@ -217,32 +213,12 @@ const LeagueGeneralSecretaryPage: React.FC = () => {
               <Nav variant="tabs" className="border-0">
                 <Nav.Item>
                   <Nav.Link
-                    eventKey="profile"
-                    className="bg-transparent border-0 text-white"
-                    style={{ borderRadius: '0' }}
-                  >
-                    <i className="fas fa-user me-2"></i>
-                    الملف الشخصي
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
                     eventKey="dashboard"
                     className="bg-transparent border-0 text-white"
                     style={{ borderRadius: '0' }}
                   >
                     <i className="fas fa-tachometer-alt me-2"></i>
                     لوحة التحكم
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
-                    eventKey="transfer-requests"
-                    className="bg-transparent border-0 text-white"
-                    style={{ borderRadius: '0' }}
-                  >
-                    <i className="fas fa-exchange-alt me-2"></i>
-                    طلبات التحويل
                   </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -270,31 +246,8 @@ const LeagueGeneralSecretaryPage: React.FC = () => {
 
             <Card.Body className="p-0">
               <Tab.Content>
-                <Tab.Pane eventKey="profile">
-                  <StaffMemberPage
-                    staff={secretaryData}
-                    leagueId={wilayaId}
-                    additionalInfo={additionalInfo}
-                  />
-                </Tab.Pane>
-                
                 <Tab.Pane eventKey="dashboard">
                   <LeagueGeneralSecretaryDashboard leagueId={wilayaId} />
-                </Tab.Pane>
-
-                <Tab.Pane eventKey="transfer-requests">
-                  <Container fluid className="py-4">
-                    <div className="text-center">
-                      <h3 className="text-warning mb-4">قسم طلبات التحويل المتقدم</h3>
-                      <p className="text-muted">
-                        هذا القسم مخصص لإدارة شاملة لطلبات التحويل مع إمكانيات متقدمة للبحث والتصفية والتقارير
-                      </p>
-                      <div className="alert alert-info">
-                        <i className="fas fa-info-circle me-2"></i>
-                        قيد التطوير - سيتم إضافة وظائف متقدمة لإدارة طلبات التحويل قريباً
-                      </div>
-                    </div>
-                  </Container>
                 </Tab.Pane>
 
                 <Tab.Pane eventKey="respect-commitment">

@@ -3,6 +3,10 @@ import { Container, Card, Row, Col, Nav, Tab, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import type { Staff, Club } from '../../types';
 import { UsersService } from '../../services/firestoreService';
+import TrainingContract from '../league-general-secretary/TrainingContract';
+import HandoverReport from '../league-general-secretary/HandoverReport';
+import FoundingMembersList from '../league-general-secretary/FoundingMembersList';
+import ExecutiveBoardList from '../league-general-secretary/ExecutiveBoardList';
 
 const ProfileHeader: React.FC<{ secretary: Staff; clubName: string }> = ({ secretary, clubName }) => (
   <Card className="mb-4">
@@ -16,15 +20,6 @@ const ProfileHeader: React.FC<{ secretary: Staff; clubName: string }> = ({ secre
           <p className="text-muted mb-0">{secretary.positionAr} - {clubName}</p>
         </Col>
       </Row>
-    </Card.Body>
-  </Card>
-);
-
-const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-  <Card className="mb-3">
-    <Card.Header>{title}</Card.Header>
-    <Card.Body>
-      {children}
     </Card.Body>
   </Card>
 );
@@ -53,54 +48,46 @@ const ClubGeneralSecretaryDashboard: React.FC<ClubGeneralSecretaryDashboardProps
 
       <ProfileHeader secretary={secretary} clubName={club.nameAr} />
 
-      <Tab.Container defaultActiveKey="responsibilities">
+      <Tab.Container defaultActiveKey="training-contract">
         <Nav variant="tabs" className="mb-3">
           <Nav.Item>
-            <Nav.Link eventKey="responsibilities">المسؤوليات الإدارية</Nav.Link>
+            <Nav.Link eventKey="training-contract">
+              <i className="fas fa-file-contract me-2"></i>
+              عقد تدريب
+            </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="profile">الملف الشخصي</Nav.Link>
+            <Nav.Link eventKey="handover-report">
+              <i className="fas fa-file-signature me-2"></i>
+              محضر تسليم واستلام
+            </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="contact">معلومات الاتصال</Nav.Link>
+            <Nav.Link eventKey="founding-members">
+              <i className="fas fa-users me-2"></i>
+              قائمة الأعضاء المؤسسين
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="executive-board">
+              <i className="fas fa-user-tie me-2"></i>
+              قائمة أعضاء المكتب التنفيذي
+            </Nav.Link>
           </Nav.Item>
         </Nav>
 
         <Tab.Content>
-          <Tab.Pane eventKey="responsibilities">
-            <Row>
-              <Col md={3}>
-                <InfoCard title="إدارة الملفات">
-                  <p>توثيق وإدارة جميع ملفات النادي الإدارية والفنية.</p>
-                </InfoCard>
-              </Col>
-              <Col md={3}>
-                <InfoCard title="تنظيم الاجتماعات">
-                  <p>تنسيق وتنظيم اجتماعات مجلس الإدارة والجمعيات العمومية.</p>
-                </InfoCard>
-              </Col>
-              <Col md={3}>
-                <InfoCard title="التواصل الرسمي">
-                  <p>إدارة المراسلات الرسمية والتواصل مع الهيئات الخارجية.</p>
-                </InfoCard>
-              </Col>
-              <Col md={3}>
-                <InfoCard title="إعداد التقارير">
-                  <p>إعداد التقارير الدورية والإحصائيات الخاصة بأنشطة النادي.</p>
-                </InfoCard>
-              </Col>
-            </Row>
+          <Tab.Pane eventKey="training-contract">
+            <TrainingContract />
           </Tab.Pane>
-          <Tab.Pane eventKey="profile">
-            <InfoCard title="السيرة الذاتية">
-              <p>{secretary.bioAr || 'لا توجد سيرة ذاتية متاحة.'}</p>
-            </InfoCard>
+          <Tab.Pane eventKey="handover-report">
+            <HandoverReport />
           </Tab.Pane>
-          <Tab.Pane eventKey="contact">
-            <InfoCard title="معلومات الاتصال">
-              <p><strong>البريد الإلكتروني:</strong> {secretary.email || 'غير متوفر'}</p>
-              <p><strong>الهاتف:</strong> {secretary.phone || 'غير متوفر'}</p>
-            </InfoCard>
+          <Tab.Pane eventKey="founding-members">
+            <FoundingMembersList />
+          </Tab.Pane>
+          <Tab.Pane eventKey="executive-board">
+            <ExecutiveBoardList />
           </Tab.Pane>
         </Tab.Content>
       </Tab.Container>

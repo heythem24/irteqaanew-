@@ -367,25 +367,25 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
             <NavDropdown title="الطاقم الفني" id="staff-dropdown">
               <NavDropdown.Item
                 as={Link}
-                to={`/league/${resolvedLeague?.wilayaId}/staff/president`}
+                to={`/login?role=league_president&leagueId=${resolvedLeague?.id}&wilayaId=${resolvedLeague?.wilayaId}`}
               >
                 رئيس الرابطة
               </NavDropdown.Item>
               <NavDropdown.Item
                 as={Link}
-                to={`/league/${resolvedLeague?.wilayaId}/staff/technical-director`}
+                to={`/login?role=league_technical_director&leagueId=${resolvedLeague?.id}&wilayaId=${resolvedLeague?.wilayaId}`}
               >
                 المدير التقني
               </NavDropdown.Item>
               <NavDropdown.Item
                 as={Link}
-                to={`/league/${resolvedLeague?.wilayaId}/staff/general-secretary`}
+                to={`/login?role=general_secretary&leagueId=${resolvedLeague?.id}&wilayaId=${resolvedLeague?.wilayaId}`}
               >
                 الكاتب العام
               </NavDropdown.Item>
               <NavDropdown.Item
                 as={Link}
-                to={`/league/${resolvedLeague?.wilayaId}/staff/treasurer`}
+                to={`/login?role=treasurer&leagueId=${resolvedLeague?.id}&wilayaId=${resolvedLeague?.wilayaId}`}
               >
                 أمين المال
               </NavDropdown.Item>
@@ -494,7 +494,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
             <NavDropdown title="الطاقم الفني" id="club-staff-dropdown">
               <NavDropdown.Item
                 as={Link}
-                to={`/club/${currentClub?.id}/staff/president`}
+                to={`/login?role=club_president&clubId=${currentClub?.id}`}
               >
                 <i className="fas fa-crown me-2"></i>
                 رئيس النادي
