@@ -54,8 +54,8 @@ interface PageProps { formData: any; updateForm: (field: string, value: string) 
 const Page1: React.FC<PageProps> = ({ formData, updateForm }) => (
     <div dir="rtl">
         <div className="text-center mb-4">
-            <h5>الاتحاد الجزائري لكرة القدم</h5>
-            <p>الرابطة <Form.Control type="text" className="d-inline-block mx-1" style={{ width: '200px' }} value={formData.leagueName} onChange={(e) => updateForm('leagueName', e.target.value)} /> لكرة القدم</p>
+            <h5>الاتحاد الجزائري للجودو</h5>
+            <p>الرابطة <Form.Control type="text" className="d-inline-block mx-1" style={{ width: '200px' }} value={formData.leagueName} onChange={(e) => updateForm('leagueName', e.target.value)} /> للجودو</p>
             <p>النادي الرياضي الهاوي المسمى: <Form.Control type="text" className="d-inline-block mx-1" style={{ width: '250px' }} value={formData.clubName} onChange={(e) => updateForm('clubName', e.target.value)} /></p>
             <h4 className="text-primary my-4">عقد تدريب</h4>
         </div>
@@ -116,7 +116,7 @@ const Page2: React.FC<PageProps> = ({ formData, updateForm }) => (
                 <p>يحدد هذا العقد علاقة العمل بين الطرف الأول بصفته رب العمل والطرف الثاني بصفته عامل في وظيفة فنية تدريبية لدى الطرف الأول وفق المهام، الحقوق والواجبات المذكورة في بنود العقد الموقعة طبقاً لـ:</p>
                 <ul>
                     <li>✓ قانون العمل 90-11 المؤرخ في 21 أفريل 1990.</li>
-                    <li>✓ القوانين العامة للاتحاد الجزائري لكرة القدم.</li>
+                    <li>✓ القوانين العامة للاتحاد الجزائري للجودو.</li>
                 </ul>
                 <p className="text-muted">ويكون هذا العقد هو الإطار القانوني لكل الوظائف الفنية في أندية كرة القدم للهواة، رابطة كرة القدم النسوية ورابطة كرة القدم داخل القاعة.</p>
             </Card.Body>
@@ -209,7 +209,7 @@ const Page3: React.FC = () => (
             <Card.Header className="bg-dark text-white"><h5 className="mb-0">المادة 07: النزاعات القضائية</h5></Card.Header>
             <Card.Body>
                 <p>أي نزاع مالي بين الطرفين بخصوص الأجور الشهرية، المنح أو تعويضات الضرر المذكورة في المادة 05 يطرح على مستوى القضاء المدني (على مستوى مفتشية العمل والمحكمة المختصة إقليمياً في موطن أحد الطرفين).</p>
-                <p className="mt-3">ويكون بإمكان أحد الطرفين تسجيل شكوى مستعجلة على مستوى لجنة القوانين الأساسية وأنظمة اللاعب على مستوى الاتحاد الجزائري لكرة القدم عبر منصة "<strong>faf legal</strong>" لكن في طلب واحد يخص فسخ العقد ولا تدرس اللجنة أي مطالب مادية.</p>
+                <p className="mt-3">ويكون بإمكان أحد الطرفين تسجيل شكوى مستعجلة على مستوى لجنة القوانين الأساسية وأنظمة اللاعب على مستوى الاتحاد الجزائري للجودو عبر منصة "<strong>faf legal</strong>" لكن في طلب واحد يخص فسخ العقد ولا تدرس اللجنة أي مطالب مادية.</p>
             </Card.Body>
         </Card>
 

@@ -3,6 +3,19 @@ import { Container, Card, Row, Col, Nav, Tab, Table, Badge, Button } from 'react
 import { useNavigate } from 'react-router-dom';
 import type { Staff, League } from '../../types';
 import { UsersService } from '../../services/firestoreService';
+import PaidExpenses from '../treasurer/PaidExpenses';
+import ClubFinancialStatus from '../treasurer/ClubFinancialStatus';
+import BankToCashTransfer from '../treasurer/BankToCashTransfer';
+import CashToBankTransfer from '../treasurer/CashToBankTransfer';
+import MissionExpenseStatus from '../treasurer/MissionExpenseStatus';
+import CompensationCalculation from '../treasurer/CompensationCalculation';
+import ExpenseCertificate from '../treasurer/ExpenseCertificate';
+import RevenueCertificate from '../treasurer/RevenueCertificate';
+import OperationReport from '../treasurer/OperationReport';
+import CashClosureReport from '../treasurer/CashClosureReport';
+import PhysicalDischarge from '../treasurer/PhysicalDischarge';
+import FinancialDischarge from '../treasurer/FinancialDischarge';
+import DischargeReceiptExtract from '../treasurer/DischargeReceiptExtract';
 
 const ProfileHeader: React.FC<{ treasurer: Staff; leagueName: string }> = ({ treasurer, leagueName }) => (
   <Card className="mb-4">
@@ -53,21 +66,96 @@ const LeagueTreasurerDashboard: React.FC<LeagueTreasurerDashboardProps> = ({ tre
 
       <ProfileHeader treasurer={treasurer} leagueName={league.nameAr} />
 
-      <Tab.Container defaultActiveKey="financials">
+      <Tab.Container defaultActiveKey="dashboard">
         <Nav variant="tabs" className="mb-3">
           <Nav.Item>
-            <Nav.Link eventKey="financials">البيانات المالية</Nav.Link>
+            <Nav.Link eventKey="dashboard">
+              <i className="fas fa-tachometer-alt me-2"></i>
+              لوحة التحكم
+            </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="profile">الملف الشخصي</Nav.Link>
+            <Nav.Link eventKey="paid-expenses">
+              <i className="fas fa-money-bill-wave me-2"></i>
+              المصاريف المدفوعة
+            </Nav.Link>
           </Nav.Item>
           <Nav.Item>
-            <Nav.Link eventKey="contact">معلومات الاتصال</Nav.Link>
+            <Nav.Link eventKey="financial-status">
+              <i className="fas fa-chart-pie me-2"></i>
+              الوضعية المالية
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="bank-to-cash">
+              <i className="fas fa-exchange-alt me-2"></i>
+              تحويل من البنك للصندوق
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="cash-to-bank">
+              <i className="fas fa-university me-2"></i>
+              تحويل من الصندوق للبنك
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="mission-expense">
+              <i className="fas fa-tasks me-2"></i>
+              حالة مصاريف المهمة
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="compensation">
+              <i className="fas fa-calculator me-2"></i>
+              حساب التعويضات
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="expense-certificate">
+              <i className="fas fa-certificate me-2"></i>
+              شهادة إثبات مصاريف
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="revenue-certificate">
+              <i className="fas fa-file-invoice-dollar me-2"></i>
+              شهادة إثبات إيرادات
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="operation-report">
+              <i className="fas fa-file-alt me-2"></i>
+              عرض حال
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="cash-closure">
+              <i className="fas fa-lock me-2"></i>
+              محضر قفل الصندوق
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="physical-discharge">
+              <i className="fas fa-box me-2"></i>
+              مخالصة مادية
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="financial-discharge">
+              <i className="fas fa-receipt me-2"></i>
+              مخالصة مالية
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="discharge-receipt">
+              <i className="fas fa-file-contract me-2"></i>
+              مستخرج وصل تبرئة الذمة
+            </Nav.Link>
           </Nav.Item>
         </Nav>
 
         <Tab.Content>
-          <Tab.Pane eventKey="financials">
+          <Tab.Pane eventKey="dashboard">
             <Row>
               <Col md={6}>
                 <InfoCard title="ملخص الميزانية">
@@ -113,16 +201,44 @@ const LeagueTreasurerDashboard: React.FC<LeagueTreasurerDashboardProps> = ({ tre
               </Col>
             </Row>
           </Tab.Pane>
-          <Tab.Pane eventKey="profile">
-            <InfoCard title="السيرة الذاتية">
-              <p>{treasurer.bioAr || 'لا توجد سيرة ذاتية متاحة.'}</p>
-            </InfoCard>
+          <Tab.Pane eventKey="paid-expenses">
+            <PaidExpenses />
           </Tab.Pane>
-          <Tab.Pane eventKey="contact">
-            <InfoCard title="معلومات الاتصال">
-              <p><strong>البريد الإلكتروني:</strong> {treasurer.email || 'غير متوفر'}</p>
-              <p><strong>الهاتف:</strong> {treasurer.phone || 'غير متوفر'}</p>
-            </InfoCard>
+          <Tab.Pane eventKey="financial-status">
+            <ClubFinancialStatus />
+          </Tab.Pane>
+          <Tab.Pane eventKey="bank-to-cash">
+            <BankToCashTransfer />
+          </Tab.Pane>
+          <Tab.Pane eventKey="cash-to-bank">
+            <CashToBankTransfer />
+          </Tab.Pane>
+          <Tab.Pane eventKey="mission-expense">
+            <MissionExpenseStatus />
+          </Tab.Pane>
+          <Tab.Pane eventKey="compensation">
+            <CompensationCalculation />
+          </Tab.Pane>
+          <Tab.Pane eventKey="expense-certificate">
+            <ExpenseCertificate />
+          </Tab.Pane>
+          <Tab.Pane eventKey="revenue-certificate">
+            <RevenueCertificate />
+          </Tab.Pane>
+          <Tab.Pane eventKey="operation-report">
+            <OperationReport />
+          </Tab.Pane>
+          <Tab.Pane eventKey="cash-closure">
+            <CashClosureReport />
+          </Tab.Pane>
+          <Tab.Pane eventKey="physical-discharge">
+            <PhysicalDischarge />
+          </Tab.Pane>
+          <Tab.Pane eventKey="financial-discharge">
+            <FinancialDischarge />
+          </Tab.Pane>
+          <Tab.Pane eventKey="discharge-receipt">
+            <DischargeReceiptExtract />
           </Tab.Pane>
         </Tab.Content>
       </Tab.Container>

@@ -1342,7 +1342,7 @@ const TrainingLoadDistribution: React.FC<Props> = ({ club, onApplyToTechnicalCar
                   <div className="load-header">
                     <div className="load-main-text">درجة الحمل</div>
                     <div className="load-divider"></div>
-                    <div className="load-sub-labels">
+                    <div className="load-sub-labels" style={{ marginRight: '-15px' }}>
                       <div className="load-sub-item">
                         <span>أقصى</span>
                         <small>% 95 : 86</small>

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Container, Card, Row, Col, Nav, Tab, Table, Badge, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import type { Staff, League } from '../../types';
+import type { Staff, Club } from '../../types';
 import { UsersService } from '../../services/firestoreService';
 import InventoryTable from '../president/InventoryTable';
 import MissionOrder from '../president/MissionOrder';
 
-const ProfileHeader: React.FC<{ president: Staff; leagueName: string }> = ({ president, leagueName }) => (
+const ProfileHeader: React.FC<{ president: Staff; clubName: string }> = ({ president, clubName }) => (
   <Card className="mb-4">
     <Card.Body>
       <Row className="align-items-center">
@@ -15,7 +15,7 @@ const ProfileHeader: React.FC<{ president: Staff; leagueName: string }> = ({ pre
         </Col>
         <Col>
           <h4 className="mb-0">{`${president.firstName} ${president.lastName}`}</h4>
-          <p className="text-muted mb-0">{president.positionAr} - {leagueName}</p>
+          <p className="text-muted mb-0">{president.positionAr} - {clubName}</p>
         </Col>
       </Row>
     </Card.Body>
@@ -31,12 +31,12 @@ const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ titl
   </Card>
 );
 
-interface LeaguePresidentDashboardProps {
+interface ClubPresidentDashboardProps {
   president: Staff;
-  league: League;
+  club: Club;
 }
 
-const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ president, league }) => {
+const ClubPresidentDashboard: React.FC<ClubPresidentDashboardProps> = ({ president, club }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -53,7 +53,7 @@ const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ pre
         </Button>
       </div>
 
-      <ProfileHeader president={president} leagueName={league.nameAr} />
+      <ProfileHeader president={president} clubName={club.nameAr} />
 
       <Tab.Container defaultActiveKey="dashboard">
         <Nav variant="tabs" className="mb-3">
@@ -80,45 +80,54 @@ const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ pre
         <Tab.Content>
           <Tab.Pane eventKey="dashboard">
             <Row>
-              <Col md={6}>
-                <InfoCard title="ملخص الأنشطة">
-                  <p><strong>عدد الأندية:</strong> 15 نادي</p>
-                  <p><strong>عدد الأعضاء:</strong> 2,500 عضو</p>
-                  <p><strong>الأنشطة الجارية:</strong> 8 أنشطة</p>
-                  <p><strong>الميزانية السنوية:</strong> 500,000 دج</p>
+              <Col md={4}>
+                <InfoCard title="عدد الأعضاء">
+                  <h3 className="text-success">250 عضو</h3>
                 </InfoCard>
               </Col>
-              <Col md={6}>
-                <InfoCard title="آخر الإجراءات">
-                  <Table striped bordered hover size="sm">
-                    <thead>
-                      <tr>
-                        <th>التاريخ</th>
-                        <th>الإجراء</th>
-                        <th>الحالة</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>2024-08-15</td>
-                        <td>اجتماع الجمعية العامة</td>
-                        <td><Badge bg="success">مكتمل</Badge></td>
-                      </tr>
-                      <tr>
-                        <td>2024-08-10</td>
-                        <td>تقرير مالي ربع سنوي</td>
-                        <td><Badge bg="success">مكتمل</Badge></td>
-                      </tr>
-                      <tr>
-                        <td>2024-08-05</td>
-                        <td>جرد الأملاك</td>
-                        <td><Badge bg="warning">قيد الإنجاز</Badge></td>
-                      </tr>
-                    </tbody>
-                  </Table>
+              <Col md={4}>
+                <InfoCard title="الأنشطة الجارية">
+                  <h3 className="text-info">5 أنشطة</h3>
+                </InfoCard>
+              </Col>
+              <Col md={4}>
+                <InfoCard title="الميزانية السنوية">
+                  <h3 className="text-warning">150,000 دج</h3>
                 </InfoCard>
               </Col>
             </Row>
+            <InfoCard title="آخر الإجراءات">
+              <Table striped bordered hover responsive>
+                <thead>
+                  <tr>
+                    <th>التاريخ</th>
+                    <th>الإجراء</th>
+                    <th>المسؤول</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>2024-08-20</td>
+                    <td>اجتماع المكتب التنفيذي</td>
+                    <td>الرئيس</td>
+                    <td><Badge bg="success">مكتمل</Badge></td>
+                  </tr>
+                  <tr>
+                    <td>2024-08-15</td>
+                    <td>جرد الأملاك والمعدات</td>
+                    <td>أمين المال</td>
+                    <td><Badge bg="warning">قيد الإنجاز</Badge></td>
+                  </tr>
+                  <tr>
+                    <td>2024-08-10</td>
+                    <td>تقرير مالي شهري</td>
+                    <td>أمين المال</td>
+                    <td><Badge bg="success">مكتمل</Badge></td>
+                  </tr>
+                </tbody>
+              </Table>
+            </InfoCard>
           </Tab.Pane>
           <Tab.Pane eventKey="inventory">
             <InventoryTable />
@@ -132,4 +141,4 @@ const LeaguePresidentDashboard: React.FC<LeaguePresidentDashboardProps> = ({ pre
   );
 };
 
-export default LeaguePresidentDashboard;
+export default ClubPresidentDashboard;

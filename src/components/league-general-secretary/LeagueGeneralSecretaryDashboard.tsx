@@ -9,6 +9,9 @@ import FoundingMembersList from './FoundingMembersList';
 import ExecutiveBoardList from './ExecutiveBoardList';
 import HandoverReport from './HandoverReport';
 import TrainingContract from './TrainingContract';
+import OrderVoucher from './OrderVoucher';
+import DiscountCertificate from './DiscountCertificate';
+import MeetingMinutes from './MeetingMinutes';
 
 interface LeagueGeneralSecretaryDashboardProps {
   leagueId?: string;
@@ -164,6 +167,24 @@ const LeagueGeneralSecretaryDashboard: React.FC<LeagueGeneralSecretaryDashboardP
                     <Nav.Link eventKey="training-contract" className="text-end border-0 rounded-0" dir="rtl">
                       <i className="fas fa-file-contract me-2"></i>
                       عقد تدريب
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="order-voucher" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-file-invoice me-2"></i>
+                      سند طلبية
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="discount-certificate" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-certificate me-2"></i>
+                      شهادة التعريف بالمؤسسة
+                    </Nav.Link>
+                  </Nav.Item>
+                  <Nav.Item>
+                    <Nav.Link eventKey="meeting-minutes" className="text-end border-0 rounded-0" dir="rtl">
+                      <i className="fas fa-file-alt me-2"></i>
+                      مستخرج مداولة
                     </Nav.Link>
                   </Nav.Item>
                 </Nav>
@@ -379,6 +400,21 @@ const LeagueGeneralSecretaryDashboard: React.FC<LeagueGeneralSecretaryDashboardP
               {/* عقد تدريب */}
               <Tab.Pane eventKey="training-contract">
                 <TrainingContract />
+              </Tab.Pane>
+
+              {/* سند طلبية */}
+              <Tab.Pane eventKey="order-voucher">
+                <OrderVoucher />
+              </Tab.Pane>
+
+              {/* شهادة التعريف بالمؤسسة */}
+              <Tab.Pane eventKey="discount-certificate">
+                <DiscountCertificate />
+              </Tab.Pane>
+
+              {/* مستخرج مداولة */}
+              <Tab.Pane eventKey="meeting-minutes">
+                <MeetingMinutes />
               </Tab.Pane>
             </Tab.Content>
           </Col>

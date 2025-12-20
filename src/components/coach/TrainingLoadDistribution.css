@@ -8,8 +8,8 @@
   box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
   direction: rtl;
   width: 100%;
-  table-layout: auto; /* تغيير من fixed إلى auto لمرونة أكبر */
-  min-width: 1200px; /* حد أدنى للعرض */
+  table-layout: auto;
+  min-width: 1200px;
 }
 
 .training-load-table th,
@@ -17,19 +17,18 @@
   border: 1px solid #667eea;
   text-align: center;
   vertical-align: middle;
-  padding: 15px 12px; /* زيادة المساحة الداخلية */
+  padding: 15px 12px;
   transition: all 0.3s ease;
   font-weight: bold;
   font-size: 16px;
-  min-height: 55px; /* زيادة الحد الأدنى للارتفاع قليلاً */
-  min-width: 100px; /* زيادة الحد الأدنى للعرض قليلاً لكل الخانات */
+  min-height: 55px;
+  min-width: 100px;
 }
 
-/* جعل العمود الأول أعرض بكثير ليظهر النص بالكامل كما في الطباعة */
 .training-load-table tr th:first-child,
 .training-load-table tr td:first-child {
-  width: 220px;
-  min-width: 220px;
+  width: 300px;
+  min-width: 300px;
 }
 
 .training-load-table th:hover,
@@ -41,9 +40,13 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   font-weight: bold;
-  width: 220px; /* توسيع عمود رأس البيانات/الأسابيع بشكل واضح */
+  width: 300px;
+  min-width: 300px;
   position: relative;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .header-content {
@@ -82,10 +85,10 @@
   background: linear-gradient(135deg, #667eea, #764ba2);
   color: white;
   font-weight: bold;
-  min-width: 100px; /* زيادة العرض الأدنى */
+  min-width: 100px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   font-size: 16px;
-  padding: 15px 12px; /* زيادة المساحة الداخلية */
+  padding: 15px 12px;
 }
 
 .row-label {
@@ -96,7 +99,11 @@
   padding: 15px 10px;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
   font-size: 16px;
-  width: 220px; /* توسيع خانات عناوين الصفوف في العمود الأول لتظهر الجمل كاملة */
+  width: 300px;
+  min-width: 300px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 .vertical-text {
@@ -105,8 +112,8 @@
   font-size: 11px;
   font-weight: bold;
   color: #1e40af;
-  line-height: 1.9; /* زيادة المسافة بين الحروف العمودية */
-  padding: 8px 4px; /* توسيع المساحة داخل الخانة عمودياً وأفقياً */
+  line-height: 1.9;
+  padding: 8px 4px;
 }
 
 .load-label {
@@ -114,12 +121,12 @@
   color: white;
   font-weight: bold;
   text-align: center;
-  width: 220px; /* توسيع عمود درجة الحمل ليتناسق مع عرض العمود الأول ويستوعب النص بالكامل */
+  width: 270px;
   font-size: 12px;
   position: relative;
   padding: 0;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-  height: 170px; /* زيادة الارتفاع لإراحة النص العمودي والمحتوى الداخلي */
+  height: 270px;
 }
 
 .load-header {
@@ -141,8 +148,8 @@
   border-left: 2px solid #fff;
   color: white;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-  min-width: 70px; /* توسيع مساحة نص درجة الحمل العمودي حتى لا تتلاصق الحروف */
-  line-height: 1.8; /* زيادة المسافة بين الحروف العمودية */
+  min-width: 70px;
+  line-height: 1.8;
 }
 
 .load-divider {
@@ -154,8 +161,9 @@
   flex: 2;
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; /* توزيع أفضل للعناصر داخل الخانة */
-  padding: 10px; /* زيادة المساحة حول النص */
+  justify-content: space-evenly;
+  align-items: flex-end;
+  padding: 6px 4px 6px 7px;
 }
 
 .load-sub-item {
@@ -163,48 +171,50 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  font-size: 11px;
-  line-height: 1.5; /* زيادة المسافة بين الأسطر داخل كل مستوى (أقصى/عالي/متوسط) */
-  margin: 4px 0;
-  padding: 3px 0;
+  font-size: 10px;
+  line-height: 1.4;
+  margin: 2px 0;
+  padding: 2px 0;
+  white-space: normal;
 }
 
 .load-sub-item span {
   font-weight: bold;
   margin-bottom: 4px;
-  font-size: 13px; /* تكبير عنوان المستوى (أقصى/عالي/متوسط) */
+  font-size: 12px;
   color: white;
   text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
 }
 
 .load-sub-item small {
-  font-size: 10px; /* تكبير نص النسب ونبضات القلب */
+  font-size: 9px;
   font-weight: bold;
   color: white;
   margin: 2px 0;
-  line-height: 1.4; /* جعل النص واضحاً وغير متلاصق */
+  line-height: 1.3;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.6);
+  white-space: normal;
 }
 
 .input-cell {
-  padding: 8px; /* زيادة المساحة الداخلية */
+  padding: 8px;
   text-align: center;
   vertical-align: middle;
   background-color: #f8f9fa;
-  min-width: 100px; /* حد أدنى للعرض */
-  width: auto; /* عرض تلقائي */
+  min-width: 100px;
+  width: auto;
 }
 
 .load-input {
   width: 100%;
-  min-width: 80px; /* زيادة الحد الأدنى للعرض */
-  max-width: 120px; /* زيادة الحد الأقصى للعرض */
-  height: 40px; /* زيادة الارتفاع */
+  min-width: 80px;
+  max-width: 120px;
+  height: 40px;
   border: 2px solid #667eea;
   border-radius: 8px;
   text-align: center;
   font-size: 16px;
-  padding: 10px; /* زيادة المساحة الداخلية */
+  padding: 10px;
   background-color: white;
   font-weight: bold;
   color: #1e40af;
@@ -234,16 +244,16 @@
 
 .heart-rate-display {
   text-align: center;
-  font-size: 14px; /* زيادة حجم الخط */
+  font-size: 14px;
   font-weight: bold;
   color: #7c2d12;
   background-color: #fef3c7;
   border: 1px solid #fddb3a;
-  padding: 10px 8px; /* زيادة المساحة الداخلية */
+  padding: 10px 8px;
   vertical-align: middle;
-  min-width: 100px; /* حد أدنى للعرض */
-  min-height: 45px; /* حد أدنى للارتفاع */
-  line-height: 1.3; /* تحسين المسافة بين الأسطر */
+  min-width: 100px;
+  min-height: 45px;
+  line-height: 1.3;
 }
 
 .weekly-time {
@@ -290,7 +300,6 @@
   background-color: rgba(25, 118, 210, 0.1) !important;
 }
 
-/* تحسينات إضافية لضمان ظهور النصوص بشكل كامل */
 .training-load-table input {
   white-space: nowrap;
   overflow: visible;
@@ -303,7 +312,16 @@
   text-overflow: clip;
 }
 
-/* تحسين عرض الخانات للشاشات الكبيرة */
+/* Overrides for coach-responsive.css to allow wrapping in this table only */
+.training-load-table.coach-table th:first-child,
+.training-load-table.coach-table td:first-child {
+  white-space: normal !important;
+}
+
+.training-load-table.coach-table th.load-label {
+  white-space: normal !important;
+}
+
 @media (min-width: 1400px) {
   .training-load-table th,
   .training-load-table td {
@@ -325,7 +343,6 @@
   }
 }
 
-/* تحسين عرض الخانات للشاشات المتوسطة */
 @media (min-width: 1200px) and (max-width: 1399px) {
   .training-load-table th,
   .training-load-table td {
@@ -345,7 +362,7 @@
 
 @media print {
   @page {
-    size: A4 landscape; /* فرض الوضع الأفقي */
+    size: A4 landscape;
     margin: 8mm;
   }
   
@@ -379,7 +396,6 @@
   }
 }
 
-/* تحسينات للطباعة - الوضع الأفقي فقط */
 @media print and (orientation: landscape) {
   @page {
     margin: 8mm !important;

@@ -7,6 +7,9 @@ import TrainingContract from '../league-general-secretary/TrainingContract';
 import HandoverReport from '../league-general-secretary/HandoverReport';
 import FoundingMembersList from '../league-general-secretary/FoundingMembersList';
 import ExecutiveBoardList from '../league-general-secretary/ExecutiveBoardList';
+import OrderVoucher from '../league-general-secretary/OrderVoucher';
+import DiscountCertificate from '../league-general-secretary/DiscountCertificate';
+import MeetingMinutes from '../league-general-secretary/MeetingMinutes';
 
 const ProfileHeader: React.FC<{ secretary: Staff; clubName: string }> = ({ secretary, clubName }) => (
   <Card className="mb-4">
@@ -74,6 +77,24 @@ const ClubGeneralSecretaryDashboard: React.FC<ClubGeneralSecretaryDashboardProps
               قائمة أعضاء المكتب التنفيذي
             </Nav.Link>
           </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="order-voucher">
+              <i className="fas fa-file-invoice me-2"></i>
+              سند طلبية
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="discount-certificate">
+              <i className="fas fa-certificate me-2"></i>
+              شهادة التعريف بالمؤسسة
+            </Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="meeting-minutes">
+              <i className="fas fa-file-alt me-2"></i>
+              مستخرج مداولة
+            </Nav.Link>
+          </Nav.Item>
         </Nav>
 
         <Tab.Content>
@@ -88,6 +109,15 @@ const ClubGeneralSecretaryDashboard: React.FC<ClubGeneralSecretaryDashboardProps
           </Tab.Pane>
           <Tab.Pane eventKey="executive-board">
             <ExecutiveBoardList />
+          </Tab.Pane>
+          <Tab.Pane eventKey="order-voucher">
+            <OrderVoucher />
+          </Tab.Pane>
+          <Tab.Pane eventKey="discount-certificate">
+            <DiscountCertificate />
+          </Tab.Pane>
+          <Tab.Pane eventKey="meeting-minutes">
+            <MeetingMinutes />
           </Tab.Pane>
         </Tab.Content>
       </Tab.Container>
