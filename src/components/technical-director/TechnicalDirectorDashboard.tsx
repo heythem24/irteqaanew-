@@ -27,82 +27,6 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
       case 'periodisation':
         return <PeriodisationAnnuelle clubId={club.id} />;
 
-      case 'training-programs':
-        return (
-          <Card className="shadow-sm">
-            <Card.Header className="bg-success text-white">
-              <h4 className="mb-0 text-center" dir="rtl">
-                <i className="fas fa-clipboard-list me-2"></i>
-               البرامج التدريبية والتكوين
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <div className="text-center text-muted">
-                <i className="fas fa-tools fa-3x mb-3"></i>
-                <h5>قيد التطوير</h5>
-                <p>سيتم إضافة هذه الميزة قريباً</p>
-              </div>
-            </Card.Body>
-          </Card>
-        );
-
-      case 'coach-evaluation':
-        return (
-          <Card className="shadow-sm">
-            <Card.Header className="bg-info text-white">
-              <h4 className="mb-0 text-center" dir="rtl">
-                <i className="fas fa-user-check me-2"></i>
-                تقييم المدربين
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <div className="text-center text-muted">
-                <i className="fas fa-tools fa-3x mb-3"></i>
-                <h5>قيد التطوير</h5>
-                <p>سيتم إضافة هذه الميزة قريباً</p>
-              </div>
-            </Card.Body>
-          </Card>
-        );
-
-      case 'technical-reports':
-        return (
-          <Card className="shadow-sm">
-            <Card.Header className="bg-warning text-dark">
-              <h4 className="mb-0 text-center" dir="rtl">
-                <i className="fas fa-file-alt me-2"></i>
-                التقارير الفنية
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <div className="text-center text-muted">
-                <i className="fas fa-tools fa-3x mb-3"></i>
-                <h5>قيد التطوير</h5>
-                <p>سيتم إضافة هذه الميزة قريباً</p>
-              </div>
-            </Card.Body>
-          </Card>
-        );
-
-      case 'athlete-development':
-        return (
-          <Card className="shadow-sm">
-            <Card.Header className="bg-danger text-white">
-              <h4 className="mb-0 text-center" dir="rtl">
-                <i className="fas fa-chart-line me-2"></i>
-               التطوير والإنتقاء
-              </h4>
-            </Card.Header>
-            <Card.Body className="p-4">
-              <div className="text-center text-muted">
-                <i className="fas fa-tools fa-3x mb-3"></i>
-                <h5>قيد التطوير</h5>
-                <p>سيتم إضافة هذه الميزة قريباً</p>
-              </div>
-            </Card.Body>
-          </Card>
-        );
-
       default:
         return null;
     }
@@ -149,46 +73,6 @@ const TechnicalDirectorDashboard: React.FC<TechnicalDirectorDashboardProps> = ({
               >
                 <i className="fas fa-calendar-alt me-2"></i>
                 البرنامج السنوي
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeSection === 'training-programs'}
-                onClick={() => setActiveSection('training-programs')}
-                className="mx-2 fw-bold mb-2"
-              >
-                <i className="fas fa-clipboard-list me-2"></i>
-               البرامج التدريبية والتكوين
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeSection === 'coach-evaluation'}
-                onClick={() => setActiveSection('coach-evaluation')}
-                className="mx-2 fw-bold mb-2"
-              >
-                <i className="fas fa-user-check me-2"></i>
-                تقييم المدربين
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeSection === 'technical-reports'}
-                onClick={() => setActiveSection('technical-reports')}
-                className="mx-2 fw-bold mb-2"
-              >
-                <i className="fas fa-file-alt me-2"></i>
-                التقارير الفنية
-              </Nav.Link>
-            </Nav.Item>
-            <Nav.Item>
-              <Nav.Link
-                active={activeSection === 'athlete-development'}
-                onClick={() => setActiveSection('athlete-development')}
-                className="mx-2 fw-bold mb-2"
-              >
-                <i className="fas fa-chart-line me-2"></i>
-               التطوير والإنتقاء
               </Nav.Link>
             </Nav.Item>
           </Nav>

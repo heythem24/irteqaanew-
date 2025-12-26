@@ -178,16 +178,17 @@ const MeetingMinutes: React.FC = () => {
               </Button>
             </Card.Header>
             <Card.Body className="p-0">
-              <Table bordered hover responsive className="mb-0">
-                <thead className="table-dark">
-                  <tr>
-                    <th style={{ width: '60px' }}>الترتيب</th>
-                    <th>الاسم واللقب</th>
-                    <th>الصفة</th>
-                    <th style={{ width: '100px' }}>الإمضاء</th>
-                    <th style={{ width: '60px' }}>حذف</th>
-                  </tr>
-                </thead>
+              <div style={{ overflowX: 'auto' }}>
+                <Table bordered hover className="mb-0" style={{ minWidth: '700px' }}>
+                  <thead className="table-dark">
+                    <tr>
+                      <th style={{ minWidth: '80px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الترتيب</th>
+                      <th style={{ minWidth: '200px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الاسم واللقب</th>
+                      <th style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الصفة</th>
+                      <th style={{ minWidth: '120px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الإمضاء</th>
+                      <th style={{ minWidth: '70px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>حذف</th>
+                    </tr>
+                  </thead>
                 <tbody>
                   {attendees.map((attendee) => (
                     <tr key={attendee.id}>
@@ -230,6 +231,7 @@ const MeetingMinutes: React.FC = () => {
                   ))}
                 </tbody>
               </Table>
+              </div>
             </Card.Body>
           </Card>
 

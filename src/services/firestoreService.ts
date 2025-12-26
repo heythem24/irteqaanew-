@@ -601,9 +601,33 @@ export class ClubsService {
   }
 
   static async updateClub(id: string, data: Partial<Club>): Promise<void> {
+    if (!id) {
+      throw new Error('معرف النادي مطلوب');
+    }
+    
     const ref = doc(db, 'clubs', id);
-    const { createdAt, ...rest } = data as any; // do not overwrite createdAt unless explicitly needed
-    await updateDoc(ref, rest);
+    
+    // تحقق من وجود النادي أولاً
+    const existingDoc = await getDoc(ref);
+    if (!existingDoc.exists()) {
+      throw new Error('النادي غير موجود');
+    }
+    
+    const { createdAt, id: _id, ...rest } = data as any; // do not overwrite createdAt or id
+    
+    // إزالة الحقول undefined لأن Firestore لا يقبلها
+    const payload: any = {};
+    Object.keys(rest).forEach(key => {
+      if (rest[key] !== undefined) {
+        payload[key] = rest[key];
+      }
+    });
+    
+    if (Object.keys(payload).length === 0) {
+      throw new Error('لا توجد بيانات للتحديث');
+    }
+    
+    await updateDoc(ref, payload);
   }
 
   static async deleteClub(id: string): Promise<void> {

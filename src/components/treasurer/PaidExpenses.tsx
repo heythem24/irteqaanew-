@@ -241,30 +241,31 @@ const PaidExpenses: React.FC = () => {
               </Button>
             </Card.Header>
             <Card.Body className="p-0">
-              <Table bordered hover responsive className="mb-0" style={{ fontSize: '0.85rem' }}>
-                <thead className="table-dark">
-                  <tr>
-                    <th style={{ width: '50px' }}>الرقم</th>
-                    <th>Chapitre</th>
-                    <th>الباب</th>
-                    <th>رقم الحساب</th>
-                    <th>المبلغ المسدد</th>
-                    <th>اسم ولقب التاجر أو المستفيد</th>
-                    <th colSpan={2} className="text-center bg-warning text-dark">الحوصلة Récapitulation</th>
-                    <th style={{ width: '50px' }}>حذف</th>
-                  </tr>
-                  <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th className="bg-warning text-dark">رقم الحساب</th>
-                    <th className="bg-warning text-dark">المجموع Total</th>
-                    <th></th>
-                  </tr>
-                </thead>
+              <div style={{ overflowX: 'auto' }}>
+                <Table bordered hover className="mb-0" style={{ minWidth: '1100px', fontSize: '0.85rem' }}>
+                  <thead className="table-dark">
+                    <tr>
+                      <th style={{ minWidth: '60px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الرقم</th>
+                      <th style={{ minWidth: '120px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>Chapitre</th>
+                      <th style={{ minWidth: '100px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الباب</th>
+                      <th style={{ minWidth: '120px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>رقم الحساب</th>
+                      <th style={{ minWidth: '130px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>المبلغ المسدد</th>
+                      <th style={{ minWidth: '220px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>اسم ولقب التاجر أو المستفيد</th>
+                      <th colSpan={2} className="text-center bg-warning text-dark" style={{ minWidth: '250px', whiteSpace: 'normal', wordWrap: 'break-word', verticalAlign: 'middle' }}>الحوصلة Récapitulation</th>
+                      <th style={{ minWidth: '60px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>حذف</th>
+                    </tr>
+                    <tr>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th></th>
+                      <th className="bg-warning text-dark" style={{ minWidth: '125px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>رقم الحساب</th>
+                      <th className="bg-warning text-dark" style={{ minWidth: '125px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>المجموع Total</th>
+                      <th></th>
+                    </tr>
+                  </thead>
                 <tbody>
                   {items.map((item) => (
                     <tr key={item.id}>
@@ -304,6 +305,7 @@ const PaidExpenses: React.FC = () => {
                   </tr>
                 </tbody>
               </Table>
+              </div>
             </Card.Body>
           </Card>
 
