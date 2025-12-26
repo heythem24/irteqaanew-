@@ -341,10 +341,21 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       const current = users.find(u => u.id === editingUserId);
       if (editUser.username && editUser.username !== current?.username) {
         try {
-          const existing = await UsersService.getUserByUsername(editUser.username);
-          if (existing && existing.id !== editingUserId) {
-            showAlert('danger', 'اسم المستخدم موجود بالفعل');
-            return;
+          if (editUser.role === 'athlete' && editUser.clubId) {
+            // للرياضيين: التحقق من التكرار داخل النادي فقط
+            const isAvailable = await UsersService.checkClubUsernameAvailability(editUser.clubId, String(editUser.username), editingUserId);
+            if (!isAvailable) {
+              showAlert('danger', 'اسم المستخدم موجود بالفعل في هذا النادي');
+              return;
+            }
+          } else {
+            // للأدوار الأخرى: التحقق العام
+            const usernameToCheck = editUser.role === 'athlete' ? String(editUser.username) : editUser.username;
+            const existing = await UsersService.getUserByUsername(usernameToCheck);
+            if (existing && existing.id !== editingUserId) {
+              showAlert('danger', 'اسم المستخدم موجود بالفعل');
+              return;
+            }
           }
         } catch (e) {
           // proceed if lookup fails, to avoid blocking edits offline
@@ -352,7 +363,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
         }
       }
       const payload: Partial<User> = {
-        username: editUser.username || current?.username,
+        // للرياضيين: حفظ اسم المستخدم وكلمة السر كـ string دائماً
+        username: editUser.role === 'athlete' ? String(editUser.username || current?.username) : (editUser.username || current?.username),
         firstName: editUser.firstName || '',
         lastName: editUser.lastName || '',
         role: editUser.role || 'athlete',
@@ -361,7 +373,8 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
         isActive: editUser.isActive ?? true,
         image: editUser.image,
         // Only update password if provided (avoid overwriting with empty)
-        ...(editUser.password ? { password: editUser.password } : {}),
+        // للرياضيين: حفظ كلمة السر كـ string
+        ...(editUser.password ? { password: editUser.role === 'athlete' ? String(editUser.password) : editUser.password } : {}),
       } as Partial<User>;
       await UsersService.updateUser(editingUserId, payload);
       showAlert('success', 'تم حفظ تعديلات المستخدم');

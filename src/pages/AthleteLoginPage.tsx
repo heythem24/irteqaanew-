@@ -11,7 +11,7 @@ const AthleteLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [club, setClub] = useState<any>(null);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams<{ clubId: string }>();
@@ -29,7 +29,7 @@ const AthleteLoginPage: React.FC = () => {
         }
       }
     };
-    
+
     fetchClub();
   }, [clubId]);
 
@@ -40,7 +40,7 @@ const AthleteLoginPage: React.FC = () => {
 
     try {
       console.log('===AthleteLogin Debug: Attempting login===', { username, clubId });
-      
+
       // Check if user is logged in
       const currentUser = UsersService.getCurrentUser();
       if (currentUser) {
@@ -57,11 +57,11 @@ const AthleteLoginPage: React.FC = () => {
       }
 
       // Attempt login
-      const user = await UsersService.login(username, password);
-      
+      const user = await UsersService.login(username, password, 'athlete', clubId);
+
       if (user) {
         console.log('===AthleteLogin Debug: Login successful===', user);
-        
+
         // Check if user is an athlete and belongs to the specified club
         if (user.role === 'athlete' && user.clubId === clubId) {
           console.log('===AthleteLogin Debug: User is athlete for this club===');
@@ -103,7 +103,7 @@ const AthleteLoginPage: React.FC = () => {
             </Card.Header>
             <Card.Body className="p-4">
               {error && <Alert variant="danger">{error}</Alert>}
-              
+
               <Form onSubmit={handleLogin}>
                 <Form.Group className="mb-3" controlId="username">
                   <Form.Label>اسم المستخدم</Form.Label>
