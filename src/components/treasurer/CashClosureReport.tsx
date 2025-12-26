@@ -34,15 +34,15 @@ const CashClosureReport: React.FC = () => {
               <h5 className="mb-0">معلومات عامة</h5>
             </Card.Header>
             <Card.Body>
-              <div className="table-responsive">
-                <Table bordered size="sm">
+              <div style={{ overflowX: 'auto' }}>
+                <Table bordered size="sm" style={{ minWidth: '750px' }}>
                   <thead className="table-light">
                     <tr>
-                      <th>الموسم</th>
-                      <th>الفترة من</th>
-                      <th>الفترة إلى</th>
-                      <th>Exercice</th>
-                      <th>Désignation</th>
+                      <th style={{ minWidth: '120px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الموسم</th>
+                      <th style={{ minWidth: '140px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الفترة من</th>
+                      <th style={{ minWidth: '140px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الفترة إلى</th>
+                      <th style={{ minWidth: '150px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>Exercice</th>
+                      <th style={{ minWidth: '200px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>Désignation</th>
                     </tr>
                   </thead>
                   <tbody>

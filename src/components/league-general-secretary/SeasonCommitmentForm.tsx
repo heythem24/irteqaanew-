@@ -564,27 +564,27 @@ const SeasonCommitmentForm: React.FC<SeasonCommitmentFormProps> = ({ leagueId })
             <h6 className="mb-0" dir="rtl">الفئات العمرية المدرجة للمشاركة في المنافسة الفردية وحسب الفرق</h6>
           </Card.Header>
           <Card.Body>
-            <div className="table-responsive">
-              <Table bordered className="text-center">
+            <div style={{ overflowX: 'auto' }}>
+              <Table bordered className="text-center" style={{ minWidth: '900px' }}>
                 <thead>
                   <tr>
-                    <th colSpan={2} className="bg-success text-white">فئة أكابر</th>
-                    <th colSpan={2} className="bg-success text-white">فئة أواسط</th>
-                    <th colSpan={2} className="bg-success text-white">فئة أشبال</th>
-                    <th colSpan={2} className="bg-success text-white">فئة أصاغر</th>
-                    <th colSpan={2} className="bg-success text-white">فئة مدرسة</th>
+                    <th colSpan={2} className="bg-success text-white" style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word' }}>فئة أكابر</th>
+                    <th colSpan={2} className="bg-success text-white" style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word' }}>فئة أواسط</th>
+                    <th colSpan={2} className="bg-success text-white" style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word' }}>فئة أشبال</th>
+                    <th colSpan={2} className="bg-success text-white" style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word' }}>فئة أصاغر</th>
+                    <th colSpan={2} className="bg-success text-white" style={{ minWidth: '180px', whiteSpace: 'normal', wordWrap: 'break-word' }}>فئة مدرسة</th>
                   </tr>
                   <tr>
-                    <th className="bg-light">ذ</th>
-                    <th className="bg-light">أ</th>
-                    <th className="bg-light">ذ</th>
-                    <th className="bg-light">أ</th>
-                    <th className="bg-light">ذ</th>
-                    <th className="bg-light">أ</th>
-                    <th className="bg-light">ذ</th>
-                    <th className="bg-light">أ</th>
-                    <th className="bg-light">ذ</th>
-                    <th className="bg-light">أ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>ذ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>أ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>ذ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>أ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>ذ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>أ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>ذ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>أ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>ذ</th>
+                    <th className="bg-light" style={{ minWidth: '90px' }}>أ</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -692,17 +692,17 @@ const SeasonCommitmentForm: React.FC<SeasonCommitmentFormProps> = ({ leagueId })
             <h6 className="mb-0" dir="rtl">مواقيت التدريب</h6>
           </Card.Header>
           <Card.Body>
-            <div className="table-responsive">
-              <Table bordered className="text-center">
+            <div style={{ overflowX: 'auto' }}>
+              <Table bordered className="text-center" style={{ minWidth: '800px' }}>
                 <thead>
                   <tr>
-                    <th className="bg-light">الأحد</th>
-                    <th className="bg-light">الاثنين</th>
-                    <th className="bg-light">الثلاثاء</th>
-                    <th className="bg-light">الأربعاء</th>
-                    <th className="bg-light">الخميس</th>
-                    <th className="bg-light">الجمعة</th>
-                    <th className="bg-light">السبت</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الأحد</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الاثنين</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الثلاثاء</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الأربعاء</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الخميس</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>الجمعة</th>
+                    <th className="bg-light" style={{ minWidth: '115px', whiteSpace: 'normal', wordWrap: 'break-word' }}>السبت</th>
                   </tr>
                 </thead>
                 <tbody>

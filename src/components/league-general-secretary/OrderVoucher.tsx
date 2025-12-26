@@ -183,72 +183,89 @@ const OrderVoucher: React.FC = () => {
               </Button>
             </Card.Header>
             <Card.Body className="p-0">
-              <Table bordered hover responsive className="mb-0">
-                <thead className="table-dark">
-                  <tr>
-                    <th style={{ width: '80px' }}>العدد</th>
-                    <th>طبيعة الطلبية</th>
-                    <th style={{ width: '120px' }}>سعر الوحدة</th>
-                    <th style={{ width: '120px' }}>المجموع</th>
-                    <th>الملاحظات</th>
-                    <th style={{ width: '60px' }}>حذف</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <Form.Control
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td>
-                        <Form.Control
-                          value={item.nature}
-                          onChange={(e) => updateItem(item.id, 'nature', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td>
-                        <Form.Control
-                          type="number"
-                          value={item.unitPrice}
-                          onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td>
-                        <Form.Control value={item.total} readOnly size="sm" className="bg-light" />
-                      </td>
-                      <td>
-                        <Form.Control
-                          value={item.notes}
-                          onChange={(e) => updateItem(item.id, 'notes', e.target.value)}
-                          size="sm"
-                        />
-                      </td>
-                      <td className="text-center">
-                        <Button
-                          variant="outline-danger"
-                          size="sm"
-                          onClick={() => removeItem(item.id)}
-                          disabled={items.length === 1}
-                        >
-                          <i className="fas fa-trash"></i>
-                        </Button>
-                      </td>
+              <div className="table-responsive" style={{ overflowX: 'auto' }}>
+                <Table bordered hover className="mb-0" style={{ minWidth: '800px' }}>
+                  <thead className="table-dark">
+                    <tr>
+                      <th style={{ width: '100px', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>العدد</div>
+                      </th>
+                      <th style={{ width: '200px', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>طبيعة الطلبية</div>
+                      </th>
+                      <th style={{ width: '130px', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>سعر الوحدة</div>
+                      </th>
+                      <th style={{ width: '130px', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>المجموع</div>
+                      </th>
+                      <th style={{ width: '180px', textAlign: 'center', verticalAlign: 'middle' }}>
+                        <div style={{ whiteSpace: 'normal', wordWrap: 'break-word' }}>الملاحظات</div>
+                      </th>
+                      <th style={{ width: '70px', textAlign: 'center', verticalAlign: 'middle' }}>حذف</th>
                     </tr>
-                  ))}
-                  <tr className="table-warning">
-                    <td colSpan={3} className="text-end fw-bold">المجموع الكلي:</td>
-                    <td className="fw-bold">{calculateTotal()} دج</td>
-                    <td colSpan={2}></td>
-                  </tr>
-                </tbody>
-              </Table>
+                  </thead>
+                  <tbody>
+                    {items.map((item) => (
+                      <tr key={item.id}>
+                        <td style={{ width: '100px' }}>
+                          <Form.Control
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
+                            size="sm"
+                            style={{ fontSize: '0.9rem' }}
+                          />
+                        </td>
+                        <td style={{ width: '200px' }}>
+                          <Form.Control
+                            value={item.nature}
+                            onChange={(e) => updateItem(item.id, 'nature', e.target.value)}
+                            size="sm"
+                            style={{ fontSize: '0.9rem' }}
+                          />
+                        </td>
+                        <td style={{ width: '130px' }}>
+                          <Form.Control
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
+                            size="sm"
+                            style={{ fontSize: '0.9rem' }}
+                          />
+                        </td>
+                        <td style={{ width: '130px' }}>
+                          <Form.Control value={item.total} readOnly size="sm" className="bg-light" style={{ fontSize: '0.9rem' }} />
+                        </td>
+                        <td style={{ width: '180px' }}>
+                          <Form.Control
+                            value={item.notes}
+                            onChange={(e) => updateItem(item.id, 'notes', e.target.value)}
+                            size="sm"
+                            style={{ fontSize: '0.9rem' }}
+                          />
+                        </td>
+                        <td style={{ width: '70px', textAlign: 'center' }}>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            onClick={() => removeItem(item.id)}
+                            disabled={items.length === 1}
+                            style={{ padding: '0.25rem 0.5rem' }}
+                          >
+                            <i className="fas fa-trash" style={{ fontSize: '0.8rem' }}></i>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                    <tr className="table-warning">
+                      <td colSpan={3} className="text-end fw-bold">المجموع الكلي:</td>
+                      <td className="fw-bold">{calculateTotal()} دج</td>
+                      <td colSpan={2}></td>
+                    </tr>
+                  </tbody>
+                </Table>
+              </div>
             </Card.Body>
           </Card>
 

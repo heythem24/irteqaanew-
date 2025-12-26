@@ -221,17 +221,17 @@ const PhysicalDischarge: React.FC = () => {
               <h5 className="mb-0">العتاد، الوسائل أو اللوازم</h5>
             </Card.Header>
             <Card.Body>
-              <div className="table-responsive">
-                <Table bordered hover size="sm">
+              <div style={{ overflowX: 'auto' }}>
+                <Table bordered hover size="sm" style={{ minWidth: '850px' }}>
                   <thead className="table-light">
                     <tr>
-                      <th>الترتيب</th>
-                      <th>التعيين</th>
-                      <th>الكمية</th>
-                      <th>قيمة الوحدة</th>
-                      <th>المجموع</th>
-                      <th>الملاحظات</th>
-                      <th>الإجراء</th>
+                      <th style={{ minWidth: '80px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الترتيب</th>
+                      <th style={{ minWidth: '200px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>التعيين</th>
+                      <th style={{ minWidth: '100px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الكمية</th>
+                      <th style={{ minWidth: '130px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>قيمة الوحدة</th>
+                      <th style={{ minWidth: '130px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>المجموع</th>
+                      <th style={{ minWidth: '150px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>الملاحظات</th>
+                      <th style={{ minWidth: '60px', whiteSpace: 'normal', wordWrap: 'break-word', textAlign: 'center', verticalAlign: 'middle' }}>حذف</th>
                     </tr>
                   </thead>
                   <tbody>
