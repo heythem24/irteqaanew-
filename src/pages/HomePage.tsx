@@ -8,6 +8,7 @@ import './HomePage.css';
 import type { CarouselItem, News, FeaturedLeague, RecentAchievement } from '../types';
 import { HomepageService, type HeroCarouselImage } from '../services/homepageService';
 import { ClubsService, UsersService } from '../services/firestoreService';
+import { wilayas } from '../data/wilayas';
 import type { Club, User } from '../types';
 
 const HomePage: React.FC = () => {
@@ -142,14 +143,14 @@ const HomePage: React.FC = () => {
               نظام متكامل لإدارة الأندية والرابطات الرياضية وتحقيق التميز في الأداء
             </p>
             <div className="animate__animated animate__fadeIn animate__delay-2s">
-              <button 
+              <button
                 className="btn btn-primary btn-lg me-3 rounded-pill px-4 py-2"
                 onClick={() => navigate('/leagues')}
               >
                 <i className="fas fa-shield-alt me-2"></i>
                 استكشف الرابطات
               </button>
-              <button 
+              <button
                 className="btn btn-primary btn-lg rounded-pill px-4 py-2"
                 onClick={() => navigate('/about')}
               >
@@ -237,7 +238,7 @@ const HomePage: React.FC = () => {
                   <div className="text-white mb-3">
                     <i className="fas fa-trophy fa-3x"></i>
                   </div>
-                  <h3 className="text-white display-5 fw-bold">58</h3>
+                  <h3 className="text-white display-5 fw-bold">{wilayas.length}</h3>
                 </div>
                 <Card.Body className="py-4">
                   <p className="text-muted mb-0">رابطة ولائية</p>

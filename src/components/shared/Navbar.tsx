@@ -89,7 +89,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
     console.log('CurrentLeague (prop):', currentLeague);
     console.log('ResolvedLeague (effective):', resolvedLeague);
     console.log('Reload trigger count:', showAdminDashboard);
-    
+
     try {
       if (resolvedLeague) {
         console.log('===Navbar Debug: Fetching clubs for specific league===');
@@ -115,14 +115,14 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
             console.error('===Navbar Debug: Fallback getAllClubs failed===', e);
           }
         }
-        
+
         // The clubs are already filtered by getClubsByLeagueFlexible, so we don't need additional filtering
         // This was causing all clubs to be filtered out
         console.log('===Navbar Debug: Using filtered clubs without additional filtering===', clubs.length);
-        
+
         const formattedClubs = clubs.map(c => ({ id: c.id, name: c.name, nameAr: c.nameAr }));
         console.log('Formatted clubs for navigation:', formattedClubs);
-        
+
         setDynamicClubs(formattedClubs);
         console.log('===Navbar Debug: Clubs state updated successfully===');
       } else {
@@ -132,10 +132,10 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
           console.log('===Navbar Debug: All clubs fetched from Firestore==>');
           console.log('Raw all clubs data:', allClubs);
           console.log('All clubs count:', allClubs.length);
-          
+
           const formattedClubs = allClubs.map(c => ({ id: c.id, name: c.name, nameAr: c.nameAr }));
           console.log('Formatted all clubs for navigation:', formattedClubs);
-          
+
           setDynamicClubs(formattedClubs);
           console.log('===Navbar Debug: All clubs state updated successfully===');
         } catch (error) {
@@ -159,15 +159,15 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
       console.log('===Navbar Debug: Club created event received===', event.detail);
       // Only refresh if the created club belongs to the current league
       if (resolvedLeague &&
-          (event.detail.leagueId === resolvedLeague.id ||
-           event.detail.wilayaId === resolvedLeague.wilayaId)) {
+        (event.detail.leagueId === resolvedLeague.id ||
+          event.detail.wilayaId === resolvedLeague.wilayaId)) {
         console.log('===Navbar Debug: Refreshing clubs list for current league===');
         fetchClubsForNav();
       }
     };
 
     window.addEventListener('clubCreated', handleClubCreated as EventListener);
-    
+
     return () => {
       window.removeEventListener('clubCreated', handleClubCreated as EventListener);
     };
@@ -175,14 +175,14 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    
+
     clickCountRef.current += 1;
-    
+
     // Clear previous timer
     if (clickTimerRef.current) {
       clearTimeout(clickTimerRef.current);
     }
-    
+
     // Set new timer
     clickTimerRef.current = setTimeout(() => {
       if (clickCountRef.current === 3) {
@@ -204,90 +204,94 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
     <>
       <BootstrapNavbar bg="dark" variant="dark" expand="lg" className="shadow fixed-top py-2" style={{ top: 0, left: 0, right: 0, zIndex: 1030 }}>
         <Container className="d-flex align-items-center">
-          <BootstrapNavbar.Brand 
-            as={Link} 
-            to="/" 
-            className="fw-bold d-flex align-items-center" 
+          <BootstrapNavbar.Brand
+            as={Link}
+            to="/"
+            className="fw-bold d-flex align-items-center"
             onClick={handleLogoClick}
             style={{ cursor: 'pointer', fontSize: '1.1rem' }}
           >
-            <img 
-              src={logo} 
-              height="32" 
+            <img
+              src={logo}
+              height="32"
               className="me-2"
               style={{ marginTop: 0, filter: 'invert(1) brightness(1.8)' }}
             />
             IRTEQAA
           </BootstrapNavbar.Brand>
-          
+
           <BootstrapNavbar.Toggle aria-controls="basic-navbar-nav" />
           <BootstrapNavbar.Collapse id="basic-navbar-nav">
             <Nav className="me-auto">
-              <Nav.Link 
-                as={Link} 
-                to="/" 
+              <Nav.Link
+                as={Link}
+                to="/"
                 className={isActive('/') ? 'active' : ''}
               >
                 الرئيسية
               </Nav.Link>
-              
+
               <NavDropdown title="الرابطات" id="leagues-dropdown">
-                {/* رابطة قسنطينة - متاحة */}
-                <NavDropdown.Item
-                  key={25}
-                  as={Link}
-                  to={`/league/25`}
-                  style={{
-                    background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    border: '2px solid #28a745',
-                    borderRadius: '8px',
-                    margin: '5px 10px',
-                    padding: '12px 20px',
-                    textAlign: 'center',
-                    boxShadow: '0 4px 8px rgba(40, 167, 69, 0.3)',
-                    transition: 'all 0.3s ease',
-                    position: 'relative',
-                    overflow: 'hidden'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #218838 0%, #1e7e34 100%)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(40, 167, 69, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.3)';
-                  }}
-                >
-                  <div className="d-flex align-items-center justify-content-center">
-                    <i className="fas fa-star me-2" style={{ color: '#ffd700' }}></i>
-                    <span>رابطة قسنطينة</span>
-                    <i className="fas fa-arrow-left ms-2" style={{ fontSize: '0.8rem' }}></i>
-                  </div>
-                  <small style={{ 
-                    display: 'block', 
-                    marginTop: '4px', 
-                    opacity: 0.9,
-                    fontSize: '0.75rem'
-                  }}>
-                    متاحة الآن
-                  </small>
-                </NavDropdown.Item>
-                
-                <NavDropdown.Divider />
-                
-                {/* باقي الرابطات - معطلة */}
+                {/* الرابطات المتاحة */}
                 {wilayas
-                  .filter(wilaya => wilaya.id !== 25) // استبعاد قسنطينة
+                  .filter(w => [1, 2, 16, 23, 25, 31].includes(w.id))
                   .map(wilaya => (
                     <NavDropdown.Item
                       key={wilaya.id}
                       as={Link}
                       to={`/league/${wilaya.id}`}
-                      style={{ 
+                      style={{
+                        background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        border: '2px solid #28a745',
+                        borderRadius: '8px',
+                        margin: '5px 10px',
+                        padding: '12px 20px',
+                        textAlign: 'center',
+                        boxShadow: '0 4px 8px rgba(40, 167, 69, 0.3)',
+                        transition: 'all 0.3s ease',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #218838 0%, #1e7e34 100%)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 6px 16px rgba(40, 167, 69, 0.4)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 4px 8px rgba(40, 167, 69, 0.3)';
+                      }}
+                    >
+                      <div className="d-flex align-items-center justify-content-center">
+                        <i className="fas fa-star me-2" style={{ color: '#ffd700' }}></i>
+                        <span>رابطة {wilaya.nameAr}</span>
+                        <i className="fas fa-arrow-left ms-2" style={{ fontSize: '0.8rem' }}></i>
+                      </div>
+                      <small style={{
+                        display: 'block',
+                        marginTop: '4px',
+                        opacity: 0.9,
+                        fontSize: '0.75rem'
+                      }}>
+                        متاحة الآن
+                      </small>
+                    </NavDropdown.Item>
+                  ))}
+
+                <NavDropdown.Divider />
+
+                {/* باقي الرابطات - معطلة */}
+                {wilayas
+                  .filter(wilaya => ![1, 2, 16, 23, 25, 31].includes(wilaya.id)) // استبعاد المتاحة
+                  .map(wilaya => (
+                    <NavDropdown.Item
+                      key={wilaya.id}
+                      as={Link}
+                      to={`/league/${wilaya.id}`}
+                      style={{
                         color: '#212529',
                         backgroundColor: '#ffffff',
                         padding: '10px 20px',
@@ -310,23 +314,23 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                     </NavDropdown.Item>
                   ))}
               </NavDropdown>
-              
-              <Nav.Link 
+
+              <Nav.Link
                 as={Link}
                 to="/competitions"
                 className={isActive('/competitions') ? 'active' : ''}
               >
                 البطولات والمنافسات
               </Nav.Link>
-              
-              <Nav.Link 
-                as={Link} 
-                to="/about" 
+
+              <Nav.Link
+                as={Link}
+                to="/about"
                 className={isActive('/about') ? 'active' : ''}
               >
                 من نحن
               </Nav.Link>
-              
+
               <Nav.Link
                 as={Link}
                 to="/contact"
@@ -338,10 +342,10 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
           </BootstrapNavbar.Collapse>
         </Container>
       </BootstrapNavbar>
-      
-      <DynamicAdminDashboard 
-        show={showAdminDashboard} 
-        onHide={() => setShowAdminDashboard(false)} 
+
+      <DynamicAdminDashboard
+        show={showAdminDashboard}
+        onHide={() => setShowAdminDashboard(false)}
       />
     </>
   );
@@ -352,18 +356,18 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
         <BootstrapNavbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center" style={{ fontSize: '1.1rem' }}>
           رابطة {resolvedLeague?.wilayaNameAr} للجودو
         </BootstrapNavbar.Brand>
-        
+
         <BootstrapNavbar.Toggle aria-controls="league-navbar-nav" />
         <BootstrapNavbar.Collapse id="league-navbar-nav">
           <Nav className="me-auto d-flex align-items-center flex-nowrap gap-2">
-            <Nav.Link 
-              as={Link} 
+            <Nav.Link
+              as={Link}
               to="/"
               className={isActive('/') ? 'active' : ''}
             >
               الرئيسية
             </Nav.Link>
-            
+
             <NavDropdown title="الطاقم الفني" id="staff-dropdown">
               <NavDropdown.Item
                 as={Link}
@@ -390,12 +394,12 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                 أمين المال
               </NavDropdown.Item>
             </NavDropdown>
-            
-            <NavDropdown 
-              title="النوادي التابعة" 
-              id="clubs-dropdown" 
+
+            <NavDropdown
+              title="النوادي التابعة"
+              id="clubs-dropdown"
               className="clubs-dropdown-custom"
-              style={{ 
+              style={{
                 minWidth: '320px',
                 maxWidth: '400px'
               }}
@@ -406,7 +410,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                   نوادي رابطة {resolvedLeague?.wilayaNameAr}
                 </h6>
               </div>
-              
+
               {/* Dynamic clubs from localStorage */}
               {dynamicClubs.length > 0 ? (
                 <div className="clubs-list-container" style={{ maxHeight: '350px', overflowY: 'auto' }}>
@@ -416,7 +420,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                       as={Link}
                       to={`/club/${club.id}`}
                       className="club-item-custom"
-                      style={{ 
+                      style={{
                         whiteSpace: 'normal',
                         wordWrap: 'break-word',
                         padding: '12px 20px',
@@ -464,9 +468,9 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                 </div>
               )}
             </NavDropdown>
-            
+
           </Nav>
-          
+
           {/* Removed right-side actions to avoid confusing toggling across pages */}
         </BootstrapNavbar.Collapse>
       </Container>
@@ -507,7 +511,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
                 <i className="fas fa-user-graduate me-2"></i>
                 المدرب
               </NavDropdown.Item>
-              
+
               <NavDropdown.Item
                 as={Link}
                 to={`/login?role=physical_trainer&clubId=${currentClub?.id}`}
