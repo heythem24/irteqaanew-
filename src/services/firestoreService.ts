@@ -604,17 +604,17 @@ export class ClubsService {
     if (!id) {
       throw new Error('معرف النادي مطلوب');
     }
-    
+
     const ref = doc(db, 'clubs', id);
-    
+
     // تحقق من وجود النادي أولاً
     const existingDoc = await getDoc(ref);
     if (!existingDoc.exists()) {
       throw new Error('النادي غير موجود');
     }
-    
+
     const { createdAt, id: _id, ...rest } = data as any; // do not overwrite createdAt or id
-    
+
     // إزالة الحقول undefined لأن Firestore لا يقبلها
     const payload: any = {};
     Object.keys(rest).forEach(key => {
@@ -622,11 +622,11 @@ export class ClubsService {
         payload[key] = rest[key];
       }
     });
-    
+
     if (Object.keys(payload).length === 0) {
       throw new Error('لا توجد بيانات للتحديث');
     }
-    
+
     await updateDoc(ref, payload);
   }
 
@@ -908,14 +908,16 @@ export class UsersService {
   static async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
     const usersRef = collection(db, 'users');
 
-    // تحويل اسم المستخدم وكلمة السر إلى string للرياضيين فقط
-    const usernameStr = userData.role === 'athlete' ? String(userData.username) : userData.username;
-    const passwordStr = userData.role === 'athlete' ? String(userData.password) : userData.password;
+    // تحويل اسم المستخدم وكلمة السر إلى string للرياضيين ومستخدمي الرابطات
+    // (مستخدمو الرابطات لا يعتمدون على النادي، ووجود قيم رقمية يسبب مشاكل مطابقة لاحقاً)
+    const shouldStringifyCredentials = userData.role === 'athlete' || (!!userData.leagueId && !userData.clubId);
+    const usernameStr = shouldStringifyCredentials ? String(userData.username) : userData.username;
+    const passwordStr = shouldStringifyCredentials ? String(userData.password) : userData.password;
 
     // التحقق من التكرار: نفس الاسم + نفس الدور + نفس المكان (نادي أو رابطة)
     // يُسمح بنفس الاسم لأدوار مختلفة في نفس المكان
     // يُسمح بنفس الاسم لنفس الدور في أماكن مختلفة
-    
+
     if (userData.clubId) {
       // مستخدم نادي: التحقق من وجود نفس الاسم + نفس الدور + نفس النادي
       // للرياضيين: البحث بكلا الشكلين (string و number)
@@ -927,9 +929,9 @@ export class UsersService {
           where('clubId', '==', userData.clubId)
         );
         const querySnapshot1 = await getDocs(duplicateQuery1);
-        
+
         let hasDuplicate = !querySnapshot1.empty;
-        
+
         // البحث أيضاً بالرقم إذا كان اسم المستخدم رقمياً
         if (!hasDuplicate && !isNaN(Number(userData.username))) {
           const duplicateQuery2 = query(
@@ -941,7 +943,7 @@ export class UsersService {
           const querySnapshot2 = await getDocs(duplicateQuery2);
           hasDuplicate = !querySnapshot2.empty;
         }
-        
+
         if (hasDuplicate) {
           throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل في هذا النادي مع هذا الدور`);
         }
@@ -960,16 +962,25 @@ export class UsersService {
       }
     } else if (userData.leagueId) {
       // مستخدم رابطة: التحقق من وجود نفس الاسم + نفس الدور + نفس الرابطة (بدون نادي)
-      const duplicateQuery = query(
-        usersRef,
-        where('username', '==', userData.username),
-        where('role', '==', userData.role),
-        where('leagueId', '==', userData.leagueId)
-      );
-      const querySnapshot = await getDocs(duplicateQuery);
-      // فلترة لاستبعاد مستخدمي النوادي
-      const duplicates = querySnapshot.docs.filter(d => !d.data().clubId);
-      if (duplicates.length > 0) {
+      // ملاحظة: اسم المستخدم قد يكون مخزناً كنص أو رقم، لذلك نتحقق بكلا الشكلين
+      const checkLeagueDuplicate = async (uName: string | number) => {
+        const duplicateQuery = query(
+          usersRef,
+          where('username', '==', uName),
+          where('role', '==', userData.role),
+          where('leagueId', '==', userData.leagueId)
+        );
+        const querySnapshot = await getDocs(duplicateQuery);
+        // فلترة لاستبعاد مستخدمي النوادي
+        return querySnapshot.docs.some(d => !d.data().clubId);
+      };
+
+      let hasDuplicate = await checkLeagueDuplicate(usernameStr as any);
+      if (!hasDuplicate && !isNaN(Number(userData.username))) {
+        hasDuplicate = await checkLeagueDuplicate(Number(userData.username));
+      }
+
+      if (hasDuplicate) {
         throw new Error(`اسم المستخدم "${userData.username}" موجود بالفعل في هذه الرابطة مع هذا الدور`);
       }
     } else {
@@ -992,9 +1003,9 @@ export class UsersService {
     // Prepare payload
     const basePayload: any = {
       ...userData,
-      // للرياضيين: حفظ اسم المستخدم وكلمة السر كـ string دائماً
-      username: userData.role === 'athlete' ? usernameStr : userData.username,
-      password: userData.role === 'athlete' ? passwordStr : userData.password,
+      // للرياضيين ومستخدمي الرابطات: حفظ اسم المستخدم وكلمة السر كـ string دائماً
+      username: shouldStringifyCredentials ? usernameStr : userData.username,
+      password: shouldStringifyCredentials ? passwordStr : userData.password,
       isActive: userData.isActive ?? true,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -1041,24 +1052,24 @@ export class UsersService {
   static async checkClubUsernameAvailability(clubId: string, username: string, excludeUserId?: string): Promise<boolean> {
     const usersRef = collection(db, 'users');
     const usernameStr = String(username);
-    
+
     // البحث عن الاسم كنص
     const qStr = query(
-      usersRef, 
-      where('clubId', '==', clubId), 
+      usersRef,
+      where('clubId', '==', clubId),
       where('role', '==', 'athlete'),
       where('username', '==', usernameStr)
     );
     const snapStr = await getDocs(qStr);
     const existsStr = snapStr.docs.some(d => d.id !== excludeUserId);
-    
+
     if (existsStr) return false; // موجود
 
     // البحث عن الاسم كرقم (إذا كان رقمياً)
     if (!isNaN(Number(username))) {
       const qNum = query(
-        usersRef, 
-        where('clubId', '==', clubId), 
+        usersRef,
+        where('clubId', '==', clubId),
         where('role', '==', 'athlete'),
         where('username', '==', Number(username))
       );
@@ -1140,11 +1151,11 @@ export class UsersService {
     // السماح بأسماء مستخدمين متكررة عبر أندية/رابطات مختلفة
     // كل مستخدم فريد بناءً على: username + password + (clubId أو leagueId)
     const usersRef = collection(db, 'users');
-    
+
     // للرياضيين: تحويل اسم المستخدم وكلمة السر إلى string للمقارنة الصحيحة
     const usernameStr = String(username);
     const passwordStr = String(password);
-    
+
     const baseFilters = [where('username', '==', usernameStr), where('password', '==', passwordStr)];
 
     console.log('===Login Debug: Parameters===', { username: usernameStr, role, clubId, leagueId });
@@ -1156,7 +1167,7 @@ export class UsersService {
       const q = query(usersRef, ...filters);
       const snap = await getDocs(q);
       console.log('===Login Debug: Club search results===', snap.size);
-      
+
       if (!snap.empty) {
         const user = mapUserData(snap.docs[0].id, snap.docs[0].data());
         if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
@@ -1170,15 +1181,15 @@ export class UsersService {
       if (role === 'athlete') {
         console.log('===Login Debug: Attempting robust athlete login===');
         const candidates: User[] = [];
-        
+
         // 1. البحث باسم المستخدم كنص (تم بالفعل في المحاولة الأولى، لكن نعيد التحقق بمرونة أكثر)
         // 2. البحث باسم المستخدم كرقم (إذا كان قابلاً للتحويل)
-        
+
         const queries = [];
-        
+
         // استعلام 1: اسم المستخدم كنص (تمت تجربته مع كلمة السر كنص، الآن نجرب فقط الاسم)
         queries.push(query(usersRef, where('clubId', '==', clubId), where('role', '==', 'athlete'), where('username', '==', usernameStr)));
-        
+
         // استعلام 2: اسم المستخدم كرقم
         if (!isNaN(Number(username))) {
           queries.push(query(usersRef, where('clubId', '==', clubId), where('role', '==', 'athlete'), where('username', '==', Number(username))));
@@ -1208,65 +1219,85 @@ export class UsersService {
           return matchedUser;
         }
       }
-      
+
       return null;
     }
 
     // إذا تم تحديد الرابطة، نبحث داخل الرابطة المحددة (بدون نادي)
     if (leagueId) {
       console.log('===Login Debug: Searching for league user with leagueId===', leagueId);
-      
-      // أولاً: البحث بـ leagueId
-      const filters = [...baseFilters, where('leagueId', '==', leagueId)];
-      if (role) filters.push(where('role', '==', role));
-      const q = query(usersRef, ...filters);
-      const snap = await getDocs(q);
-      console.log('===Login Debug: League search results===', snap.size);
-      
-      // فلترة النتائج لاستبعاد مستخدمي النوادي
-      const leagueUsers = snap.docs.filter(d => {
-        const data = d.data();
-        return !data.clubId; // فقط مستخدمي الرابطة (بدون نادي)
-      });
-      
-      console.log('===Login Debug: League users (no club)===', leagueUsers.length);
-      
-      if (leagueUsers.length > 0) {
-        const user = mapUserData(leagueUsers[0].id, leagueUsers[0].data());
-        if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
-        localStorage.setItem('current_user', JSON.stringify(user));
-        await this.updateUser(user.id, { lastLogin: new Date() });
-        return user;
+
+      // تحديد جميع المعرفات المحتملة للرابطة (Firestore ID و mockData ID)
+      const possibleLeagueIds: (string | number)[] = [leagueId];
+      let wilayaId: number | undefined;
+
+      try {
+        const leagueDoc = await getDoc(doc(db, 'leagues', leagueId));
+        if (leagueDoc.exists()) {
+          const leagueData = leagueDoc.data();
+          wilayaId = leagueData?.wilayaId;
+          if (wilayaId !== undefined) {
+            const mockLeagueId = `league-judo-${String(wilayaId).padStart(2, '0')}`;
+            possibleLeagueIds.push(mockLeagueId);
+            possibleLeagueIds.push(String(wilayaId));
+            possibleLeagueIds.push(wilayaId);
+          }
+        }
+      } catch (e) {
+        console.warn('===Login Debug: Could not fetch league data===', e);
       }
-      
-      // ثانياً: البحث البديل - مستخدم رابطة بدون leagueId محفوظ (للتوافق مع المستخدمين القدامى)
-      console.log('===Login Debug: Trying fallback search for league users without leagueId===');
-      const fallbackFilters = [...baseFilters];
-      if (role) fallbackFilters.push(where('role', '==', role));
-      const fallbackQ = query(usersRef, ...fallbackFilters);
-      const fallbackSnap = await getDocs(fallbackQ);
-      console.log('===Login Debug: Fallback search results===', fallbackSnap.size);
-      
-      // فلترة للحصول على مستخدمي الرابطة فقط (بدون clubId)
-      const fallbackLeagueUsers = fallbackSnap.docs.filter(d => {
-        const data = d.data();
-        return !data.clubId; // مستخدم رابطة (بدون نادي)
-      });
-      
-      console.log('===Login Debug: Fallback league users===', fallbackLeagueUsers.length);
-      
-      if (fallbackLeagueUsers.length > 0) {
-        const user = mapUserData(fallbackLeagueUsers[0].id, fallbackLeagueUsers[0].data());
-        if (!user.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
-        
-        // تحديث المستخدم بـ leagueId الصحيح
-        await this.updateUser(user.id, { leagueId: leagueId, lastLogin: new Date() });
-        user.leagueId = leagueId;
-        
-        localStorage.setItem('current_user', JSON.stringify(user));
-        return user;
+
+      console.log('===Login Debug: Possible league IDs===', possibleLeagueIds);
+
+      // تحديد الأدوار المحتملة للبحث (بعض الأدوار لها تسميات بديلة)
+      const rolesToSearch = [role];
+      if (role === 'technical_director') rolesToSearch.push('league_technical_director');
+      if (role === 'league_technical_director') rolesToSearch.push('technical_director');
+
+      // البحث بجميع المعرفات المحتملة
+      let matchedUser: User | null = null;
+
+      for (const lid of possibleLeagueIds) {
+        if (matchedUser) break;
+
+        for (const searchRole of rolesToSearch) {
+          if (matchedUser) break;
+
+          const filters = [
+            where('username', '==', usernameStr),
+            where('password', '==', passwordStr),
+            where('leagueId', '==', lid)
+          ];
+          if (searchRole) filters.push(where('role', '==', searchRole));
+
+          const q = query(usersRef, ...filters);
+          const snap = await getDocs(q);
+
+          // فلترة لاستبعاد مستخدمي النوادي
+          const leagueUsers = snap.docs.filter(d => !d.data().clubId);
+
+          if (leagueUsers.length > 0) {
+            matchedUser = mapUserData(leagueUsers[0].id, leagueUsers[0].data());
+            console.log('===Login Debug: Found user with leagueId===', lid, 'role===', searchRole);
+          }
+        }
       }
-      
+
+      if (matchedUser) {
+        if (!matchedUser.isActive) throw new Error('حسابك غير نشط. يرجى التواصل مع المسؤول');
+
+        // تحديث leagueId ليكون معرف Firestore الصحيح (للتوحيد)
+        // تحديث تاريخ آخر تسجيل دخول فقط
+        // ملاحظة: لا تقم بتحديث leagueId لأنه قد يسبب تعارض بين المعرفات (Mock ID vs Firestore ID)
+        // مما يؤدي إلى "اختفاء" الرابطة في لوحة التحكم التي تعتمد على Mock IDs
+        await this.updateUser(matchedUser.id, { lastLogin: new Date() });
+
+        localStorage.setItem('current_user', JSON.stringify(matchedUser));
+        return matchedUser;
+      }
+
+      // لم يتم العثور على مستخدم - لا نقبل مستخدمين بدون leagueId
+      console.log('===Login Debug: No user found for this league with matching credentials===');
       return null;
     }
 
@@ -1278,7 +1309,7 @@ export class UsersService {
     if (snap.empty) return null;
 
     const candidates = snap.docs.map(d => mapUserData(d.id, d.data()));
-    
+
     // إذا وجد مستخدم واحد فقط، نسجل دخوله مباشرة
     if (candidates.length === 1) {
       const user = candidates[0];

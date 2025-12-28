@@ -44,7 +44,7 @@ const UserLoginPage: React.FC = () => {
   const [showAccountSelector, setShowAccountSelector] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   useEffect(() => {
     const state = location.state as { from?: Location; error?: string };
     if (state?.error) {
@@ -66,7 +66,7 @@ const UserLoginPage: React.FC = () => {
       if (roleParam || clubParam) {
         return;
       }
-    } catch {}
+    } catch { }
 
     const checkAndRedirect = async () => {
       if (UsersService.isAuthenticated()) {
@@ -98,20 +98,20 @@ const UserLoginPage: React.FC = () => {
         const desiredRole = roleParam || undefined;
         const desiredClub = clubParam || undefined;
         const desiredLeague = leagueParam || undefined;
-        const mismatch = (!!desiredRole && cu.role !== desiredRole) || 
-                        (!!desiredClub && cu.clubId !== desiredClub) ||
-                        (!!desiredLeague && cu.leagueId !== desiredLeague);
+        const mismatch = (!!desiredRole && cu.role !== desiredRole) ||
+          (!!desiredClub && cu.clubId !== desiredClub) ||
+          (!!desiredLeague && cu.leagueId !== desiredLeague);
         setCurrentUserMismatch({ hasUser: true, mismatch: Boolean(mismatch), currentRole: cu.role, currentClubId: cu.clubId });
       } else {
         setCurrentUserMismatch({ hasUser: false, mismatch: false });
       }
-    } catch {}
+    } catch { }
   }, [location.search]);
 
   const handleLogoutAndSwitch = () => {
     try {
       UsersService.logout();
-    } catch {}
+    } catch { }
     // Stay on the same login page with intent params; no redirect
     setCurrentUserMismatch({ hasUser: false, mismatch: false });
   };
@@ -120,7 +120,7 @@ const UserLoginPage: React.FC = () => {
     const { role, clubId, leagueId } = user;
 
     const clubRoles = [
-      'club_president', 'coach', 'physical_trainer', 'club_general_secretary', 
+      'club_president', 'coach', 'physical_trainer', 'club_general_secretary',
       'club_treasurer', 'medical_staff', 'athlete', 'technical_director'
     ];
 
@@ -133,7 +133,7 @@ const UserLoginPage: React.FC = () => {
     try {
       if (clubId) {
         console.log('===Login Debug: Checking club existence for clubId===', clubId);
-        
+
         try {
           const clubExists = await ClubsService.getClubById(clubId);
           if (!clubExists) {
@@ -144,7 +144,7 @@ const UserLoginPage: React.FC = () => {
           setError('حدث خطأ أثناء التحقق من وجود النادي. يرجى التواصل مع المسؤول.');
           return;
         }
-        
+
         let path = '';
         switch (role) {
           case 'club_president': path = `/club/${clubId}/staff/president`; break;
@@ -202,7 +202,7 @@ const UserLoginPage: React.FC = () => {
           clubId: user.clubId,
           isActive: user.isActive
         });
-        
+
         if (!user.isActive) {
           setError('حسابك غير نشط. يرجى التواصل مع المسؤول');
           setIsLoading(false);
@@ -260,11 +260,11 @@ const UserLoginPage: React.FC = () => {
           <Card className="shadow">
             <Card.Body className="p-5">
               <div className="text-center mb-4">
-                <Image 
-                  src="/vite.svg" 
-                  alt="Logo" 
-                  width="80" 
-                  height="80" 
+                <Image
+                  src="/vite.svg"
+                  alt="Logo"
+                  width="80"
+                  height="80"
                   className="mb-3"
                 />
                 <h2 className="fw-bold">تسجيل الدخول</h2>
@@ -325,7 +325,7 @@ const UserLoginPage: React.FC = () => {
                   {isLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
                 </Button>
               </Form>
-              
+
               <div className="text-center mt-3">
                 <small className="text-muted">
                   <Link to="/">العودة للصفحة الرئيسية</Link>

@@ -304,6 +304,11 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
       return;
     }
     try {
+      console.log('===CreateUser Debug: Creating user with data===', {
+        ...newUser,
+        password: '***hidden***'
+      });
+      console.log('===CreateUser Debug: LeagueId being saved===', newUser.leagueId);
       await UsersService.createUser(newUser as Omit<User, 'id' | 'createdAt' | 'updatedAt'>);
       setShowCreateUserForm(false);
       setNewUser({ username: '', password: '', role: 'athlete', firstName: '', lastName: '', isActive: true, clubId: undefined, leagueId: undefined });
@@ -368,8 +373,9 @@ const DynamicAdminDashboard: React.FC<DynamicAdminDashboardProps> = ({ show, onH
         firstName: editUser.firstName || '',
         lastName: editUser.lastName || '',
         role: editUser.role || 'athlete',
-        clubId: editUser.clubId || undefined,
-        leagueId: editUser.leagueId || undefined,
+        // الحفاظ على clubId و leagueId الأصليين إذا لم يتم تغييرهما
+        clubId: editUser.clubId !== undefined ? (editUser.clubId || undefined) : current?.clubId,
+        leagueId: editUser.leagueId !== undefined ? (editUser.leagueId || undefined) : current?.leagueId,
         isActive: editUser.isActive ?? true,
         image: editUser.image,
         // Only update password if provided (avoid overwriting with empty)

@@ -4,7 +4,7 @@ import { Container, Alert, Spinner } from 'react-bootstrap';
 import { LeaguesService, UsersService } from '../../services/firestoreService';
 import { StaffService } from '../../services/mockDataService';
 import { leagues as mockLeagues, staff as mockStaff } from '../../data/mockData';
-import type { Staff, League, User } from '../../types';
+import type { Staff, League } from '../../types';
 import { StaffPosition } from '../../types';
 
 import LeaguePresidentDashboard from '../../components/league/LeaguePresidentDashboard';
@@ -28,11 +28,11 @@ const LeaguePresidentPage: React.FC = () => {
         }
 
         console.log('===LeaguePresidentPage Debug: Fetching league data===', wilayaId);
-        
+
         // Fetch league from Firestore first
         const leagueData = await LeaguesService.getLeagueByWilayaId(parseInt(wilayaId, 10));
         console.log('===LeaguePresidentPage Debug: League data from Firestore===', leagueData);
-        
+
         if (leagueData) {
           setLeague(leagueData);
         } else {
@@ -43,33 +43,47 @@ const LeaguePresidentPage: React.FC = () => {
         }
 
         let presidentData: Staff | null = null;
-        
+
         // First try to get the current logged-in user
         try {
           const currentUser = UsersService.getCurrentUser();
           if (currentUser && currentUser.role === 'league_president') {
-            // Convert User to Staff format
-            presidentData = {
-              id: currentUser.id,
-              firstName: currentUser.firstName,
-              lastName: currentUser.lastName,
-              firstNameAr: currentUser.firstNameAr || currentUser.firstName,
-              lastNameAr: currentUser.lastNameAr || currentUser.lastName,
-              position: StaffPosition.LEAGUE_PRESIDENT,
-              positionAr: 'رئيس الرابطة',
-              bioAr: 'رئيس الرابطة الولائية للجودو',
-              image: currentUser.image,
-              email: currentUser.email,
-              phone: currentUser.phone,
-              leagueId: leagueData?.id,
-              isActive: currentUser.isActive,
-              createdAt: currentUser.createdAt
-            };
+            // Validate that the user belongs to this league
+            const userLeagueId = String(currentUser.leagueId);
+            const currentLeagueId = String(leagueData?.id);
+            const currentWilayaIdStr = String(leagueData?.wilayaId);
+            const mockLeagueId = `league-judo-${String(leagueData?.wilayaId).padStart(2, '0')}`;
+
+            // Check if the user's league ID matches any valid identifier for the current league
+            const isValidUserForLeague =
+              userLeagueId === currentLeagueId ||
+              userLeagueId === currentWilayaIdStr ||
+              userLeagueId === mockLeagueId;
+
+            if (isValidUserForLeague) {
+              // Convert User to Staff format
+              presidentData = {
+                id: currentUser.id,
+                firstName: currentUser.firstName,
+                lastName: currentUser.lastName,
+                firstNameAr: currentUser.firstNameAr || currentUser.firstName,
+                lastNameAr: currentUser.lastNameAr || currentUser.lastName,
+                position: StaffPosition.LEAGUE_PRESIDENT,
+                positionAr: 'رئيس الرابطة',
+                bioAr: 'رئيس الرابطة الولائية للجودو',
+                image: currentUser.image,
+                email: currentUser.email,
+                phone: currentUser.phone,
+                leagueId: leagueData?.id,
+                isActive: currentUser.isActive,
+                createdAt: currentUser.createdAt
+              };
+            }
           }
         } catch (e) {
           console.log('Error getting current user:', e);
         }
-        
+
         // If no current user, try to get by presidentId
         if (!presidentData && leagueData && leagueData.presidentId) {
           try {
@@ -113,7 +127,7 @@ const LeaguePresidentPage: React.FC = () => {
     })();
     return () => { mounted = false; };
   }, [wilayaId]);
-  
+
   if (loading) {
     return (
       <Container className="py-5 text-center">

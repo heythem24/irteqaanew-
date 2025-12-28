@@ -81,7 +81,7 @@ const LeagueLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     // Add event listener for admin dashboard close
     window.addEventListener('adminDashboardClosed', handleAdminDashboardClose);
-    
+
     return () => {
       window.removeEventListener('adminDashboardClosed', handleAdminDashboardClose);
     };
@@ -339,7 +339,7 @@ function App() {
           <Route path="/league/:wilayaId/staff/technical-director" element={
             <LeagueLayout>
               <main className="flex-grow-1">
-                <ProtectedRoute requiredRole="technical_director">
+                <ProtectedRoute requiredRole={['technical_director', 'league_technical_director']}>
                   <TechnicalDirectorPage />
                 </ProtectedRoute>
               </main>
@@ -398,7 +398,7 @@ function App() {
             </ClubLayout>
           } />
 
-          <Route path="/coach/competitions" element={            <>              <Navbar variant="main" />              <main className="flex-grow-1">                <ProtectedRoute requiredRole="coach">                  <CoachCompetitionsPage />                </ProtectedRoute>              </main>            </>          } />
+          <Route path="/coach/competitions" element={<>              <Navbar variant="main" />              <main className="flex-grow-1">                <ProtectedRoute requiredRole="coach">                  <CoachCompetitionsPage />                </ProtectedRoute>              </main>            </>} />
 
           <Route path="/club/:clubId/coach/dashboard" element={
             <ClubLayout>
@@ -468,7 +468,7 @@ function App() {
               </main>
             </ClubLayout>
           } />
-          
+
           {/* Athletes Login Route */}
           <Route path="/club/:clubId/athlete/login" element={
             <ClubLayout>
@@ -477,7 +477,7 @@ function App() {
               </main>
             </ClubLayout>
           } />
-          
+
           {/* Individual Athlete Route */}
           <Route path="/club/:clubId/athlete/:athleteId" element={
             <ClubLayout>

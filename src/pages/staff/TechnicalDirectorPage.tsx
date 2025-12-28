@@ -57,11 +57,11 @@ const TechnicalDirectorPage: React.FC = () => {
         }
 
         console.log('===TechnicalDirectorPage Debug: Fetching league data===', wilayaId);
-        
+
         // Fetch league from Firestore first
         const leagueData = await LeaguesService.getLeagueByWilayaId(parseInt(wilayaId, 10));
         console.log('===TechnicalDirectorPage Debug: League data from Firestore===', leagueData);
-        
+
         if (leagueData) {
           setLeague(leagueData);
         } else {
@@ -72,11 +72,11 @@ const TechnicalDirectorPage: React.FC = () => {
         }
 
         let directorData: Staff | null = null;
-        
+
         // First try to get the current logged-in user
         try {
           const currentUser = UsersService.getCurrentUser();
-          if (currentUser && currentUser.role === 'technical_director') {
+          if (currentUser && (currentUser.role === 'technical_director' || currentUser.role === 'league_technical_director')) {
             // Convert User to Staff format
             directorData = {
               id: currentUser.id,
@@ -98,7 +98,7 @@ const TechnicalDirectorPage: React.FC = () => {
         } catch (e) {
           console.log('Error getting current user:', e);
         }
-        
+
         // If no current user, try to find technical director by leagueId
         if (!directorData && leagueData) {
           try {
@@ -174,7 +174,7 @@ const TechnicalDirectorPage: React.FC = () => {
   const directorData = technicalDirector || technicalDirectorData;
 
   const handleLogout = () => {
-    try { UsersService.logout(); } catch {}
+    try { UsersService.logout(); } catch { }
     navigate('/login');
   };
 
