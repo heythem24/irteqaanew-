@@ -234,7 +234,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
               <NavDropdown title="الرابطات" id="leagues-dropdown">
                 {/* الرابطات المتاحة */}
                 {wilayas
-                  .filter(w => [1, 2, 16, 23, 25, 31].includes(w.id))
+                  .filter(w => [1, 2, 4, 16, 23, 25, 31].includes(w.id))
                   .map(wilaya => (
                     <NavDropdown.Item
                       key={wilaya.id}
@@ -285,7 +285,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant = 'main', currentLeague, curren
 
                 {/* باقي الرابطات - معطلة */}
                 {wilayas
-                  .filter(wilaya => ![1, 2, 16, 23, 25, 31].includes(wilaya.id)) // استبعاد المتاحة
+                  .filter(wilaya => ![1, 2, 4, 16, 23, 25, 31].includes(wilaya.id)) // استبعاد المتاحة
                   .map(wilaya => (
                     <NavDropdown.Item
                       key={wilaya.id}
