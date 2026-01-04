@@ -27,8 +27,30 @@ function tsToDate(value: unknown): Date {
     if (value instanceof Date) return value;
     if (value && typeof value === 'object' && (value as Timestamp).toDate) return (value as Timestamp).toDate();
     if (typeof value === 'number') return new Date(value);
+    if (typeof value === 'string' && value) return new Date(value);
   } catch { }
   return new Date();
+}
+
+// Safe version that returns undefined instead of today's date for invalid/missing values
+function tsToDateOrUndefined(value: unknown): Date | undefined {
+  if (value === null || value === undefined) return undefined;
+  try {
+    if (value instanceof Date) return isNaN(value.getTime()) ? undefined : value;
+    if (value && typeof value === 'object' && (value as Timestamp).toDate) {
+      const d = (value as Timestamp).toDate();
+      return isNaN(d.getTime()) ? undefined : d;
+    }
+    if (typeof value === 'number') {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? undefined : d;
+    }
+    if (typeof value === 'string' && value) {
+      const d = new Date(value);
+      return isNaN(d.getTime()) ? undefined : d;
+    }
+  } catch { }
+  return undefined;
 }
 
 // ===== Competition Organizers (per-competition accounts) =====
@@ -481,7 +503,7 @@ function mapUserData(id: string, data: any): User {
     createdAt: tsToDate(data.createdAt),
     updatedAt: tsToDate(data.updatedAt),
     // Athlete-related optional fields
-    dateOfBirth: data.dateOfBirth ? tsToDate(data.dateOfBirth) : undefined,
+    dateOfBirth: tsToDateOrUndefined(data.dateOfBirth),
     gender: data.gender,
     weight: typeof data.weight === 'number' ? data.weight : undefined,
     height: typeof data.height === 'number' ? data.height : undefined,
@@ -1103,21 +1125,26 @@ export class UsersService {
 
   static async updateUser(id: string, data: Partial<User>): Promise<void> {
     const ref = doc(db, 'users', id);
-    // Deep remove undefined to satisfy Firestore update rules
-    const prune = (val: any): any => {
-      if (Array.isArray(val)) return val.map(prune).filter(v => v !== undefined);
-      if (val && typeof val === 'object') {
+    // Convert Date objects to Firestore Timestamps and remove undefined values
+    const convertDates = (val: any): any => {
+      if (val === undefined || val === null) return val;
+      if (val instanceof Date) {
+        // Convert Date to Firestore Timestamp
+        return Timestamp.fromDate(val);
+      }
+      if (Array.isArray(val)) return val.map(convertDates).filter(v => v !== undefined);
+      if (val && typeof val === 'object' && val.constructor === Object) {
         const out: any = {};
         Object.keys(val).forEach(k => {
-          const v = prune(val[k]);
+          const v = convertDates(val[k]);
           if (v !== undefined) out[k] = v;
         });
         return out;
       }
-      return val === undefined ? undefined : val;
+      return val;
     };
     const payloadRaw = { ...data, updatedAt: serverTimestamp() } as any;
-    const payload = prune(payloadRaw);
+    const payload = convertDates(payloadRaw);
     await updateDoc(ref, payload);
   }
 

@@ -130,7 +130,7 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
           const ach = (userAny.achievements || {}) as any;
           // Convert single values to arrays
           const toArr = (val?: any): number[] | undefined => {
-            if (Array.isArray(val)) return val.filter((n)=> typeof n === 'number');
+            if (Array.isArray(val)) return val.filter((n) => typeof n === 'number');
             if (typeof val === 'number') return [val];
             return undefined;
           };
@@ -211,7 +211,7 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
               coachId: coachId,
               joinDate: athlete.createdAt || new Date(),
               isActive: true,
-              
+
             });
           }
         }
@@ -245,11 +245,15 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
     return comp?.nameAr || '';
   };
 
-  // Parse edited ISO date (yyyy-MM-dd) to Date
+  // Parse edited ISO date (yyyy-MM-dd) to Date (avoid timezone shifts)
   const parseISO = (iso?: string): Date | undefined => {
     if (!iso) return undefined;
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? undefined : d;
+    const parts = iso.split('-');
+    if (parts.length !== 3) return undefined;
+    const [y, m, d] = parts.map(Number);
+    if (!y || !m || !d) return undefined;
+    const dt = new Date(y, m - 1, d);
+    return isNaN(dt.getTime()) ? undefined : dt;
   };
 
   // Get effective DOB for an athlete (prefer edited value if present)
@@ -347,16 +351,16 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
           </thead>
           <tbody>
             ${filteredAthletes.map((athlete, index) => {
-              const effDob = (function(){
-                const iso = (dobEdits as any)[athlete.id];
-                if (iso) { const d = new Date(iso); if (!isNaN(d.getTime())) return d; }
-                return athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined;
-              })();
-              const age = effDob ? calculateAge(effDob) : 0;
-              const category = getAgeCategoryLabel(effDob);
-              const genderText = athlete.gender === 'male' ? 'ذكر' : 'أنثى';
-              
-              return `
+      const effDob = (function () {
+        const iso = (dobEdits as any)[athlete.id];
+        if (iso) { const d = new Date(iso); if (!isNaN(d.getTime())) return d; }
+        return athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined;
+      })();
+      const age = effDob ? calculateAge(effDob) : 0;
+      const category = getAgeCategoryLabel(effDob);
+      const genderText = athlete.gender === 'male' ? 'ذكر' : 'أنثى';
+
+      return `
                 <tr>
                   <td>${index + 1}</td>
                   <td>${athlete.firstNameAr || athlete.firstName || ''} ${athlete.lastNameAr || athlete.lastName || ''}</td>
@@ -373,7 +377,7 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
                   <td>${phoneEdits[athlete.id] || athlete.phone || ''}</td>
                 </tr>
               `;
-            }).join('')}
+    }).join('')}
           </tbody>
         </table>
       </body>
@@ -395,7 +399,7 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
     return clubAthletes.filter(athlete => {
       const effDob = getEffectiveDob(athlete.id, athlete.dateOfBirth);
       const category = getAgeCategoryLabel(effDob);
-      
+
       // Check if athlete is active in Firebase roster
       const rosterEntry = athleteRoster.find(r => r.athleteId === athlete.id);
       const isActiveInRoster = rosterEntry?.isActive !== false;
@@ -444,86 +448,86 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
             <div>جاري تحميل قائمة الرياضيين...</div>
           </div>
         </Card.Body>
-      {/* Achievements Modal */}
-      <Modal show={!!achModalAthleteId} onHide={() => setAchModalAthleteId(null)} dir="rtl" centered>
-        <Modal.Header closeButton>
-          <Modal.Title>تحرير الإنجازات الرياضية</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row className="g-2">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل ولائي (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.wilayaYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, wilayaYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل جهوي (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.regionalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, regionalYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل وطني (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.nationalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, nationalYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل عربي (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.arabYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, arabYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل قاري (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.continentalYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, continentalYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل عالمي (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.worldYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, worldYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label>بطل أولمبي (سنة)</Form.Label>
-                <Form.Control type="number" value={achTemp.olympicYear ?? ''} onChange={(e)=>setAchTemp(p=>({...p, olympicYear:e.target.value}))} />
-              </Form.Group>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setAchModalAthleteId(null)}>إلغاء</Button>
-          <Button
-            variant="primary"
-            onClick={async () => {
-              if (!achModalAthleteId) return;
-              const payload = {
-                achievements: {
-                  wilayaYear: achTemp.wilayaYear ? Number(achTemp.wilayaYear) : undefined,
-                  regionalYear: achTemp.regionalYear ? Number(achTemp.regionalYear) : undefined,
-                  nationalYear: achTemp.nationalYear ? Number(achTemp.nationalYear) : undefined,
-                  arabYear: achTemp.arabYear ? Number(achTemp.arabYear) : undefined,
-                  continentalYear: achTemp.continentalYear ? Number(achTemp.continentalYear) : undefined,
-                  worldYear: achTemp.worldYear ? Number(achTemp.worldYear) : undefined,
-                  olympicYear: achTemp.olympicYear ? Number(achTemp.olympicYear) : undefined,
-                }
-              } as any;
-              await saveField(achModalAthleteId, payload);
-              setAchievementsEdits(prev => ({
-                ...prev,
-                [achModalAthleteId]: payload.achievements
-              }));
-              setAchModalAthleteId(null);
-            }}
-          >
-            حفظ
-          </Button>
-        </Modal.Footer>
-      </Modal>
+        {/* Achievements Modal */}
+        <Modal show={!!achModalAthleteId} onHide={() => setAchModalAthleteId(null)} dir="rtl" centered>
+          <Modal.Header closeButton>
+            <Modal.Title>تحرير الإنجازات الرياضية</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Row className="g-2">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل ولائي (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.wilayaYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, wilayaYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل جهوي (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.regionalYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, regionalYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل وطني (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.nationalYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, nationalYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل عربي (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.arabYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, arabYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل قاري (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.continentalYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, continentalYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل عالمي (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.worldYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, worldYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>بطل أولمبي (سنة)</Form.Label>
+                  <Form.Control type="number" value={achTemp.olympicYear ?? ''} onChange={(e) => setAchTemp(p => ({ ...p, olympicYear: e.target.value }))} />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setAchModalAthleteId(null)}>إلغاء</Button>
+            <Button
+              variant="primary"
+              onClick={async () => {
+                if (!achModalAthleteId) return;
+                const payload = {
+                  achievements: {
+                    wilayaYear: achTemp.wilayaYear ? Number(achTemp.wilayaYear) : undefined,
+                    regionalYear: achTemp.regionalYear ? Number(achTemp.regionalYear) : undefined,
+                    nationalYear: achTemp.nationalYear ? Number(achTemp.nationalYear) : undefined,
+                    arabYear: achTemp.arabYear ? Number(achTemp.arabYear) : undefined,
+                    continentalYear: achTemp.continentalYear ? Number(achTemp.continentalYear) : undefined,
+                    worldYear: achTemp.worldYear ? Number(achTemp.worldYear) : undefined,
+                    olympicYear: achTemp.olympicYear ? Number(achTemp.olympicYear) : undefined,
+                  }
+                } as any;
+                await saveField(achModalAthleteId, payload);
+                setAchievementsEdits(prev => ({
+                  ...prev,
+                  [achModalAthleteId]: payload.achievements
+                }));
+                setAchModalAthleteId(null);
+              }}
+            >
+              حفظ
+            </Button>
+          </Modal.Footer>
+        </Modal>
       </Card>
     );
   }
@@ -640,419 +644,434 @@ const AthleteRoster: React.FC<AthleteRosterProps> = ({ club }) => {
                 </tr>
               </thead>
               <tbody>
-              {filteredAthletes.map((athlete, index) => {
-                const effDob = getEffectiveDob(athlete.id, athlete.dateOfBirth);
-                const age = effDob ? calculateAge(effDob) : 0;
-                const category = getAgeCategoryLabel(effDob);
+                {filteredAthletes.map((athlete, index) => {
+                  const effDob = getEffectiveDob(athlete.id, athlete.dateOfBirth);
+                  const age = effDob ? calculateAge(effDob) : 0;
+                  const category = getAgeCategoryLabel(effDob);
 
-                return (
-                  <tr key={athlete.id}>
-                    <td>{index + 1}</td>
-                    <td className="text-end" dir="rtl">
-                      <div className="fw-semibold">
-                        {athlete.firstNameAr || athlete.firstName || ''} {athlete.lastNameAr || athlete.lastName || ''}
-                      </div>
-                    </td>
-                    <td className="text-end" dir="rtl">
-                      <Form.Control
-                        type="text"
-                        value={fatherEdits[athlete.id] ?? athlete.fatherName ?? ''}
-                        placeholder="اسم الأب"
-                        className="text-end"
-                        onChange={(e) => setFatherEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                        onBlur={() => saveField(athlete.id, { fatherName: fatherEdits[athlete.id] ?? '' })}
-                        disabled={!!saving[athlete.id]}
-                      />
-                    </td>
-                    <td className="text-end" dir="rtl">
-                      <Form.Control
-                        type="text"
-                        value={motherEdits[athlete.id] ?? athlete.motherName ?? ''}
-                        placeholder="اسم ولقب الأم"
-                        className="text-end"
-                        onChange={(e) => setMotherEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                        onBlur={() => saveField(athlete.id, { motherName: (motherEdits[athlete.id] ?? '').trim() })}
-                        disabled={!!saving[athlete.id]}
-                      />
-                      {/* ملاحظة: يتم حفظ الاسم الكامل للأم في حقل motherName */}
-                    </td>
-                    <td>
-                      <Form.Control
-                        type="date"
-                        value={dobEdits[athlete.id] ?? ''}
-                        onChange={(e) => {
-                          const iso = e.target.value;
-                          setDobEdits(prev => ({ ...prev, [athlete.id]: iso }));
-                          const d = parseISO(iso);
-                          const newAge = d ? String(calculateAge(d)) : '';
-                          setAgeEdits(prev => ({ ...prev, [athlete.id]: newAge }));
-                        }}
-                        onBlur={() => {
-                          const iso = dobEdits[athlete.id] ?? '';
-                          if (iso) {
-                            saveField(athlete.id, { dateOfBirth: new Date(iso) });
-                          }
-                        }}
-                        disabled={!!saving[athlete.id]}
-                      />
-                    </td>
-                    <td className="text-end" dir="rtl">
-                      <Form.Control
-                        type="text"
-                        value={birthPlaceEdits[athlete.id] ?? ''}
-                        placeholder="مكان الميلاد"
-                        className="text-end"
-                        onChange={(e) => setBirthPlaceEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                        onBlur={() => saveField(athlete.id, { birthPlace: (birthPlaceEdits[athlete.id] ?? '').trim() })}
-                        disabled={!!saving[athlete.id]}
-                      />
-                    </td>
-                    <td>
-                      <div className="d-flex align-items-center justify-content-center">
+                  return (
+                    <tr key={athlete.id}>
+                      <td>{index + 1}</td>
+                      <td className="text-end" dir="rtl">
+                        <div className="fw-semibold">
+                          {athlete.firstNameAr || athlete.firstName || ''} {athlete.lastNameAr || athlete.lastName || ''}
+                        </div>
+                      </td>
+                      <td className="text-end" dir="rtl">
                         <Form.Control
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          value={ageEdits[athlete.id] ?? (age ? String(age) : '')}
-                          onChange={(e) => setAgeEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          type="text"
+                          value={fatherEdits[athlete.id] ?? athlete.fatherName ?? ''}
+                          placeholder="اسم الأب"
+                          className="text-end"
+                          onChange={(e) => setFatherEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          onBlur={() => saveField(athlete.id, { fatherName: fatherEdits[athlete.id] ?? '' })}
+                          disabled={!!saving[athlete.id]}
+                        />
+                      </td>
+                      <td className="text-end" dir="rtl">
+                        <Form.Control
+                          type="text"
+                          value={motherEdits[athlete.id] ?? athlete.motherName ?? ''}
+                          placeholder="اسم ولقب الأم"
+                          className="text-end"
+                          onChange={(e) => setMotherEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          onBlur={() => saveField(athlete.id, { motherName: (motherEdits[athlete.id] ?? '').trim() })}
+                          disabled={!!saving[athlete.id]}
+                        />
+                        {/* ملاحظة: يتم حفظ الاسم الكامل للأم في حقل motherName */}
+                      </td>
+                      <td>
+                        <Form.Control
+                          type="date"
+                          value={dobEdits[athlete.id] ?? ''}
+                          onChange={(e) => {
+                            const iso = e.target.value;
+                            setDobEdits(prev => ({ ...prev, [athlete.id]: iso }));
+                            const d = parseISO(iso);
+                            const newAge = d ? String(calculateAge(d)) : '';
+                            setAgeEdits(prev => ({ ...prev, [athlete.id]: newAge }));
+                          }}
                           onBlur={() => {
-                            const v = (ageEdits[athlete.id] ?? '').trim();
-                            const num = Number(v);
-                            if (!isNaN(num) && num > 0) {
-                              const today = new Date();
-                              const existing = athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined;
-                              const month = existing ? existing.getMonth() : 5; // June (0-based)
-                              const day = existing ? existing.getDate() : 15;
-                              const newDob = new Date(today.getFullYear() - num, month, day);
-                              saveField(athlete.id, { dateOfBirth: newDob });
+                            const iso = dobEdits[athlete.id] ?? '';
+                            if (iso) {
+                              const d = parseISO(iso);
+                              if (d) {
+                                saveField(athlete.id, { dateOfBirth: d });
+                              }
                             }
                           }}
                           disabled={!!saving[athlete.id]}
                         />
-                      </div>
-                    </td>
-                    <td>
-                      <Badge bg="success">{category}</Badge>
-                    </td>
-                    <td>
-                      <Form.Select
-                        value={genderEdits[athlete.id] ?? athlete.gender ?? 'male'}
-                        onChange={(e) => {
-                          const val = (e.target.value as 'male' | 'female');
-                          setGenderEdits(prev => ({ ...prev, [athlete.id]: val }));
-                          saveField(athlete.id, { gender: val });
-                        }}
-                        disabled={!!saving[athlete.id]}
-                      >
-                        <option value="male">ذكر</option>
-                        <option value="female">أنثى</option>
-                      </Form.Select>
-                    </td>
-                    <td>
-                      {(() => {
-                        const effDob = getEffectiveDob(athlete.id, athlete.dateOfBirth);
-                        const comp = getCategoryByDOBToday(effDob);
-                        const g = (genderEdits[athlete.id] ?? athlete.gender ?? 'male') as 'male' | 'female';
-                        const options = comp ? getWeightClasses(comp.id, g) : [];
-                        // Derive selected class from current numeric weight if possible (avoid treating empty as 0)
-                        const raw = (weightEdits[athlete.id] ?? athlete.weight) as unknown;
-                        const currentNum = (raw === '' || raw === undefined) ? NaN : Number(raw);
-                        const currentClass = options.find(o => weightClassToNumber(o) === (isNaN(currentNum) ? undefined : currentNum)) || '';
-                        if (options.length > 0) {
-                          return (
-                            <Form.Select
-                              value={currentClass}
-                              onChange={(e) => {
-                                const cls = e.target.value;
-                                const num = weightClassToNumber(cls);
-                                setWeightEdits(prev => ({ ...prev, [athlete.id]: num !== undefined ? String(num) : '' }));
-                                if (num !== undefined) {
-                                  saveField(athlete.id, { weight: num });
-                                }
-                              }}
-                              disabled={!!saving[athlete.id]}
-                            >
-                              <option value="">اختر صنف الوزن</option>
-                              {options.map(opt => (
-                                <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                            </Form.Select>
-                          );
-                        }
-                        // Fallback numeric input when no predefined classes for this category/gender
-                        return (
+                      </td>
+                      <td className="text-end" dir="rtl">
+                        <Form.Control
+                          type="text"
+                          value={birthPlaceEdits[athlete.id] ?? ''}
+                          placeholder="مكان الميلاد"
+                          className="text-end"
+                          onChange={(e) => setBirthPlaceEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          onBlur={() => saveField(athlete.id, { birthPlace: (birthPlaceEdits[athlete.id] ?? '').trim() })}
+                          disabled={!!saving[athlete.id]}
+                        />
+                      </td>
+                      <td>
+                        <div className="d-flex align-items-center justify-content-center">
                           <Form.Control
                             type="number"
-                            inputMode="decimal"
-                            value={weightEdits[athlete.id] ?? ''}
-                            placeholder="الوزن"
-                            onChange={(e) => setWeightEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                            inputMode="numeric"
+                            min={0}
+                            value={ageEdits[athlete.id] ?? (age ? String(age) : '')}
+                            onChange={(e) => setAgeEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
                             onBlur={() => {
-                              const v = weightEdits[athlete.id];
-                              const num = v === '' ? undefined : Number(v);
-                              if (!isNaN(num as number)) {
-                                saveField(athlete.id, { weight: num as number });
+                              const v = (ageEdits[athlete.id] ?? '').trim();
+                              const num = Number(v);
+                              if (!isNaN(num) && num > 0) {
+                                const today = new Date();
+                                const existing = athlete.dateOfBirth ? new Date(athlete.dateOfBirth) : undefined;
+                                const month = existing ? existing.getMonth() : 5; // June (0-based)
+                                const day = existing ? existing.getDate() : 15;
+                                const newDob = new Date(today.getFullYear() - num, month, day);
+                                saveField(athlete.id, { dateOfBirth: newDob });
                               }
                             }}
                             disabled={!!saving[athlete.id]}
                           />
-                        );
-                      })()}
-                    </td>
-                    <td>
-                      <Form.Control
-                        type="number"
-                        inputMode="decimal"
-                        value={heightEdits[athlete.id] ?? ''}
-                        placeholder="الطول"
-                        onChange={(e) => setHeightEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                        onBlur={() => {
-                          const v = heightEdits[athlete.id];
-                          const num = v === '' ? undefined : Number(v);
-                          if (!isNaN(num as number)) {
-                            saveField(athlete.id, { height: num as number });
-                          }
-                        }}
-                        disabled={!!saving[athlete.id]}
-                      />
-                    </td>
-                    <td>
-                      <Form.Select
-                        value={bloodTypeEdits[athlete.id] ?? ''}
-                        onChange={(e) => {
-                          const bt = e.target.value;
-                          setBloodTypeEdits(prev => ({ ...prev, [athlete.id]: bt }));
-                          saveField(athlete.id, { bloodType: bt });
-                        }}
-                        disabled={!!saving[athlete.id]}
-                      >
-                        <option value="">—</option>
-                        <option value="A+">A+</option>
-                        <option value="A-">A-</option>
-                        <option value="B+">B+</option>
-                        <option value="B-">B-</option>
-                        <option value="AB+">AB+</option>
-                        <option value="AB-">AB-</option>
-                        <option value="O+">O+</option>
-                        <option value="O-">O-</option>
-                      </Form.Select>
-                    </td>
-                    <td className="text-end" dir="rtl">
-                      <Form.Control
-                        type="text"
-                        value={phoneEdits[athlete.id] ?? ''}
-                        placeholder="رقم الهاتف"
-                        className="text-end"
-                        onChange={(e) => setPhoneEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                        onBlur={() => saveField(athlete.id, { phone: (phoneEdits[athlete.id] ?? '').trim() })}
-                        disabled={!!saving[athlete.id]}
-                      />
-                      {/* Add coach notes from Firebase if available */}
-                      {(() => {
-                        const rosterEntry = athleteRoster.find(r => r.athleteId === athlete.id);
-                        return rosterEntry?.notes && (
-                          <div className="small text-muted mt-1">
-                            <i className="fas fa-sticky-note me-1"></i>
-                            {rosterEntry.notes.substring(0, 50)}{rosterEntry.notes.length > 50 ? '...' : ''}
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    {/* Achievements: multiple entries (dropdown + year + إضافة) */}
-                    <td className="text-end" dir="rtl">
-                      {(() => {
-                        const current = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
-                        const selKey = (achArraySelection[athlete.id] as keyof AchievementsArrays) || 'wilayaYears';
-                        const summary: string[] = [];
-                        const pushYears = (label: string, arr?: number[]) => { if (arr && arr.length) summary.push(`${label}:${arr.join(',')}`); };
-                        pushYears('ولائي', current.wilayaYears);
-                        pushYears('جهوي', current.regionalYears);
-                        pushYears('وطني', current.nationalYears);
-                        pushYears('عربي', current.arabYears);
-                        pushYears('قاري', current.continentalYears);
-                        pushYears('عالمي', current.worldYears);
-                        pushYears('أولمبي', current.olympicYears);
-                        return (
-                          <div className="d-flex flex-column gap-2">
-                            <div className="small text-muted" style={{whiteSpace:'normal', wordBreak:'break-word'}}>
-                              {summary.length ? summary.join(' | ') : '—'}
-                            </div>
-                            <div className="d-flex gap-2 align-items-center justify-content-end">
+                        </div>
+                      </td>
+                      <td>
+                        <Badge bg="success">{category}</Badge>
+                      </td>
+                      <td>
+                        <Form.Select
+                          value={genderEdits[athlete.id] ?? athlete.gender ?? 'male'}
+                          onChange={(e) => {
+                            const val = (e.target.value as 'male' | 'female');
+                            setGenderEdits(prev => ({ ...prev, [athlete.id]: val }));
+                            saveField(athlete.id, { gender: val });
+                          }}
+                          disabled={!!saving[athlete.id]}
+                        >
+                          <option value="male">ذكر</option>
+                          <option value="female">أنثى</option>
+                        </Form.Select>
+                      </td>
+                      <td>
+                        {(() => {
+                          const effDob = getEffectiveDob(athlete.id, athlete.dateOfBirth);
+                          const comp = getCategoryByDOBToday(effDob);
+                          const g = (genderEdits[athlete.id] ?? athlete.gender ?? 'male') as 'male' | 'female';
+                          const options = comp ? getWeightClasses(comp.id, g) : [];
+                          // Derive selected class from current numeric weight if possible (avoid treating empty as 0)
+                          const raw = (weightEdits[athlete.id] ?? athlete.weight) as unknown;
+                          const currentNum = (raw === '' || raw === undefined) ? NaN : Number(raw);
+                          const currentClass = options.find(o => weightClassToNumber(o) === (isNaN(currentNum) ? undefined : currentNum)) || '';
+                          if (options.length > 0) {
+                            return (
                               <Form.Select
-                                size="sm"
-                                className="text-end"
-                                value={selKey}
-                                onChange={(e)=> setAchArraySelection(prev => ({ ...prev, [athlete.id]: e.target.value as keyof AchievementsArrays }))}
-                                disabled={!!saving[athlete.id]}
-                                style={{maxWidth:'220px'}}
-                              >
-                                {achievementOptions.map(opt => (
-                                  <option key={opt.key as string} value={opt.key as string}>{opt.label}</option>
-                                ))}
-                              </Form.Select>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                placeholder="السنة"
-                                className="text-end"
-                                style={{maxWidth:'130px'}}
-                                value={achArrayYear[athlete.id] ?? ''}
-                                onChange={(e)=> setAchArrayYear(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                                disabled={!!saving[athlete.id]}
-                              />
-                              <Button
-                                size="sm"
-                                variant="outline-primary"
-                                disabled={!!saving[athlete.id]}
-                                onClick={async ()=>{
-                                  const yearStr = (achArrayYear[athlete.id] ?? '').trim();
-                                  const num = Number(yearStr);
-                                  if (!yearStr || isNaN(num)) return;
-                                  const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
-                                  const nextArr = [...(existing[selKey] || []), num];
-                                  const next: AchievementsArrays = { ...existing, [selKey]: nextArr } as any;
-                                  await saveField(athlete.id, { achievements: next } as any);
-                                  setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
-                                  setAchArrayYear(prev => ({ ...prev, [athlete.id]: '' }));
+                                value={currentClass}
+                                onChange={(e) => {
+                                  const cls = e.target.value;
+                                  const num = weightClassToNumber(cls);
+                                  setWeightEdits(prev => ({ ...prev, [athlete.id]: num !== undefined ? String(num) : '' }));
+                                  if (num !== undefined) {
+                                    saveField(athlete.id, { weight: num });
+                                  }
                                 }}
-                              >
-                                إضافة
-                              </Button>
-                            </div>
-                            {/* existing entries with remove */}
-                            <div className="d-flex flex-wrap gap-2 justify-content-end">
-                              {achievementOptions.map(opt => {
-                                const arr = (current as any)[opt.key] as number[] | undefined;
-                                if (!arr || arr.length === 0) return null;
-                                return arr.map((y, idx) => (
-                                  <Badge bg="light" text="dark" key={opt.key + '-' + idx} className="p-2 border">
-                                    <span className="me-2">{opt.label.split(' (')[0]}: {y}</span>
-                                    <Button size="sm" variant="outline-danger" onClick={async ()=>{
-                                      const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
-                                      const filtered = (arr || []).filter((_, i)=> i !== idx);
-                                      const next: AchievementsArrays = { ...existing, [opt.key]: filtered } as any;
-                                      await saveField(athlete.id, { achievements: next } as any);
-                                      setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
-                                    }}>حذف</Button>
-                                  </Badge>
-                                ));
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    {/* International Ranking: multiple entries (level + rank + إضافة) */}
-                    <td className="text-end" dir="rtl">
-                      {(() => {
-                        const list = rankingEdits[athlete.id] || [];
-                        const levelSel = rankLevelSel[athlete.id] || 'محلي';
-                        const rn = rankNumber[athlete.id] || '';
-                        return (
-                          <div className="d-flex flex-column gap-2">
-                            <div className="d-flex gap-2 align-items-center justify-content-end">
-                              <Form.Select
-                                size="sm"
-                                className="text-end"
-                                value={levelSel}
-                                onChange={(e)=> setRankLevelSel(prev => ({ ...prev, [athlete.id]: e.target.value as RankingEntry['level'] }))}
                                 disabled={!!saving[athlete.id]}
-                                style={{maxWidth:'150px'}}
                               >
-                                {rankingLevelOptions.map(opt => (
+                                <option value="">اختر صنف الوزن</option>
+                                {options.map(opt => (
                                   <option key={opt} value={opt}>{opt}</option>
                                 ))}
                               </Form.Select>
-                              <Form.Control
-                                size="sm"
-                                type="number"
-                                placeholder="الترتيب"
-                                className="text-end"
-                                style={{maxWidth:'120px'}}
-                                value={rn}
-                                onChange={(e)=> setRankNumber(prev => ({ ...prev, [athlete.id]: e.target.value }))}
-                                disabled={!!saving[athlete.id]}
-                              />
-                              <Button
-                                size="sm"
-                                variant="outline-primary"
-                                disabled={!!saving[athlete.id]}
-                                onClick={async ()=>{
-                                  const num = Number(rankNumber[athlete.id] || '');
-                                  if (isNaN(num) || num <= 0) return;
-                                  const existing = rankingEdits[athlete.id] || [];
-                                  const next = [...existing, { level: levelSel, rank: num } as RankingEntry];
-                                  await saveField(athlete.id, { rankings: next } as any);
-                                  setRankingEdits(prev => ({ ...prev, [athlete.id]: next }));
-                                  setRankNumber(prev => ({ ...prev, [athlete.id]: '' }));
-                                }}
-                              >
-                                إضافة
-                              </Button>
+                            );
+                          }
+                          // Fallback numeric input when no predefined classes for this category/gender
+                          return (
+                            <Form.Control
+                              type="number"
+                              inputMode="decimal"
+                              value={weightEdits[athlete.id] ?? ''}
+                              placeholder="الوزن"
+                              onChange={(e) => setWeightEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                              onBlur={() => {
+                                const v = weightEdits[athlete.id];
+                                const num = v === '' ? undefined : Number(v);
+                                if (!isNaN(num as number)) {
+                                  saveField(athlete.id, { weight: num as number });
+                                }
+                              }}
+                              disabled={!!saving[athlete.id]}
+                            />
+                          );
+                        })()}
+                      </td>
+                      <td>
+                        <Form.Control
+                          type="number"
+                          inputMode="decimal"
+                          value={heightEdits[athlete.id] ?? ''}
+                          placeholder="الطول"
+                          onChange={(e) => setHeightEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          onBlur={() => {
+                            const v = heightEdits[athlete.id];
+                            const num = v === '' ? undefined : Number(v);
+                            if (!isNaN(num as number)) {
+                              saveField(athlete.id, { height: num as number });
+                            }
+                          }}
+                          disabled={!!saving[athlete.id]}
+                        />
+                      </td>
+                      <td>
+                        <Form.Select
+                          value={bloodTypeEdits[athlete.id] ?? ''}
+                          onChange={(e) => {
+                            const bt = e.target.value;
+                            setBloodTypeEdits(prev => ({ ...prev, [athlete.id]: bt }));
+                            saveField(athlete.id, { bloodType: bt });
+                          }}
+                          disabled={!!saving[athlete.id]}
+                        >
+                          <option value="">—</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                        </Form.Select>
+                      </td>
+                      <td className="text-end" dir="rtl">
+                        <Form.Control
+                          type="text"
+                          value={phoneEdits[athlete.id] ?? ''}
+                          placeholder="رقم الهاتف"
+                          className="text-end"
+                          onChange={(e) => setPhoneEdits(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                          onBlur={() => saveField(athlete.id, { phone: (phoneEdits[athlete.id] ?? '').trim() })}
+                          disabled={!!saving[athlete.id]}
+                        />
+                        {/* Add coach notes from Firebase if available */}
+                        {(() => {
+                          const rosterEntry = athleteRoster.find(r => r.athleteId === athlete.id);
+                          return rosterEntry?.notes && (
+                            <div className="small text-muted mt-1">
+                              <i className="fas fa-sticky-note me-1"></i>
+                              {rosterEntry.notes.substring(0, 50)}{rosterEntry.notes.length > 50 ? '...' : ''}
                             </div>
-                            <div className="d-flex flex-wrap gap-2 justify-content-end">
-                              {list.map((r, idx) => (
-                                <Badge bg="light" text="dark" key={idx} className="p-2 border">
-                                  <span className="me-2">{r.level}: #{r.rank}</span>
-                                  <Button size="sm" variant="outline-danger" onClick={async ()=>{
+                          );
+                        })()}
+                      </td>
+                      {/* Achievements: multiple entries (dropdown + year + إضافة) */}
+                      <td className="text-end" dir="rtl">
+                        {(() => {
+                          const current = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                          const selKey = (achArraySelection[athlete.id] as keyof AchievementsArrays) || 'wilayaYears';
+                          const summary: string[] = [];
+                          const pushYears = (label: string, arr?: number[]) => { if (arr && arr.length) summary.push(`${label}:${arr.join(',')}`); };
+                          pushYears('ولائي', current.wilayaYears);
+                          pushYears('جهوي', current.regionalYears);
+                          pushYears('وطني', current.nationalYears);
+                          pushYears('عربي', current.arabYears);
+                          pushYears('قاري', current.continentalYears);
+                          pushYears('عالمي', current.worldYears);
+                          pushYears('أولمبي', current.olympicYears);
+                          return (
+                            <div className="d-flex flex-column gap-2">
+                              <div className="small text-muted" style={{ whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                                {summary.length ? summary.join(' | ') : '—'}
+                              </div>
+                              <div className="d-flex gap-2 align-items-center justify-content-end">
+                                <Form.Select
+                                  size="sm"
+                                  className="text-end"
+                                  value={selKey}
+                                  onChange={(e) => setAchArraySelection(prev => ({ ...prev, [athlete.id]: e.target.value as keyof AchievementsArrays }))}
+                                  disabled={!!saving[athlete.id]}
+                                  style={{ maxWidth: '220px' }}
+                                >
+                                  {achievementOptions.map(opt => (
+                                    <option key={opt.key as string} value={opt.key as string}>{opt.label}</option>
+                                  ))}
+                                </Form.Select>
+                                <Form.Control
+                                  size="sm"
+                                  type="number"
+                                  placeholder="السنة"
+                                  className="text-end"
+                                  style={{ maxWidth: '130px' }}
+                                  value={achArrayYear[athlete.id] ?? ''}
+                                  onChange={(e) => setAchArrayYear(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                                  disabled={!!saving[athlete.id]}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  disabled={!!saving[athlete.id]}
+                                  onClick={async () => {
+                                    const yearStr = (achArrayYear[athlete.id] ?? '').trim();
+                                    const num = Number(yearStr);
+                                    if (!yearStr || isNaN(num)) return;
+                                    const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                                    const nextArr = [...(existing[selKey] || []), num];
+                                    const next: AchievementsArrays = { ...existing, [selKey]: nextArr } as any;
+                                    await saveField(athlete.id, { achievements: next } as any);
+                                    setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                    setAchArrayYear(prev => ({ ...prev, [athlete.id]: '' }));
+                                  }}
+                                >
+                                  إضافة
+                                </Button>
+                              </div>
+                              {/* existing entries with remove */}
+                              <div className="d-flex flex-wrap gap-2 justify-content-end">
+                                {achievementOptions.map(opt => {
+                                  const arr = (current as any)[opt.key] as number[] | undefined;
+                                  if (!arr || arr.length === 0) return null;
+                                  return arr.map((y, idx) => (
+                                    <Badge bg="light" text="dark" key={opt.key + '-' + idx} className="p-2 border">
+                                      <span className="me-2">{opt.label.split(' (')[0]}: {y}</span>
+                                      <Button size="sm" variant="outline-danger" onClick={async () => {
+                                        const existing = (achievementsEdits[athlete.id] || {}) as AchievementsArrays;
+                                        const filtered = (arr || []).filter((_, i) => i !== idx);
+                                        const next: AchievementsArrays = { ...existing, [opt.key]: filtered } as any;
+                                        await saveField(athlete.id, { achievements: next } as any);
+                                        setAchievementsEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                      }}>حذف</Button>
+                                    </Badge>
+                                  ));
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
+                      {/* International Ranking: multiple entries (level + rank + إضافة) */}
+                      <td className="text-end" dir="rtl">
+                        {(() => {
+                          const list = rankingEdits[athlete.id] || [];
+                          const levelSel = rankLevelSel[athlete.id] || 'محلي';
+                          const rn = rankNumber[athlete.id] || '';
+                          return (
+                            <div className="d-flex flex-column gap-2">
+                              <div className="d-flex gap-2 align-items-center justify-content-end">
+                                <Form.Select
+                                  size="sm"
+                                  className="text-end"
+                                  value={levelSel}
+                                  onChange={(e) => setRankLevelSel(prev => ({ ...prev, [athlete.id]: e.target.value as RankingEntry['level'] }))}
+                                  disabled={!!saving[athlete.id]}
+                                  style={{ maxWidth: '150px' }}
+                                >
+                                  {rankingLevelOptions.map(opt => (
+                                    <option key={opt} value={opt}>{opt}</option>
+                                  ))}
+                                </Form.Select>
+                                <Form.Control
+                                  size="sm"
+                                  type="number"
+                                  placeholder="الترتيب"
+                                  className="text-end"
+                                  style={{ maxWidth: '120px' }}
+                                  value={rn}
+                                  onChange={(e) => setRankNumber(prev => ({ ...prev, [athlete.id]: e.target.value }))}
+                                  disabled={!!saving[athlete.id]}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="outline-primary"
+                                  disabled={!!saving[athlete.id]}
+                                  onClick={async () => {
+                                    const num = Number(rankNumber[athlete.id] || '');
+                                    if (isNaN(num) || num <= 0) return;
                                     const existing = rankingEdits[athlete.id] || [];
-                                    const next = existing.filter((_, i)=> i !== idx);
+                                    const next = [...existing, { level: levelSel, rank: num } as RankingEntry];
                                     await saveField(athlete.id, { rankings: next } as any);
                                     setRankingEdits(prev => ({ ...prev, [athlete.id]: next }));
-                                  }}>حذف</Button>
-                                </Badge>
-                              ))}
+                                    setRankNumber(prev => ({ ...prev, [athlete.id]: '' }));
+                                  }}
+                                >
+                                  إضافة
+                                </Button>
+                              </div>
+                              <div className="d-flex flex-wrap gap-2 justify-content-end">
+                                {list.map((r, idx) => (
+                                  <Badge bg="light" text="dark" key={idx} className="p-2 border">
+                                    <span className="me-2">{r.level}: #{r.rank}</span>
+                                    <Button size="sm" variant="outline-danger" onClick={async () => {
+                                      const existing = rankingEdits[athlete.id] || [];
+                                      const next = existing.filter((_, i) => i !== idx);
+                                      await saveField(athlete.id, { rankings: next } as any);
+                                      setRankingEdits(prev => ({ ...prev, [athlete.id]: next }));
+                                    }}>حذف</Button>
+                                  </Badge>
+                                ))}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()}
-                    </td>
-                  </tr>
-              );
-              })}
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </Table>
-        </div>
-
-        {filteredAthletes.length === 0 && (
-          <div className="text-center text-muted py-4">
-            <i className="fas fa-search fa-3x mb-3"></i>
-            <p>لم يتم العثور على رياضيين يطابقون معايير البحث</p>
           </div>
-        )}
 
-        {/* Summary */}
-        <div className="mt-4 p-3 bg-light rounded">
-          <Row className="text-center">
-            <Col md={3}>
-              <h6 className="text-primary">إجمالي الرياضيين</h6>
-              <h4 className="text-primary">{filteredAthletes.length}</h4>
-            </Col>
-            <Col md={3}>
-              <h6 className="text-info">الذكور</h6>
-              <h4 className="text-info">
-                {filteredAthletes.filter(a => a.gender === 'male').length}
-              </h4>
-            </Col>
-            <Col md={3}>
-              <h6 className="text-warning">الإناث</h6>
-              <h4 className="text-warning">
-                {filteredAthletes.filter(a => a.gender === 'female').length}
-              </h4>
-            </Col>
-            <Col md={3}>
-              <h6 className="text-success">متوسط العمر</h6>
-              <h4 className="text-success">
-                {filteredAthletes.length > 0
-                  ? Math.round(filteredAthletes.reduce((sum, a) => sum + (a.dateOfBirth ? calculateAge(a.dateOfBirth) : 0), 0) / filteredAthletes.length)
-                  : 0
-                } سنة
-              </h4>
-            </Col>
-          </Row>
-          {/* Add Firebase sync status */}
-         
-        </div>
+          {filteredAthletes.length === 0 && (
+            <div className="text-center text-muted py-4">
+              <i className="fas fa-search fa-3x mb-3"></i>
+              <p>لم يتم العثور على رياضيين يطابقون معايير البحث</p>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="mt-4 p-3 bg-light rounded">
+            <Row className="text-center">
+              <Col md={3}>
+                <h6 className="text-primary">إجمالي الرياضيين</h6>
+                <h4 className="text-primary">{filteredAthletes.length}</h4>
+              </Col>
+              <Col md={3}>
+                <h6 className="text-info">الذكور</h6>
+                <h4 className="text-info">
+                  {filteredAthletes.filter(a => (genderEdits[a.id] ?? a.gender) === 'male').length}
+                </h4>
+              </Col>
+              <Col md={3}>
+                <h6 className="text-warning">الإناث</h6>
+                <h4 className="text-warning">
+                  {filteredAthletes.filter(a => (genderEdits[a.id] ?? a.gender) === 'female').length}
+                </h4>
+              </Col>
+              <Col md={3}>
+                <h6 className="text-success">متوسط العمر</h6>
+                <h4 className="text-success">
+                  {filteredAthletes.length > 0
+                    ? (() => {
+                      let totalAge = 0;
+                      let count = 0;
+                      filteredAthletes.forEach(a => {
+                        const dob = getEffectiveDob(a.id, a.dateOfBirth);
+                        if (dob) {
+                          totalAge += calculateAge(dob);
+                          count++;
+                        }
+                      });
+                      if (count === 0) return 0;
+                      return Math.round(totalAge / count);
+                    })()
+                    : 0
+                  } سنة
+                </h4>
+              </Col>
+            </Row>
+            {/* Add Firebase sync status */}
+
+          </div>
         </Card.Body>
       </Card>
     </>
