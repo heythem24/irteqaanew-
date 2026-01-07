@@ -261,7 +261,7 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
               <th rowspan="2">الفئة</th>
               <th rowspan="2">شدة نبض القلب</th>
               <th rowspan="2">الراحة</th>
-              <th colspan="6">عدد الهجمات التي عرضت العضم المطة في آخر مباراة</th>
+              <th colspan="6"> عدد الهجمات التي عرضت الخصم للخطر في آخر مباراة</th>
               <th rowspan="2">التقدير</th>
             </tr>
             <tr>
@@ -383,7 +383,7 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
                 <th rowSpan={2} className="text-center align-middle">الفئة</th>
                 <th rowSpan={2} className="text-center align-middle">شدة نبض القلب</th>
                 <th rowSpan={2} className="text-center align-middle">الراحة</th>
-                <th colSpan={6} className="text-center bg-info text-white">عدد الهجمات التي عرضت العضم المطة في آخر مباراة</th>
+                <th colSpan={6} className="text-center bg-info text-white">عدد الهجمات التي عرضت الخصم للخطر في آخر مباراة</th>
                 <th rowSpan={2} className="text-center align-middle">التقدير</th>
               </tr>
               <tr className="table-secondary">

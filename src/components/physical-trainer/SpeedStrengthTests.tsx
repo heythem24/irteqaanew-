@@ -302,7 +302,7 @@ const SpeedStrengthTests: React.FC<SpeedStrengthTestsProps> = ({ clubId }) => {
               <ul className="mb-0 mt-2">
                 <li>الأطراف العلوية: ضغطة / 20 ثانية</li>
                 <li>الأطراف السفلية: ضغطة / 20 ثانية</li>
-                <li>يتم تسجيل عدد الضربات في الوقت المحدد</li>
+                <li>يتم تسجيل عدد الضغطات في الوقت المحدد</li>
               </ul>
             </Col>
             <Col md={6}>
@@ -390,7 +390,7 @@ const SpeedStrengthTests: React.FC<SpeedStrengthTestsProps> = ({ clubId }) => {
                       value={athlete.upperLimbsReps || ''}
                       onChange={(e) => updateAthlete(athlete.id, 'upperLimbsReps', Number(e.target.value))}
                       className="text-center"
-                      placeholder="عدد الضربات"
+                      placeholder="عدد الضغطات"
                       min="0"
                       size="sm"
                     />
@@ -411,7 +411,7 @@ const SpeedStrengthTests: React.FC<SpeedStrengthTestsProps> = ({ clubId }) => {
                       value={athlete.lowerLimbsReps || ''}
                       onChange={(e) => updateAthlete(athlete.id, 'lowerLimbsReps', Number(e.target.value))}
                       className="text-center"
-                      placeholder="عدد الضربات"
+                      placeholder="عدد الضغطات"
                       min="0"
                       size="sm"
                     />
