@@ -117,27 +117,31 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
       if (athlete.id === id) {
         const updated = { ...athlete, [field]: value };
         
-        // حساب المتوسط عند تغيير الجولات
+        // حساب المتوسط عند تغيير الجولات (للعرض فقط)
         if (field === 'rounds') {
           const rounds = value as string[];
           const validRounds = rounds.filter(round => round && !isNaN(Number(round))).map(Number);
           if (validRounds.length > 0) {
             const average = (validRounds.reduce((sum, val) => sum + val, 0) / validRounds.length).toFixed(1);
             updated.averages = average;
-            
-            // تحديد التقدير بناءً على المتوسط
-            const avgNum = Number(average);
-            if (avgNum >= 4) {
+          } else {
+            updated.averages = '';
+          }
+          
+          // التقدير يعتمد على المباراة السادسة فقط (index 5)
+          const sixthRound = rounds[5];
+          if (sixthRound && !isNaN(Number(sixthRound))) {
+            const sixthValue = Number(sixthRound);
+            if (sixthValue >= 4) {
               updated.evaluation = 'متحمل';
-            } else if (avgNum >= 3) {
+            } else if (sixthValue >= 3) {
               updated.evaluation = 'جيد';
-            } else if (avgNum >= 2) {
+            } else if (sixthValue >= 2) {
               updated.evaluation = 'متوسط';
             } else {
               updated.evaluation = 'ضعيف';
             }
           } else {
-            updated.averages = '';
             updated.evaluation = '';
           }
         }
@@ -156,25 +160,29 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
         newRounds[roundIndex] = value;
         const updated = { ...athlete, rounds: newRounds };
         
-        // حساب المتوسط
+        // حساب المتوسط للعرض فقط
         const validRounds = newRounds.filter(round => round && !isNaN(Number(round))).map(Number);
         if (validRounds.length > 0) {
           const average = (validRounds.reduce((sum, val) => sum + val, 0) / validRounds.length).toFixed(1);
           updated.averages = average;
-          
-          // تحديد التقدير
-          const avgNum = Number(average);
-          if (avgNum >= 4) {
+        } else {
+          updated.averages = '';
+        }
+        
+        // التقدير يعتمد على المباراة السادسة فقط (index 5)
+        const sixthRound = newRounds[5];
+        if (sixthRound && !isNaN(Number(sixthRound))) {
+          const sixthValue = Number(sixthRound);
+          if (sixthValue >= 4) {
             updated.evaluation = 'متحمل';
-          } else if (avgNum >= 3) {
+          } else if (sixthValue >= 3) {
             updated.evaluation = 'جيد';
-          } else if (avgNum >= 2) {
+          } else if (sixthValue >= 2) {
             updated.evaluation = 'متوسط';
           } else {
             updated.evaluation = 'ضعيف';
           }
         } else {
-          updated.averages = '';
           updated.evaluation = '';
         }
         
@@ -322,10 +330,10 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
             <Col md={6}>
               <strong>معايير التقييم:</strong>
               <ul className="mb-0 mt-2">
-                <li>متوسط 4 فأكثر: متحمل</li>
-                <li>متوسط 3-3.9: جيد</li>
-                <li>متوسط 2-2.9: متوسط</li>
-                <li>متوسط أقل من 2: ضعيف</li>
+                <li>4 فأكثر: متحمل</li>
+                <li>3: جيد</li>
+                <li>2: متوسط</li>
+                <li>أقل من 2: ضعيف</li>
               </ul>
             </Col>
             <Col md={6}>
@@ -334,7 +342,6 @@ const SpecialEnduranceTest: React.FC<SpecialEnduranceTestProps> = ({ clubId }) =
                 <li>6 مباريات كل مباراة 4 دقائق</li>
                 <li>فترات راحة محددة بين المباريات</li>
                 <li>شدة نبض القلب: 75%</li>
-                <li>يتم حساب المتوسط تلقائياً</li>
               </ul>
             </Col>
           </Row>
